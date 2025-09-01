@@ -10,28 +10,33 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "@/components/motion";
+import { Users, TrendingUp, TrendingDown, Package, Building } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const iconMap = {
+    Users: <Users className="size-6 text-primary-foreground" />,
+    Package: <Package className="size-5 text-muted-foreground" />,
+    Building: <Building className="size-5 text-muted-foreground" />,
+};
 
 type StatCardProps = {
   title: string;
-  icon: React.ReactNode;
   value: string;
+  icon: keyof typeof iconMap;
   trendValue: string;
-  trendIcon: React.ReactNode;
-  trendColor: string;
-  trendPeriod?: string;
-  collectionName: string; // Keep for potential future hook-up
-  role?: "coach" | "owner";
-  today?: boolean;
+  trendPeriod: string;
+  trendColor?: string;
+  primary?: boolean;
 };
 
 export function StatCard({ 
   title, 
-  icon, 
   value,
+  icon,
   trendValue,
-  trendIcon,
-  trendColor,
-  trendPeriod = "vs last month"
+  trendPeriod,
+  trendColor = "text-green-500",
+  primary = false
 }: StatCardProps) {
   const [loading, setLoading] = useState(true);
 
@@ -40,16 +45,28 @@ export function StatCard({
     return () => clearTimeout(timer);
   }, []);
 
+  const TrendIcon = trendValue.startsWith('+') ? TrendingUp : TrendingDown;
+
   return (
-    <Card className="group relative overflow-hidden border-border/50 shadow-sm transition-all duration-300 ease-in-out hover:border-primary/30 hover:shadow-lg hover:-translate-y-1">
-      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-br from-background via-background to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
-      <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className="p-2 bg-accent/50 rounded-lg">
-            {icon}
+    <Card className={cn(
+      "shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 border-none",
+      primary ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground"
+    )}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className={cn(
+            "text-sm font-medium",
+            primary ? "text-primary-foreground/90" : "text-muted-foreground"
+        )}>{title}</CardTitle>
+        <div className={cn(
+            "p-2 rounded-lg",
+            primary ? "bg-primary-foreground/20" : "bg-muted"
+        )}>
+            {React.cloneElement(iconMap[icon], {
+                className: cn(primary ? "text-primary-foreground" : "text-muted-foreground", "size-5")
+            })}
         </div>
       </CardHeader>
-      <CardContent className="relative z-10">
+      <CardContent>
         {loading ? (
           <Skeleton className="h-8 w-24 mt-1" />
         ) : (
@@ -65,12 +82,12 @@ export function StatCard({
         {loading ? (
           <Skeleton className="h-4 w-40 mt-2" />
         ) : (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-             <span className={`flex items-center gap-1 font-medium ${trendColor}`}>
-                {trendIcon}
+          <div className="flex items-center gap-2 text-xs mt-1">
+             <span className={cn("flex items-center gap-1 font-medium", primary ? "text-primary-foreground/90" : trendColor)}>
+                <TrendIcon className="size-4" />
                 {trendValue}
             </span>
-            <span>{trendPeriod}</span>
+            <span className={cn(primary ? "text-primary-foreground/80" : "text-muted-foreground")}>{trendPeriod}</span>
           </div>
         )}
       </CardContent>

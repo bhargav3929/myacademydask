@@ -2,12 +2,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, XCircle, LogIn, UserPlus } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { MotionDiv } from "../motion";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
 type ActivityType = 'present' | 'absent' | 'login' | 'new_student';
 
@@ -21,11 +22,7 @@ type Activity = {
 };
 
 const MOCK_PEOPLE = [
-    { name: "Alex Johnson", image: `https://i.pravatar.cc/150?u=alex` },
-    { name: "Maria Garcia", image: `https://i.pravatar.cc/150?u=maria` },
-    { name: "Coach Mike", image: `https://i.pravatar.cc/150?u=coachmike` },
-    { name: "David Smith", image: `https://i.pravatar.cc/150?u=david` },
-    { name: "Coach Sarah", image: `https://i.pravatar.cc/150?u=coachsarah` },
+    { name: "Esther Howard", image: `https://i.pravatar.cc/150?u=esther` },
 ];
 
 const generateMockActivity = (): Activity[] => {
@@ -34,47 +31,15 @@ const generateMockActivity = (): Activity[] => {
             id: 'act_1',
             person: MOCK_PEOPLE[0].name,
             personImage: MOCK_PEOPLE[0].image,
-            action: 'marked as present',
+            action: 'Courier',
             type: 'present',
-            timestamp: '5m ago'
-        },
-        {
-            id: 'act_2',
-            person: MOCK_PEOPLE[1].name,
-            personImage: MOCK_PEOPLE[1].image,
-            action: 'marked as absent',
-            type: 'absent',
-            timestamp: '12m ago'
-        },
-        {
-            id: 'act_3',
-            person: MOCK_PEOPLE[2].name,
-            personImage: MOCK_PEOPLE[2].image,
-            action: 'logged in',
-            type: 'login',
-            timestamp: '30m ago'
-        },
-        {
-            id: 'act_4',
-            person: MOCK_PEOPLE[3].name,
-            action: 'was added to North Stadium',
-            type: 'new_student',
-            timestamp: '45m ago'
-        },
-         {
-            id: 'act_5',
-            person: MOCK_PEOPLE[4].name,
-            personImage: MOCK_PEOPLE[4].image,
-            action: 'logged in',
-            type: 'login',
-            timestamp: '1h ago'
+            timestamp: '06:20 PM (22 Jun 2024)'
         },
     ];
-    return activities.sort(() => Math.random() - 0.5); // Randomize for effect
+    return activities;
 }
 
-
-export function RecentActivity() {
+export function LiveTracking() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,69 +52,69 @@ export function RecentActivity() {
      return () => clearTimeout(timer);
   }, []);
 
-  const icons: Record<ActivityType, React.ReactNode> = {
-      present: <CheckCircle2 className="size-5 text-green-500" />,
-      absent: <XCircle className="size-5 text-red-500" />,
-      login: <LogIn className="size-5 text-primary" />,
-      new_student: <UserPlus className="size-5 text-purple-500" />,
-  };
+  const trackingSteps = [
+    { status: 'Checking', time: '11:48 AM', completed: true },
+    { status: 'In Transit', time: '04:30 PM', completed: true },
+    { status: 'Out for Delivery', time: '06:20 PM (22 Jun 2024)', completed: false },
+  ];
 
   return (
-    <Card className="h-full flex flex-col shadow-sm border-border/50">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">Live Activity Feed</CardTitle>
-        <CardDescription>A real-time stream of events in your academy.</CardDescription>
+    <Card className="h-full flex flex-col shadow-sm border-none">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-semibold">Live Tracking</CardTitle>
+        <Button variant="ghost" size="icon" className="size-6">
+            <MoreHorizontal className="size-4" />
+        </Button>
       </CardHeader>
-      <CardContent className="flex-grow p-0">
-        <ScrollArea className="h-[280px]">
-          <div className="p-6 pt-0">
-            {loading ? (
-              <div className="space-y-6">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                      <Skeleton className="size-10 rounded-full" />
-                      <div className="space-y-2">
-                          <Skeleton className="h-4 w-48" />
-                          <Skeleton className="h-3 w-20" />
-                      </div>
-                  </div>
-                ))}
-              </div>
-            ) : activities.length > 0 ? (
-              <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute left-5 top-2 bottom-2 w-0.5 bg-border/70" />
-                <div className="space-y-8">
-                {activities.map((activity, index) => (
-                  <MotionDiv
-                    key={activity.id}
-                    className="flex items-start gap-4 relative"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
-                  >
-                    <div className="size-10 rounded-full bg-background flex items-center justify-center border-2 border-border/70 z-10">
-                        {icons[activity.type]}
-                    </div>
-                    <div className="flex-grow pt-1.5">
-                      <p className="text-sm text-foreground">
-                        <span className="font-semibold">{activity.person}</span> {activity.action}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {activity.timestamp}
-                      </p>
-                    </div>
-                  </MotionDiv>
-                ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                  <p className="text-muted-foreground">No recent activity.</p>
-              </div>
-            )}
+      <CardContent className="flex-grow p-6 pt-0">
+        <div className="flex items-center justify-between mb-4">
+            <div>
+                <p className="text-sm text-muted-foreground">Tracking Number</p>
+                <p className="font-semibold">#867dhk-7589ktj</p>
             </div>
-        </ScrollArea>
+            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">On the Way</Badge>
+        </div>
+        <div className="space-y-6 relative">
+             {/* Timeline line */}
+             <div className="absolute left-2 top-2 bottom-8 w-0.5 bg-border ml-px" />
+            {trackingSteps.map((step, index) => (
+                <div key={index} className="flex items-start gap-4 relative">
+                    <div className="size-5 rounded-full bg-background flex items-center justify-center border-2 border-primary z-10">
+                        {step.completed && <div className="size-2.5 rounded-full bg-primary" />}
+                    </div>
+                    <div className="flex-grow flex justify-between items-center -mt-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {step.status}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {step.time}
+                      </p>
+                    </div>
+                </div>
+            ))}
+        </div>
+         <div className="flex items-center justify-between mt-6 rounded-lg border p-3">
+            <div className="flex items-center gap-3">
+                <Avatar>
+                    <AvatarImage src={MOCK_PEOPLE[0].image} />
+                    <AvatarFallback>EH</AvatarFallback>
+                </Avatar>
+                <div>
+                    <p className="font-semibold text-sm">Esther Howard</p>
+                    <p className="text-xs text-muted-foreground">Courier</p>
+                </div>
+            </div>
+            <div className="flex gap-1">
+                <Button variant="outline" size="icon" className="size-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 8.383V4.617l-6.5 3.9-6.5-3.9V12.5a1 1 0 0 0 .584.922z"/></svg>
+                </Button>
+                <Button variant="outline" size="icon" className="size-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58z"/></svg>
+                </Button>
+            </div>
+         </div>
+
+         <Button variant="outline" className="w-full mt-4">New Shipping</Button>
       </CardContent>
     </Card>
   );

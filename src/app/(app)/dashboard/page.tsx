@@ -1,9 +1,10 @@
 
-import { TrendingUp, UserPlus, Users, Building, Activity, CalendarCheck } from "lucide-react";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { AttendanceChart } from "@/components/dashboard/attendance-chart";
-import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { ShipmentStatistics } from "@/components/dashboard/shipment-statistics";
+import { LiveTracking } from "@/components/dashboard/live-tracking";
+import { DeliveryTime } from "@/components/dashboard/delivery-time";
+import { ShippingList } from "@/components/dashboard/shipping-list";
 
 export default function DashboardPage() {
   const containerVariants = {
@@ -31,91 +32,75 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex-1 space-y-8 bg-background p-4 md:p-8 pt-6">
+    <MotionDiv
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col gap-6"
+    >
+      <MotionDiv variants={itemVariants}>
+        <div className="space-y-0.5">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Good Morning, Owner! 👋
+          </h1>
+          <p className="text-muted-foreground">
+            You can follow all new data here.
+          </p>
+        </div>
+      </MotionDiv>
+      
       <MotionDiv
         variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col gap-8"
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
       >
         <MotionDiv variants={itemVariants}>
-            <div className="space-y-1.5">
-                <h1 className="text-3xl font-bold tracking-tight">
-                    Welcome Back, Owner!
-                </h1>
-                <p className="text-muted-foreground">
-                    Here's a bird's-eye view of your academy's performance.
-                </p>
-            </div>
+          <StatCard
+            title="Total Students"
+            value="248"
+            icon="Users"
+            trendValue="+16.2%"
+            trendPeriod="+124 today"
+            primary
+          />
         </MotionDiv>
-        
-        <MotionDiv
-            variants={containerVariants}
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
-        >
-            <MotionDiv variants={itemVariants}>
-            <StatCard
-                title="Total Students"
-                value="73"
-                icon={<Users className="size-5 text-primary" />}
-                trendValue="+12.5%"
-                trendIcon={<TrendingUp className="size-4 text-emerald-500" />}
-                trendColor="text-emerald-500"
-                collectionName="students"
-            />
-            </MotionDiv>
-            <MotionDiv variants={itemVariants}>
-            <StatCard
-                title="Active Stadiums"
-                value="4"
-                icon={<Building className="size-5 text-orange-500" />}
-                trendValue="+2"
-                trendIcon={<UserPlus className="size-4 text-emerald-500" />}
-                trendColor="text-emerald-500"
-                trendPeriod="this month"
-                collectionName="stadiums"
-            />
-            </MotionDiv>
-            <MotionDiv variants={itemVariants}>
-            <StatCard
-                title="Total Coaches"
-                value="8"
-                icon={<Users className="size-5 text-purple-500" />}
-                trendValue="+1"
-                trendIcon={<UserPlus className="size-4 text-emerald-500" />}
-                trendColor="text-emerald-500"
-                trendPeriod="this month"
-                collectionName="users"
-                role="coach"
-            />
-            </MotionDiv>
-            <MotionDiv variants={itemVariants}>
-            <StatCard
-                title="Attendance Today"
-                value="92%"
-                icon={<CalendarCheck className="size-5 text-green-500" />}
-                trendValue="-3%"
-                trendIcon={<TrendingUp className="size-4 text-red-500 rotate-180" />}
-                trendColor="text-red-500"
-                trendPeriod="vs yesterday"
-                collectionName="attendance"
-                today
-            />
-            </MotionDiv>
+        <MotionDiv variants={itemVariants}>
+          <StatCard
+            title="Pending Applications"
+            value="64"
+            icon="Package"
+            trendValue="-12.4%"
+            trendPeriod="-12 today"
+            trendColor="text-red-500"
+          />
         </MotionDiv>
-
-        <MotionDiv
-            variants={containerVariants}
-            className="grid grid-cols-1 gap-6 lg:grid-cols-5"
-        >
-            <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <AttendanceChart />
-            </MotionDiv>
-            <MotionDiv variants={itemVariants} className="lg:col-span-2">
-            <RecentActivity />
-            </MotionDiv>
+        <MotionDiv variants={itemVariants}>
+          <StatCard
+            title="Active Stadiums"
+            value="32"
+            icon="Building"
+            trendValue="+18.6%"
+            trendPeriod="+16 today"
+          />
         </MotionDiv>
       </MotionDiv>
-    </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <MotionDiv variants={itemVariants} className="lg:col-span-3">
+            <ShipmentStatistics />
+        </MotionDiv>
+        <div className="lg:col-span-2 space-y-6">
+            <MotionDiv variants={itemVariants}>
+                <LiveTracking />
+            </MotionDiv>
+            <MotionDiv variants={itemVariants}>
+                <DeliveryTime />
+            </MotionDiv>
+        </div>
+      </div>
+
+       <MotionDiv variants={itemVariants}>
+          <ShippingList />
+        </MotionDiv>
+    </MotionDiv>
   );
 }

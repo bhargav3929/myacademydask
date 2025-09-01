@@ -2,49 +2,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Dot } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Dot, ReferenceLine } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { subDays, format } from "date-fns";
 import { Button } from "../ui/button";
+import { MoreHorizontal } from "lucide-react";
 
 type ChartData = {
-  date: string;
   name: string;
   Shipment: number;
   Delivery: number;
 };
 
 // MOCK DATA
-const generateMockData = () => {
-    const today = new Date();
-    return ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'].map((month, i) => {
-        return {
-            date: `${i+1}`,
-            name: month,
-            Shipment: Math.floor(Math.random() * 2000) + 1000,
-            Delivery: Math.floor(Math.random() * 2000) + 800,
-        };
-    });
+const generateMockData = (): ChartData[] => {
+    return [
+        { name: 'Dec', Shipment: 20, Delivery: 28 },
+        { name: 'Jan', Shipment: 18, Delivery: 25 },
+        { name: 'Feb', Shipment: 22, Delivery: 30 },
+        { name: 'Mar', Shipment: 20, Delivery: 28 },
+        { name: 'Apr', Shipment: 25, Delivery: 32 },
+        { name: 'May', Shipment: 23, Delivery: 30 },
+        { name: 'Jun', Shipment: 28, Delivery: 35 },
+        { name: 'Jul', Shipment: 26, Delivery: 34 },
+        { name: 'Aug', Shipment: 30, Delivery: 38 },
+        { name: 'Sep', Shipment: 28, Delivery: 36 },
+        { name: 'Oct', Shipment: 32, Delivery: 40 },
+        { name: 'Nov', Shipment: 30, Delivery: 38 },
+    ];
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border bg-background p-2 shadow-sm">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col space-y-1">
-            <span className="text-xs uppercase text-muted-foreground">
-              {label}
-            </span>
-          </div>
-        </div>
+        <p className="font-bold mb-2">{label}</p>
         <div className="flex flex-col space-y-1 mt-1">
             {payload.map((p: any, i: number) => (
                 <div key={i} className="flex items-center gap-2">
                     <div className="size-2.5 rounded-full" style={{backgroundColor: p.stroke}}/>
                     <span className="text-sm text-muted-foreground">{`${p.name}:`}</span>
-                    <span className="text-sm font-bold">{p.value}</span>
+                    <span className="text-sm font-bold">{p.value}%</span>
                 </div>
             ))}
         </div>
@@ -55,16 +53,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const CustomActiveDot = (props: any) => {
-    const { cx, cy, stroke, payload, value } = props;
-    
-    if (payload.name === 'Jul') {
-        return (
-            <Dot {...props} r={5} fill={stroke} strokeWidth={2} />
-        );
-    }
-    
-    return null;
+const CustomActiveDot = ({ cx, cy, stroke, payload, value }: any) => {
+    return <Dot cx={cx} cy={cy} r={5} fill={stroke} stroke="white" strokeWidth={2} />;
 };
 
 export function ShipmentStatistics() {
@@ -80,6 +70,8 @@ export function ShipmentStatistics() {
     return () => clearTimeout(timer);
   }, []);
 
+  const julDataPoint = data.find(d => d.name === 'Jul');
+
   return (
     <Card className="h-full flex flex-col shadow-sm border-none">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -89,16 +81,19 @@ export function ShipmentStatistics() {
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-sm">
                 <div className="size-2 rounded-full bg-primary" />
-                <span>Shipment</span>
+                <span className="text-muted-foreground">Shipment</span>
             </div>
              <div className="flex items-center gap-2 text-sm">
-                <div className="size-2 rounded-full bg-green-400" />
-                <span>Delivery</span>
+                <div className="size-2 rounded-full" style={{backgroundColor: "#82ca9d"}} />
+                <span className="text-muted-foreground">Delivery</span>
             </div>
             <Button variant="outline" size="sm">Monthly</Button>
+            <Button variant="ghost" size="icon" className="size-6">
+                <MoreHorizontal className="size-4" />
+            </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow pb-4">
+      <CardContent className="flex-grow pb-4 -ml-4">
         {loading ? (
           <Skeleton className="w-full h-[250px] rounded-md" />
         ) : (
@@ -130,13 +125,18 @@ export function ShipmentStatistics() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `${value/1000}k`}
-                width={30}
+                tickFormatter={(value) => `${value}%`}
+                domain={[0, 40]}
+                width={40}
               />
               <Tooltip
-                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: "3 3" }}
+                cursor={false}
                 content={<CustomTooltip />}
+                position={{ y: 0 }}
               />
+               {julDataPoint && (
+                <ReferenceLine x="Jul" stroke="hsl(var(--border))" strokeDasharray="3 3" />
+               )}
               <Area 
                 type="monotone" 
                 dataKey="Shipment" 
@@ -144,7 +144,8 @@ export function ShipmentStatistics() {
                 fillOpacity={1} 
                 fill="url(#colorShipment)" 
                 strokeWidth={2} 
-                activeDot={<CustomActiveDot />}
+                activeDot={(props) => props.payload.name === 'Jul' ? <CustomActiveDot {...props} /> : null}
+                dot={false}
               />
               <Area 
                 type="monotone" 
@@ -153,8 +154,9 @@ export function ShipmentStatistics() {
                 fillOpacity={1} 
                 fill="url(#colorDelivery)" 
                 strokeWidth={2}
-                activeDot={<CustomActiveDot />}
-            />
+                activeDot={(props) => props.payload.name === 'Jul' ? <CustomActiveDot {...props} /> : null}
+                dot={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         )}
