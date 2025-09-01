@@ -65,9 +65,9 @@ export default function DashboardPage() {
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
           <StatCard
-            title="Pending Applications"
+            title="New Students Joined"
             value="0"
-            icon="ClipboardList"
+            icon="UserPlus"
             trendValue=""
             trendPeriod="No data yet"
           />

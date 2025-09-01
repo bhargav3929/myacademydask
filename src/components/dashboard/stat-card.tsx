@@ -10,13 +10,14 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "@/components/motion";
-import { Users, TrendingUp, TrendingDown, ClipboardList, Building } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, ClipboardList, Building, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
     Users: <Users className="size-6 text-primary-foreground" />,
     ClipboardList: <ClipboardList className="size-5 text-muted-foreground" />,
     Building: <Building className="size-5 text-muted-foreground" />,
+    UserPlus: <UserPlus className="size-5 text-muted-foreground" />,
 };
 
 type StatCardProps = {
