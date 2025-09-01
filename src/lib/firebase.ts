@@ -1,7 +1,7 @@
+
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
 
 console.log("--- Firebase Initialization ---");
 console.log("NEXT_PUBLIC_FIREBASE_API_KEY:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "Loaded" : "MISSING");
@@ -36,7 +36,6 @@ try {
 
     auth = getAuth(app);
     firestore = getFirestore(app);
-    getFunctions(app); // Initialize Functions
     console.log("Firebase initialized successfully.");
 
 } catch (error) {
