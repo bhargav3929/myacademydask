@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "@/components/motion";
-import { Users, TrendingUp, TrendingDown, Package, Building } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, ClipboardList, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
     Users: <Users className="size-6 text-primary-foreground" />,
-    Package: <Package className="size-5 text-muted-foreground" />,
+    ClipboardList: <ClipboardList className="size-5 text-muted-foreground" />,
     Building: <Building className="size-5 text-muted-foreground" />,
 };
 

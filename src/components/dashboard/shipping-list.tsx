@@ -16,59 +16,51 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, ArrowDownToLine, Search } from "lucide-react";
+import { MoreHorizontal, FileDown, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import Image from "next/image";
 import { Input } from "../ui/input";
+import { format } from "date-fns";
 
-const shippingData = [
+const registrationData = [
   {
-    trackingId: "#RQ7487",
-    deliverer: {
+    id: "#REG7487",
+    student: {
       name: "Wade Warren",
       avatar: "https://i.pravatar.cc/150?u=wade",
     },
-    shippedDate: "22 June 2024",
-    country: {
-      name: "United States",
-      flag: "https://flagcdn.com/w20/us.png",
-    },
-    weight: "2.8kg",
-    price: "$24.05",
-    status: "On the Way",
-    statusVariant: "warning" as const,
+    joinDate: new Date(2024, 5, 22),
+    stadium: "North City Arena",
+    plan: "Pro Tier",
+    monthlyFee: "$49.99",
+    status: "Active",
+    statusVariant: "success" as const,
   },
   {
-    trackingId: "#RQ7488",
-    deliverer: {
+    id: "#REG7488",
+    student: {
       name: "Kristin Watson",
       avatar: "https://i.pravatar.cc/150?u=kristin",
     },
-    shippedDate: "21 June 2024",
-    country: {
-      name: "India",
-      flag: "https://flagcdn.com/w20/in.png",
-    },
-    weight: "3.4kg",
-    price: "$32.02",
-    status: "In Transit",
-    statusVariant: "info" as const,
+    joinDate: new Date(2024, 5, 21),
+    stadium: "Downtown Center",
+    plan: "Beginner",
+    monthlyFee: "$29.99",
+    status: "Trial",
+    statusVariant: "warning" as const,
   },
   {
-    trackingId: "#RQ7489",
-    deliverer: {
+    id: "#REG7489",
+    student: {
       name: "Robert Fox",
       avatar: "https://i.pravatar.cc/150?u=robert",
     },
-    shippedDate: "20 June 2024",
-    country: {
-      name: "Germany",
-      flag: "https://flagcdn.com/w20/de.png",
-    },
-    weight: "1.2kg",
-    price: "$18.50",
-    status: "Delivered",
+    joinDate: new Date(2024, 5, 20),
+    stadium: "Southside Complex",
+    plan: "Pro Tier",
+    monthlyFee: "$49.99",
+    status: "Active",
     statusVariant: "success" as const,
   },
 ];
@@ -80,19 +72,19 @@ const badgeVariants = {
 }
 
 
-export function ShippingList() {
+export function RecentRegistrations() {
   return (
     <Card className="shadow-sm border-none">
         <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Shipping list</CardTitle>
+            <CardTitle className="text-lg font-semibold">Recent Registrations</CardTitle>
             <div className="flex gap-2">
                 <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search" className="pl-8 w-full md:w-[200px] lg:w-[320px]" />
+                    <Input placeholder="Search students..." className="pl-8 w-full md:w-[200px] lg:w-[320px]" />
                 </div>
                 <Button>
-                    Download Data
-                    <ArrowDownToLine className="ml-2 size-4" />
+                    Export List
+                    <FileDown className="ml-2 size-4" />
                 </Button>
             </div>
         </CardHeader>
@@ -100,12 +92,12 @@ export function ShippingList() {
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead>Tracking ID</TableHead>
-                    <TableHead>Deliver</TableHead>
-                    <TableHead>Shipped Date</TableHead>
-                    <TableHead>Country</TableHead>
-                    <TableHead>Weight</TableHead>
-                    <TableHead>Price</TableHead>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Join Date</TableHead>
+                    <TableHead>Assigned Stadium</TableHead>
+                    <TableHead>Membership Plan</TableHead>
+                    <TableHead>Fee</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>
                     <span className="sr-only">Actions</span>
@@ -113,24 +105,19 @@ export function ShippingList() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {shippingData.map((item) => (
-                    <TableRow key={item.trackingId} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{item.trackingId}</TableCell>
+                {registrationData.map((item) => (
+                    <TableRow key={item.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{item.id}</TableCell>
                     <TableCell>
                         <div className="flex items-center gap-2">
-                            <Image src={item.deliverer.avatar} alt={item.deliverer.name} width={24} height={24} className="rounded-full" />
-                            <span>{item.deliverer.name}</span>
+                            <Image src={item.student.avatar} alt={item.student.name} width={24} height={24} className="rounded-full" />
+                            <span>{item.student.name}</span>
                         </div>
                     </TableCell>
-                    <TableCell>{item.shippedDate}</TableCell>
-                    <TableCell>
-                        <div className="flex items-center gap-2">
-                            <Image src={item.country.flag} alt={item.country.name} width={20} height={15} />
-                            <span>{item.country.name}</span>
-                        </div>
-                    </TableCell>
-                    <TableCell>{item.weight}</TableCell>
-                    <TableCell>{item.price}</TableCell>
+                    <TableCell>{format(item.joinDate, "dd MMM yyyy")}</TableCell>
+                    <TableCell>{item.stadium}</TableCell>
+                    <TableCell>{item.plan}</TableCell>
+                    <TableCell>{item.monthlyFee}</TableCell>
                     <TableCell>
                         <Badge variant="outline" className={badgeVariants[item.statusVariant]}>{item.status}</Badge>
                     </TableCell>
@@ -143,9 +130,9 @@ export function ShippingList() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
+                            <DropdownMenuItem>View Profile</DropdownMenuItem>
+                            <DropdownMenuItem>Edit Plan</DropdownMenuItem>
+                            <DropdownMenuItem>Cancel Membership</DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>

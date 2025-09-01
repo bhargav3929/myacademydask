@@ -1,10 +1,10 @@
 
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { ShipmentStatistics } from "@/components/dashboard/shipment-statistics";
-import { LiveTracking } from "@/components/dashboard/recent-activity";
-import { DeliveryTime } from "@/components/dashboard/delivery-time";
-import { ShippingList } from "@/components/dashboard/shipping-list";
+import { AttendanceChart } from "@/components/dashboard/attendance-chart";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { CoachAssignments } from "@/components/dashboard/coach-assignments";
+import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
 
 export default function DashboardPage() {
   const containerVariants = {
@@ -41,10 +41,10 @@ export default function DashboardPage() {
       <MotionDiv variants={itemVariants}>
         <div className="space-y-0.5">
           <h1 className="text-2xl font-bold tracking-tight">
-            Good Morning, Owner! 👋
+            Good Morning, Academy Director! 👋
           </h1>
           <p className="text-muted-foreground">
-            You can follow all new data here.
+            Here's a snapshot of your academy's performance.
           </p>
         </div>
       </MotionDiv>
@@ -59,7 +59,7 @@ export default function DashboardPage() {
             value="248"
             icon="Users"
             trendValue="+16.2%"
-            trendPeriod="+124 today"
+            trendPeriod="from last month"
             primary
           />
         </MotionDiv>
@@ -67,10 +67,10 @@ export default function DashboardPage() {
           <StatCard
             title="Pending Applications"
             value="64"
-            icon="Package"
+            icon="ClipboardList"
             trendValue="-12.4%"
-            trendPeriod="-12 today"
-            trendColor="text-red-500"
+            trendPeriod="from last week"
+            trendColor="text-destructive"
           />
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
@@ -78,28 +78,28 @@ export default function DashboardPage() {
             title="Active Stadiums"
             value="32"
             icon="Building"
-            trendValue="+18.6%"
-            trendPeriod="+16 today"
+            trendValue="+2"
+            trendPeriod="this quarter"
           />
         </MotionDiv>
       </MotionDiv>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <ShipmentStatistics />
+            <AttendanceChart />
         </MotionDiv>
         <div className="lg:col-span-2 space-y-6">
             <MotionDiv variants={itemVariants}>
-                <LiveTracking />
+                <RecentActivity />
             </MotionDiv>
             <MotionDiv variants={itemVariants}>
-                <DeliveryTime />
+                <CoachAssignments />
             </MotionDiv>
         </div>
       </div>
 
        <MotionDiv variants={itemVariants}>
-          <ShippingList />
+          <RecentRegistrations />
         </MotionDiv>
     </MotionDiv>
   );

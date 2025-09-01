@@ -7,9 +7,10 @@ import {
   ChevronDown,
   Building,
   Settings,
-  Ship,
   Users,
   Search,
+  ClipboardCheck,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,10 +30,10 @@ export function AppHeader() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/dashboard", icon: <Building className="size-4" />, label: "Dashboard" },
-    { href: "/stadiums", icon: <Ship className="size-4" />, label: "Stadiums" },
-    { href: "/tracking", icon: <Users className="size-4" />, label: "Tracking" },
-    { href: "/clients", icon: <Users className="size-4" />, label: "Clients" },
+    { href: "/dashboard", icon: <LayoutDashboard className="size-4" />, label: "Dashboard" },
+    { href: "/stadiums", icon: <Building className="size-4" />, label: "Stadiums" },
+    { href: "/students", icon: <Users className="size-4" />, label: "Students" },
+    { href: "/attendance", icon: <ClipboardCheck className="size-4" />, label: "Attendance" },
     { href: "/security-rules", icon: <Settings className="size-4" />, label: "Settings" },
   ];
 
@@ -95,7 +96,7 @@ export function AppHeader() {
             <Button variant="ghost" size="icon" className="rounded-full">
                <Avatar className="size-8">
                 <AvatarImage src="https://i.pravatar.cc/150?u=owner" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback>AD</AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>

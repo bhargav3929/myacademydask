@@ -1,125 +1,84 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Dot } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Skeleton } from "../ui/skeleton";
-import { subDays, format } from "date-fns";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
 
-type ChartData = {
-  date: string;
-  name: string;
-  Shipment: number;
-  Delivery: number;
-};
-
-// MOCK DATA
-const generateMockData = () => {
-    const today = new Date();
-    return ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'].map((month, i) => {
-        return {
-            date: `${i+1}`,
-            name: month,
-            Shipment: Math.floor(Math.random() * 2000) + 1000,
-            Delivery: Math.floor(Math.random() * 2000) + 800,
-        };
-    });
-};
+const data = [
+    { month: "Jan", present: 86, absent: 14 },
+    { month: "Feb", present: 88, absent: 12 },
+    { month: "Mar", present: 90, absent: 10 },
+    { month: "Apr", present: 85, absent: 15 },
+    { month: "May", present: 92, absent: 8 },
+    { month: "Jun", present: 91, absent: 9 },
+    { month: "Jul", present: 93, absent: 7 },
+    { month: "Aug", present: 94, absent: 6 },
+    { month: "Sep", present: 90, absent: 10 },
+    { month: "Oct", present: 88, absent: 12 },
+    { month: "Nov", present: 89, absent: 11 },
+    { month: "Dec", present: 95, absent: 5 },
+];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border bg-background p-2 shadow-sm">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col space-y-1">
-            <span className="text-xs uppercase text-muted-foreground">
-              {label}
-            </span>
-          </div>
-        </div>
+        <p className="font-bold mb-2">{label}</p>
         <div className="flex flex-col space-y-1 mt-1">
             {payload.map((p: any, i: number) => (
                 <div key={i} className="flex items-center gap-2">
                     <div className="size-2.5 rounded-full" style={{backgroundColor: p.stroke}}/>
                     <span className="text-sm text-muted-foreground">{`${p.name}:`}</span>
-                    <span className="text-sm font-bold">{p.value}</span>
+                    <span className="text-sm font-bold">{p.value}%</span>
                 </div>
             ))}
         </div>
       </div>
     );
   }
-
   return null;
 };
 
-const CustomActiveDot = (props: any) => {
-    const { cx, cy, stroke, payload, value } = props;
-    
-    if (payload.name === 'Jul') {
-        return (
-            <Dot {...props} r={5} fill={stroke} strokeWidth={2} />
-        );
-    }
-    
-    return null;
-};
 
-export function ShipmentStatistics() {
-  const [data, setData] = useState<ChartData[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-        setData(generateMockData());
-        setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
+export function AttendanceChart() {
   return (
     <Card className="h-full flex flex-col shadow-sm border-none">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-            <CardTitle className="text-lg font-semibold">Shipment Statistics</CardTitle>
+            <CardTitle className="text-lg font-semibold">Attendance Overview</CardTitle>
         </div>
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-sm">
                 <div className="size-2 rounded-full bg-primary" />
-                <span>Shipment</span>
+                <span>Present</span>
             </div>
              <div className="flex items-center gap-2 text-sm">
-                <div className="size-2 rounded-full bg-green-400" />
-                <span>Delivery</span>
+                <div className="size-2 rounded-full bg-destructive/70" />
+                <span>Absent</span>
             </div>
-            <Button variant="outline" size="sm">Monthly</Button>
+            <Button variant="outline" size="sm">Yearly</Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow pb-4">
-        {loading ? (
-          <Skeleton className="w-full h-[250px] rounded-md" />
-        ) : (
+      <CardContent className="flex-grow pb-4 -ml-4">
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart 
                 data={data}
                 margin={{ top: 5, right: 20, left: -10, bottom: 0 }}
             >
               <defs>
-                <linearGradient id="colorShipment" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
                   <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                 </linearGradient>
-                <linearGradient id="colorDelivery" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                <linearGradient id="colorAbsent" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.1}/>
+                  <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
               <XAxis
-                dataKey="name"
+                dataKey="month"
                 stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
@@ -130,8 +89,9 @@ export function ShipmentStatistics() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `${value/1000}k`}
-                width={30}
+                tickFormatter={(value) => `${value}%`}
+                domain={[70, 100]}
+                width={40}
               />
               <Tooltip
                 cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: "3 3" }}
@@ -139,25 +99,24 @@ export function ShipmentStatistics() {
               />
               <Area 
                 type="monotone" 
-                dataKey="Shipment" 
+                dataKey="present" 
                 stroke="hsl(var(--primary))" 
                 fillOpacity={1} 
-                fill="url(#colorShipment)" 
+                fill="url(#colorPresent)" 
                 strokeWidth={2} 
-                activeDot={<CustomActiveDot />}
+                dot={false}
               />
               <Area 
                 type="monotone" 
-                dataKey="Delivery" 
-                stroke="#82ca9d" 
+                dataKey="absent" 
+                stroke="hsl(var(--destructive) / 0.7)" 
                 fillOpacity={1} 
-                fill="url(#colorDelivery)" 
+                fill="url(#colorAbsent)" 
                 strokeWidth={2}
-                activeDot={<CustomActiveDot />}
+                dot={false}
             />
             </AreaChart>
           </ResponsiveContainer>
-        )}
       </CardContent>
     </Card>
   );
