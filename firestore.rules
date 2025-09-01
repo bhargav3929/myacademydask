@@ -1,56 +1,39 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to get the user's custom claims/profile data
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    // Rule: Can a user access data for a specific organization?
-    function isMemberOfOrg(orgId) {
-      return getUserData().organizationId == orgId;
-    }
-
-    // Rule: Is the user the owner of a specific organization?
-    function isOwnerOfOrg(orgId) {
-        return isMemberOfOrg(orgId) && getUserData().role == 'owner';
-    }
-
-    // Rule: Is the coach assigned to the specific stadium?
-    function isCoachAssignedToStadium(stadiumId) {
-        return getUserData().role == 'coach' && stadiumId in getUserData().assignedStadiums;
-    }
-
-    // USERS collection
+    // Allow users to read and write their own user document
     match /users/{userId} {
-      // Users can read their own profile. Owners can read profiles in their org.
-      allow read: if request.auth.uid == userId || isOwnerOfOrg(resource.data.organizationId);
-      // Users can create their own profile upon signup.
-      allow create: if request.auth.uid == userId;
-      // Users can only update their own profile.
-      allow update: if request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // ORGANIZATIONS, STADIUMS, STUDENTS, ATTENDANCE
-    match /{collection}/{docId}
-      where collection in ['organizations', 'stadiums', 'students', 'attendance'] {
-        
-        // READ access
-        allow read: if (isOwnerOfOrg(resource.data.organizationId)) ||
-                       (collection != 'organizations' && isCoachAssignedToStadium(resource.data.stadiumId));
-                       
-        // WRITE access (create, update, delete)
-        // Only owners can manage these resources.
-        allow write: if isOwnerOfOrg(request.resource.data.organizationId);
+    // Allow authenticated users to create new organizations
+    match /organizations/{orgId} {
+      allow create: if request.auth != null;
+      // Only the owner can read/update the organization
+      allow read, update: if request.auth != null && request.auth.uid == resource.data.ownerId;
     }
-    
-    // Special rule for Attendance creation by coaches
-    match /attendance/{docId} {
-        // Allow owners to manage attendance records as well
-        allow read, update, delete: if isOwnerOfOrg(resource.data.organizationId);
-        // Coaches can create attendance records for stadiums they are assigned to.
-        allow create: if isCoachAssignedToStadium(request.resource.data.stadiumId);
+
+    // Stadiums can be managed by the organization owner
+    match /stadiums/{stadiumId} {
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+    }
+
+    // Students can be managed by the organization owner
+     match /students/{studentId} {
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+    }
+
+    // Attendance can be marked by an assigned coach or managed by the owner
+    match /attendance/{attendanceId} {
+        allow read, write: if request.auth != null && 
+          (
+            // Coach can write
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'coach' && request.resource.data.stadiumId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedStadiums
+          ) || (
+            // Owner can write
+            exists(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)) && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid
+          );
     }
   }
 }
