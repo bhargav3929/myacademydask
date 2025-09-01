@@ -21,20 +21,19 @@ export default function DashboardPage() {
   
   useEffect(() => {
     // Listener for total students
-    const studentsQuery = query(collection(firestore, "students"), where("organizationId", "==", MOCK_ORGANIZATION_ID));
+    const studentsQuery = query(collection(firestore, "students"));
     const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
 
     // Listener for new students (joined in the last 30 days)
     const thirtyDaysAgo = subDays(new Date(), 30);
     const newStudentsQuery = query(
       collection(firestore, "students"),
-      where("organizationId", "==", MOCK_ORGANIZATION_ID),
       where("joinDate", ">=", thirtyDaysAgo)
     );
     const newStudentsUnsubscribe = onSnapshot(newStudentsQuery, snapshot => setNewStudents(snapshot.size));
 
     // Listener for active stadiums
-    const stadiumsQuery = query(collection(firestore, "stadiums"), where("organizationId", "==", MOCK_ORGANIZATION_ID));
+    const stadiumsQuery = query(collection(firestore, "stadiums"));
     const stadiumsUnsubscribe = onSnapshot(stadiumsQuery, snapshot => setActiveStadiums(snapshot.size));
     
     // Cleanup listeners on unmount
