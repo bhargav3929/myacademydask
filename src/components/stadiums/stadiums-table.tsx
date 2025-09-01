@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -40,7 +41,7 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((stadium) => (
+          {data.length > 0 ? data.map((stadium) => (
             <TableRow key={stadium.id}>
               <TableCell className="font-medium">{stadium.name}</TableCell>
               <TableCell>{stadium.location}</TableCell>
@@ -63,7 +64,13 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-          ))}
+          )) : (
+            <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                    No stadiums created yet. Click "New Stadium" to get started.
+                </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

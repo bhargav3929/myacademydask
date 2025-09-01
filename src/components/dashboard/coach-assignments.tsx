@@ -7,10 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function CoachAssignments() {
     
-    const coaches = [
-        { name: 'Danilo Souza', avatar: `https://i.pravatar.cc/150?u=danilo`, stadium: 'North City Arena' },
-        { name: 'John Doe', avatar: `https://i.pravatar.cc/150?u=john`, stadium: 'Downtown Center' },
-        { name: 'Jane Smith', avatar: `https://i.pravatar.cc/150?u=jane`, stadium: 'Southside Complex' },
+    const coaches: any[] = [
+        // Data will be fetched from Firestore
     ]
 
   return (
@@ -20,7 +18,7 @@ export function CoachAssignments() {
         <Users className="size-5 text-muted-foreground" />
       </CardHeader>
       <CardContent className="space-y-4">
-        {coaches.map(coach => (
+        {coaches.length > 0 ? coaches.map(coach => (
             <div key={coach.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
                 <div className="flex items-center gap-3">
                     <Avatar className="size-9">
@@ -33,7 +31,11 @@ export function CoachAssignments() {
                     </div>
                 </div>
             </div>
-        ))}
+        )) : (
+            <div className="flex h-24 items-center justify-center">
+                <p className="text-sm text-muted-foreground">No coaches assigned yet.</p>
+            </div>
+        )}
       </CardContent>
     </Card>
   );

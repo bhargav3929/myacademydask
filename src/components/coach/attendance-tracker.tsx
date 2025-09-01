@@ -22,46 +22,22 @@ const MOCK_STADIUM_ID = "mock-stadium-id";
 const MOCK_COACH_ID = "mock-coach-id";
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
-const MOCK_STUDENTS: Student[] = [
-    { id: 'student-1', fullName: 'Alice', joinDate: new Date(), stadiumId: MOCK_STADIUM_ID, organizationId: MOCK_ORGANIZATION_ID, createdAt: new Date() },
-    { id: 'student-2', fullName: 'Bob', joinDate: new Date(), stadiumId: MOCK_STADIUM_ID, organizationId: MOCK_ORGANIZATION_ID, createdAt: new Date() },
-    { id: 'student-3', fullName: 'Charlie', joinDate: new Date(), stadiumId: MOCK_STADIUM_ID, organizationId: MOCK_ORGANIZATION_ID, createdAt: new Date() },
-];
-
 
 export function AttendanceTracker() {
   const { toast } = useToast();
-  const [stadiumName, setStadiumName] = useState("Mock Stadium");
+  const [stadiumName, setStadiumName] = useState("Your Assigned Stadium");
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<AttendanceStatus>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Using Mock data
+    // In a real app, you would fetch the coach's assigned stadium and students.
     setLoading(true);
+    // Simulating empty state
     setTimeout(() => {
-        setStudents(MOCK_STUDENTS);
-        
-        const todayStr = format(new Date(), "yyyy-MM-dd");
-        const attendanceQuery = query(
-            collection(firestore, "attendance"),
-            where("stadiumId", "==", MOCK_STADIUM_ID),
-            where("date", "==", todayStr)
-        );
-
-        const unsubscribeAttendance = onSnapshot(attendanceQuery, (snapshot) => {
-            const todayAttendance: AttendanceStatus = {};
-            snapshot.forEach(d => {
-                const data = d.data();
-                todayAttendance[data.studentId] = data.status;
-            });
-            setAttendance(todayAttendance);
-        });
-        
+        setStudents([]);
         setLoading(false);
-        return () => unsubscribeAttendance();
     }, 1000);
-
   }, []);
 
   const handleMarkAttendance = async (studentId: string, status: 'present' | 'absent') => {
@@ -141,7 +117,7 @@ export function AttendanceTracker() {
                   </Button>
                 </div>
               </div>
-            )) : <p className="text-muted-foreground text-center">No students found in this stadium.</p>}
+            )) : <p className="text-muted-foreground text-center py-10">No students assigned to you in this stadium.</p>}
           </div>
         </CardContent>
       </Card>

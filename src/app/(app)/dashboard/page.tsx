@@ -41,7 +41,7 @@ export default function DashboardPage() {
       <MotionDiv variants={itemVariants}>
         <div className="space-y-0.5">
           <h1 className="text-2xl font-bold tracking-tight">
-            Good Morning, Academy Director! 👋
+            Welcome, Academy Director! 👋
           </h1>
           <p className="text-muted-foreground">
             Here's a snapshot of your academy's performance.
@@ -56,30 +56,29 @@ export default function DashboardPage() {
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="Total Students"
-            value="248"
+            value="0"
             icon="Users"
-            trendValue="+16.2%"
-            trendPeriod="from last month"
+            trendValue=""
+            trendPeriod="No data yet"
             primary
           />
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="Pending Applications"
-            value="64"
+            value="0"
             icon="ClipboardList"
-            trendValue="-12.4%"
-            trendPeriod="from last week"
-            trendColor="text-destructive"
+            trendValue=""
+            trendPeriod="No data yet"
           />
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="Active Stadiums"
-            value="32"
+            value="0"
             icon="Building"
-            trendValue="+2"
-            trendPeriod="this quarter"
+            trendValue=""
+            trendPeriod="No data yet"
           />
         </MotionDiv>
       </MotionDiv>

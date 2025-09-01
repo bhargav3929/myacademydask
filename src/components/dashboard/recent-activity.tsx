@@ -17,41 +17,6 @@ type Activity = {
   timestamp: string;
 };
 
-const MOCK_PEOPLE = [
-    { name: "Esther Howard", image: `https://i.pravatar.cc/150?u=esther` },
-    { name: "Cody Fisher", image: `https://i.pravatar.cc/150?u=cody` },
-    { name: "Brooklyn Simmons", image: `https://i.pravatar.cc/150?u=brooklyn` },
-];
-
-const generateMockActivity = (): Activity[] => {
-    return [
-        {
-            id: 'act_1',
-            person: MOCK_PEOPLE[0].name,
-            personImage: MOCK_PEOPLE[0].image,
-            action: 'marked as Present',
-            type: 'present',
-            timestamp: '9:30 AM'
-        },
-        {
-            id: 'act_2',
-            person: MOCK_PEOPLE[1].name,
-            personImage: MOCK_PEOPLE[1].image,
-            action: 'registered as a new student.',
-            type: 'new_student',
-            timestamp: 'Yesterday'
-        },
-        {
-            id: 'act_3',
-            person: MOCK_PEOPLE[2].name,
-            personImage: MOCK_PEOPLE[2].image,
-            action: 'marked as Absent',
-            type: 'absent',
-            timestamp: '2 days ago'
-        },
-    ];
-}
-
 const activityIcons = {
     present: <CalendarCheck className="size-4 text-green-500" />,
     absent: <CalendarX className="size-4 text-destructive" />,
@@ -59,7 +24,9 @@ const activityIcons = {
 };
 
 export function RecentActivity() {
-  const activities = generateMockActivity();
+  const activities: Activity[] = [
+    // Data will be fetched from Firestore
+  ];
 
   return (
     <Card className="h-full flex flex-col shadow-sm border-none">
@@ -70,7 +37,7 @@ export function RecentActivity() {
         </Button>
       </CardHeader>
       <CardContent className="flex-grow p-6 pt-0 space-y-4">
-        {activities.map((activity) => (
+        {activities.length > 0 ? activities.map((activity) => (
              <div key={activity.id} className="flex items-start gap-4">
                 <div className="size-9 rounded-full bg-muted flex items-center justify-center">
                     {activityIcons[activity.type]}
@@ -83,7 +50,11 @@ export function RecentActivity() {
                     <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
                 </div>
              </div>
-        ))}
+        )) : (
+            <div className="flex h-24 items-center justify-center">
+                <p className="text-sm text-muted-foreground">No recent activity.</p>
+            </div>
+        )}
       </CardContent>
     </Card>
   );
