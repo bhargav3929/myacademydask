@@ -5,7 +5,7 @@ export interface UserProfile {
   email: string;
   fullName: string;
   organizationId: string;
-  role?: "owner" | "coach";
+  role: "owner" | "coach";
   assignedStadiums?: string[];
   createdAt: Timestamp;
 }
