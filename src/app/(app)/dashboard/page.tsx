@@ -74,15 +74,15 @@ export default function DashboardPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-8"
     >
       <MotionDiv variants={itemVariants}>
         <div className="space-y-0.5">
           <h1 className="text-2xl font-bold tracking-tight">
-            Welcome, Academy Director! 👋
+            Welcome Back, Academy Director! 👋
           </h1>
           <p className="text-muted-foreground">
-            Here's a snapshot of your academy's performance.
+            Here's a snapshot of your academy's performance and recent activities.
           </p>
         </div>
       </MotionDiv>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
             value={totalStudents.toString()}
             icon="Users"
             trendValue=""
-            trendPeriod=""
+            trendPeriod="Across all stadiums"
             primary
           />
         </MotionDiv>
@@ -116,16 +116,16 @@ export default function DashboardPage() {
             value={activeStadiums.toString()}
             icon="Building"
             trendValue=""
-            trendPeriod=""
+            trendPeriod="Ready for action"
           />
         </MotionDiv>
       </MotionDiv>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
             <AttendanceChart />
         </MotionDiv>
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
             <MotionDiv variants={itemVariants}>
                 <RecentActivity />
             </MotionDiv>

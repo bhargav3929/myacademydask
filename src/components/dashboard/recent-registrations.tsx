@@ -28,15 +28,15 @@ const registrationData: any[] = [
 ];
 
 const badgeVariants = {
-    warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    info: "bg-blue-100 text-blue-800 border-blue-200",
-    success: "bg-green-100 text-green-800 border-green-200",
+    warning: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+    info: "bg-blue-500/10 text-blue-700 border-blue-500/20",
+    success: "bg-green-500/10 text-green-700 border-green-500/20",
 }
 
 
 export function RecentRegistrations() {
   return (
-    <Card className="shadow-sm border-none">
+    <Card className="shadow-sm border-border/60">
         <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-semibold">Recent Registrations</CardTitle>
             <div className="flex gap-2">
@@ -44,9 +44,9 @@ export function RecentRegistrations() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search students..." className="pl-8 w-full md:w-[200px] lg:w-[320px]" />
                 </div>
-                <Button>
+                <Button variant="outline">
+                    <FileDown className="mr-2 size-4" />
                     Export List
-                    <FileDown className="ml-2 size-4" />
                 </Button>
             </div>
         </CardHeader>
@@ -68,18 +68,18 @@ export function RecentRegistrations() {
                 </TableHeader>
                 <TableBody>
                 {registrationData.length > 0 ? registrationData.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{item.id}</TableCell>
+                    <TableRow key={item.id} className="hover:bg-secondary/50">
+                    <TableCell className="font-mono text-xs">{item.id}</TableCell>
                     <TableCell>
-                        <div className="flex items-center gap-2">
-                            <Image src={item.student.avatar} alt={item.student.name} width={24} height={24} className="rounded-full" />
-                            <span>{item.student.name}</span>
+                        <div className="flex items-center gap-3">
+                            <Image src={item.student.avatar} alt={item.student.name} width={28} height={28} className="rounded-full" />
+                            <span className="font-medium">{item.student.name}</span>
                         </div>
                     </TableCell>
                     <TableCell>{format(item.joinDate, "dd MMM yyyy")}</TableCell>
-                    <TableCell>{item.stadium}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.stadium}</TableCell>
                     <TableCell>{item.plan}</TableCell>
-                    <TableCell>{item.monthlyFee}</TableCell>
+                    <TableCell className="font-medium">{item.monthlyFee}</TableCell>
                     <TableCell>
                         <Badge variant="outline" className={badgeVariants[item.statusVariant]}>{item.status}</Badge>
                     </TableCell>
@@ -101,8 +101,8 @@ export function RecentRegistrations() {
                     </TableRow>
                 )) : (
                     <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
-                            No recent registrations.
+                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                            No recent registrations to display.
                         </TableCell>
                     </TableRow>
                 )}

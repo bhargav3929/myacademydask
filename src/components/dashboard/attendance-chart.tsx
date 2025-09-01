@@ -12,7 +12,7 @@ const data: any[] = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border bg-background p-2 shadow-sm">
+      <div className="rounded-lg border bg-background/90 backdrop-blur-sm p-2 shadow-sm">
         <p className="font-bold mb-2">{label}</p>
         <div className="flex flex-col space-y-1 mt-1">
             {payload.map((p: any, i: number) => (
@@ -32,12 +32,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function AttendanceChart() {
   return (
-    <Card className="h-full flex flex-col shadow-sm border-none">
+    <Card className="h-full flex flex-col shadow-sm border-border/60">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
             <CardTitle className="text-lg font-semibold">Attendance Overview</CardTitle>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm">
                 <div className="size-2 rounded-full bg-primary" />
                 <span>Present</span>
@@ -46,23 +46,22 @@ export function AttendanceChart() {
                 <div className="size-2 rounded-full bg-destructive/70" />
                 <span>Absent</span>
             </div>
-            <Button variant="outline" size="sm">Yearly</Button>
         </div>
       </CardHeader>
       <CardContent className="flex-grow pb-4 -ml-4">
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={300}>
             {data.length > 0 ? (
                 <AreaChart 
                     data={data}
-                    margin={{ top: 5, right: 20, left: -10, bottom: 0 }}
+                    margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
                 >
                 <defs>
                     <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorAbsent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
                     <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
                     </linearGradient>
                 </defs>
@@ -107,8 +106,9 @@ export function AttendanceChart() {
                 />
                 </AreaChart>
             ) : (
-                <div className="flex h-full items-center justify-center">
-                    <p className="text-muted-foreground">No attendance data to display yet.</p>
+                <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-2">
+                     <p className="text-sm">No attendance data to display yet.</p>
+                     <p className="text-xs">Data will appear here once coaches start marking attendance.</p>
                 </div>
             )}
           </ResponsiveContainer>

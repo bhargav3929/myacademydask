@@ -3,10 +3,11 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, BarChart, CalendarCheck, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, BarChart, CalendarCheck, ShieldCheck, Users, Gamepad2 } from 'lucide-react';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 
 export default function Home() {
@@ -56,17 +57,28 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Icons.logo className="h-6 w-6 text-primary" />
-            <span className="font-bold">CourtCommand</span>
+        <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Gamepad2 className="h-7 w-7 text-primary" />
+            <span className="text-lg font-bold">CourtCommand</span>
           </Link>
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-4">
+             <Link href="/#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Features
+            </Link>
+            <Link href="/pricing" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Pricing
+            </Link>
+            <Button asChild variant="ghost">
+              <Link href="/dashboard">
+                Login
+              </Link>
+            </Button>
             <Button asChild>
               <Link href="/dashboard">
-                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </nav>
@@ -75,36 +87,62 @@ export default function Home() {
 
       <main className="flex-1">
         <motion.section
-          className="container flex flex-col items-center justify-center py-20 text-center md:py-32"
+          className="container flex flex-col items-center justify-center py-24 text-center md:py-32 lg:py-40"
           initial="hidden"
           animate="visible"
           variants={containerVariants}
         >
-          <motion.div variants={itemVariants} className="mb-4 rounded-full border bg-card px-4 py-1.5 text-sm text-muted-foreground">
-            The Ultimate Court Management System
+          <motion.div variants={itemVariants} className="mb-4 rounded-full border bg-card px-4 py-1.5 text-sm font-medium text-primary shadow-sm">
+            The #1 Platform for Sports Academies
           </motion.div>
           <motion.h1
             variants={itemVariants}
-            className="font-headline text-4xl font-bold tracking-tighter md:text-6xl"
+            className="text-4xl font-extrabold tracking-tighter md:text-6xl lg:text-7xl"
           >
             Command Your Court
           </motion.h1>
           <motion.p
             variants={itemVariants}
-            className="font-body mx-auto mt-6 max-w-xl text-lg text-muted-foreground"
+            className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
           >
-            CourtCommand is a premium SaaS solution designed for badminton academies to streamline operations, track performance, and foster growth.
+            CourtCommand is the ultimate all-in-one solution for managing your sports academy. Streamline operations, track performance, and unlock your academy's potential.
           </motion.p>
-          <motion.div variants={itemVariants} className="mt-8 flex gap-4">
+          <motion.div variants={itemVariants} className="mt-8 flex flex-wrap justify-center gap-4">
             <Button size="lg" asChild>
               <Link href="/dashboard">
-                Access Dashboard
+                Claim Your Academy <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="#">
+                Book a Demo
               </Link>
             </Button>
           </motion.div>
         </motion.section>
+        
+        <motion.section
+           className="container relative -mt-16"
+           initial={{ opacity: 0, y: 50 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           viewport={{ once: true, amount: 0.3 }}
+           transition={{ duration: 0.5 }}
+        >
+            <div className="relative rounded-xl border bg-card p-2 shadow-2xl shadow-primary/10">
+                 <Image 
+                    src="https://picsum.photos/1200/600"
+                    alt="Dashboard preview"
+                    width={1200}
+                    height={600}
+                    className="rounded-lg"
+                    data-ai-hint="dashboard user interface"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/80 via-background/0 to-background/0" />
+            </div>
+        </motion.section>
 
-        <section id="features" className="container py-12 md:py-24">
+
+        <section id="features" className="container py-24 md:py-32">
           <motion.div
             className="mx-auto flex max-w-4xl flex-col items-center text-center"
             initial="hidden"
@@ -112,16 +150,16 @@ export default function Home() {
             viewport={{ once: true, amount: 0.3 }}
             variants={containerVariants}
           >
-            <motion.h2 variants={itemVariants} className="font-headline text-3xl font-bold tracking-tight md:text-4xl">
+            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tight md:text-5xl">
               Powerful Features, Elegant Design
             </motion.h2>
-            <motion.p variants={itemVariants} className="font-body mt-4 text-lg text-muted-foreground">
+            <motion.p variants={itemVariants} className="mt-4 text-lg text-muted-foreground">
               Everything you need to run your academy, built with precision and care.
             </motion.p>
           </motion.div>
 
           <motion.div
-            className="mx-auto mt-12 grid max-w-5xl gap-8 md:grid-cols-2"
+            className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-2"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
@@ -130,13 +168,15 @@ export default function Home() {
             {features.map((feature, i) => (
               <motion.div variants={itemVariants} key={i}>
                 <Card className="h-full bg-card/80 backdrop-blur-sm transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    {feature.icon}
-                    <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
+                  <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+                    <div className="rounded-lg bg-primary/10 p-3 border border-primary/20">
+                      {feature.icon}
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-xl">{feature.title}</CardTitle>
+                       <p className="text-muted-foreground pt-2">{feature.description}</p>
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </CardContent>
                 </Card>
               </motion.div>
             ))}
@@ -144,12 +184,16 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border/40">
-        <div className="container flex h-16 items-center justify-between text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} CourtCommand. All rights reserved.</p>
-          <div className="flex items-center gap-4">
+      <footer className="border-t border-border/40 bg-secondary/50">
+        <div className="container flex flex-col md:flex-row items-center justify-between py-8 text-sm text-muted-foreground gap-4">
+          <div className="flex items-center gap-2.5">
+            <Gamepad2 className="h-6 w-6 text-muted-foreground" />
+            <span className="font-semibold">&copy; {new Date().getFullYear()} CourtCommand. All rights reserved.</span>
+          </div>
+          <div className="flex items-center gap-6">
             <Link href="#" className="transition-colors hover:text-foreground">Privacy Policy</Link>
             <Link href="#" className="transition-colors hover:text-foreground">Terms of Service</Link>
+             <Link href="#" className="transition-colors hover:text-foreground">Contact</Link>
           </div>
         </div>
       </footer>

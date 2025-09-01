@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -17,9 +18,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
-        code: ['monospace'],
+        sans: ['var(--font-inter)', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -74,9 +73,9 @@ export default {
         },
       },
       borderRadius: {
-        xl: "12px",
+        xl: "calc(var(--radius) + 4px)",
         lg: 'var(--radius)',
-        md: '6px',
+        md: 'calc(var(--radius) - 4px)',
         sm: 'calc(var(--radius) - 8px)',
       },
       keyframes: {

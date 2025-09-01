@@ -29,7 +29,7 @@ export function RecentActivity() {
   ];
 
   return (
-    <Card className="h-full flex flex-col shadow-sm border-none">
+    <Card className="h-full flex flex-col shadow-sm border-border/60">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
         <Button variant="ghost" size="icon" className="size-6">
@@ -39,7 +39,7 @@ export function RecentActivity() {
       <CardContent className="flex-grow p-6 pt-0 space-y-4">
         {activities.length > 0 ? activities.map((activity) => (
              <div key={activity.id} className="flex items-start gap-4">
-                <div className="size-9 rounded-full bg-muted flex items-center justify-center">
+                <div className="size-9 rounded-full bg-secondary flex items-center justify-center border">
                     {activityIcons[activity.type]}
                 </div>
                 <div className="flex-grow">
@@ -51,8 +51,8 @@ export function RecentActivity() {
                 </div>
              </div>
         )) : (
-            <div className="flex h-24 items-center justify-center">
-                <p className="text-sm text-muted-foreground">No recent activity.</p>
+            <div className="flex h-24 items-center justify-center text-center text-muted-foreground">
+                <p className="text-sm">No recent activity to display.</p>
             </div>
         )}
       </CardContent>

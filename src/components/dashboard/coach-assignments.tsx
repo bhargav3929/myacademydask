@@ -12,14 +12,14 @@ export function CoachAssignments() {
     ]
 
   return (
-    <Card className="shadow-sm border-none">
+    <Card className="shadow-sm border-border/60">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">Coach Assignments</CardTitle>
         <Users className="size-5 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2">
         {coaches.length > 0 ? coaches.map(coach => (
-            <div key={coach.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
+            <div key={coach.name} className="flex items-center justify-between p-2 rounded-lg transition-colors hover:bg-secondary">
                 <div className="flex items-center gap-3">
                     <Avatar className="size-9">
                         <AvatarImage src={coach.avatar} />
@@ -32,8 +32,8 @@ export function CoachAssignments() {
                 </div>
             </div>
         )) : (
-            <div className="flex h-24 items-center justify-center">
-                <p className="text-sm text-muted-foreground">No coaches assigned yet.</p>
+            <div className="flex h-24 items-center justify-center text-center text-muted-foreground">
+                <p className="text-sm">No coaches assigned yet.</p>
             </div>
         )}
       </CardContent>

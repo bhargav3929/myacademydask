@@ -14,10 +14,10 @@ import { Users, TrendingUp, TrendingDown, ClipboardList, Building, UserPlus } fr
 import { cn } from "@/lib/utils";
 
 const iconMap = {
-    Users: <Users className="size-6 text-primary-foreground" />,
-    ClipboardList: <ClipboardList className="size-5 text-muted-foreground" />,
-    Building: <Building className="size-5 text-muted-foreground" />,
-    UserPlus: <UserPlus className="size-5 text-muted-foreground" />,
+    Users: Users,
+    ClipboardList: ClipboardList,
+    Building: Building,
+    UserPlus: UserPlus,
 };
 
 type StatCardProps = {
@@ -36,7 +36,7 @@ export function StatCard({
   icon,
   trendValue,
   trendPeriod,
-  trendColor = "text-green-500",
+  trendColor = "text-emerald-500",
   primary = false
 }: StatCardProps) {
   const [loading, setLoading] = useState(true);
@@ -47,10 +47,11 @@ export function StatCard({
   }, []);
 
   const TrendIcon = trendValue && trendValue.startsWith('+') ? TrendingUp : TrendingDown;
+  const IconComponent = iconMap[icon];
 
   return (
     <Card className={cn(
-      "shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 border-none",
+      "shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 border-border/60",
       primary ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground"
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -58,18 +59,12 @@ export function StatCard({
             "text-sm font-medium",
             primary ? "text-primary-foreground/90" : "text-muted-foreground"
         )}>{title}</CardTitle>
-        <div className={cn(
-            "p-2 rounded-lg",
-            primary ? "bg-primary-foreground/20" : "bg-muted"
-        )}>
-            {React.cloneElement(iconMap[icon], {
-                className: cn(primary ? "text-primary-foreground" : "text-muted-foreground", "size-5")
-            })}
-        </div>
+        <IconComponent className={cn("size-5", primary ? "text-primary-foreground/80" : "text-muted-foreground")} />
+
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Skeleton className="h-8 w-24 mt-1" />
+          <Skeleton className="h-8 w-24 mt-1 bg-muted-foreground/10" />
         ) : (
           <MotionDiv 
             initial={{ opacity: 0, y: 10 }}
@@ -81,7 +76,7 @@ export function StatCard({
           </MotionDiv>
         )}
         {loading ? (
-          <Skeleton className="h-4 w-40 mt-2" />
+          <Skeleton className="h-4 w-40 mt-2 bg-muted-foreground/10" />
         ) : (
           <p className={cn("text-xs mt-1", primary ? "text-primary-foreground/80" : "text-muted-foreground")}>
             {trendValue && (
