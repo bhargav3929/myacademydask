@@ -24,7 +24,7 @@ type StatCardProps = {
   title: string;
   value: string;
   icon: keyof typeof iconMap;
-  trendValue: string;
+  trendValue?: string;
   trendPeriod: string;
   trendColor?: string;
   primary?: boolean;
@@ -46,7 +46,7 @@ export function StatCard({
     return () => clearTimeout(timer);
   }, []);
 
-  const TrendIcon = trendValue.startsWith('+') ? TrendingUp : TrendingDown;
+  const TrendIcon = trendValue && trendValue.startsWith('+') ? TrendingUp : TrendingDown;
 
   return (
     <Card className={cn(
@@ -83,13 +83,15 @@ export function StatCard({
         {loading ? (
           <Skeleton className="h-4 w-40 mt-2" />
         ) : (
-          <div className="flex items-center gap-2 text-xs mt-1">
-             <span className={cn("flex items-center gap-1 font-medium", primary ? "text-primary-foreground/90" : trendColor)}>
+          <p className={cn("text-xs mt-1", primary ? "text-primary-foreground/80" : "text-muted-foreground")}>
+            {trendValue && (
+              <span className={cn("flex items-center gap-1 font-medium", primary ? "text-primary-foreground/90" : trendColor)}>
                 <TrendIcon className="size-4" />
                 {trendValue}
-            </span>
-            <span className={cn(primary ? "text-primary-foreground/80" : "text-muted-foreground")}>{trendPeriod}</span>
-          </div>
+              </span>
+            )}
+            {trendPeriod}
+          </p>
         )}
       </CardContent>
     </Card>

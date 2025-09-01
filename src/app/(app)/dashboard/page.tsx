@@ -1,12 +1,51 @@
 
+"use client";
+
+import { useEffect, useState } from "react";
+import { collection, query, where, onSnapshot, getCountFromServer } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AttendanceChart } from "@/components/dashboard/attendance-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { CoachAssignments } from "@/components/dashboard/coach-assignments";
 import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
+import { subDays } from "date-fns";
+
+const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
 
 export default function DashboardPage() {
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [newStudents, setNewStudents] = useState(0);
+  const [activeStadiums, setActiveStadiums] = useState(0);
+  
+  useEffect(() => {
+    // Listener for total students
+    const studentsQuery = query(collection(firestore, "students"), where("organizationId", "==", MOCK_ORGANIZATION_ID));
+    const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
+
+    // Listener for new students (joined in the last 30 days)
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    const newStudentsQuery = query(
+      collection(firestore, "students"),
+      where("organizationId", "==", MOCK_ORGANIZATION_ID),
+      where("joinDate", ">=", thirtyDaysAgo)
+    );
+    const newStudentsUnsubscribe = onSnapshot(newStudentsQuery, snapshot => setNewStudents(snapshot.size));
+
+    // Listener for active stadiums
+    const stadiumsQuery = query(collection(firestore, "stadiums"), where("organizationId", "==", MOCK_ORGANIZATION_ID));
+    const stadiumsUnsubscribe = onSnapshot(stadiumsQuery, snapshot => setActiveStadiums(snapshot.size));
+    
+    // Cleanup listeners on unmount
+    return () => {
+      studentsUnsubscribe();
+      newStudentsUnsubscribe();
+      stadiumsUnsubscribe();
+    };
+
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -56,29 +95,29 @@ export default function DashboardPage() {
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="Total Students"
-            value="0"
+            value={totalStudents.toString()}
             icon="Users"
             trendValue=""
-            trendPeriod="No data yet"
+            trendPeriod=""
             primary
           />
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="New Students Joined"
-            value="0"
+            value={newStudents.toString()}
             icon="UserPlus"
             trendValue=""
-            trendPeriod="No data yet"
+            trendPeriod="Last 30 days"
           />
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="Active Stadiums"
-            value="0"
+            value={activeStadiums.toString()}
             icon="Building"
             trendValue=""
-            trendPeriod="No data yet"
+            trendPeriod=""
           />
         </MotionDiv>
       </MotionDiv>

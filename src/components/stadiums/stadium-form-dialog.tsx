@@ -5,8 +5,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { app } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,13 +32,14 @@ import { PlusCircle } from "lucide-react";
 import { Stadium } from "@/lib/types";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Stadium name must be at least 2 characters."),
+  stadiumName: z.string().min(2, "Stadium name must be at least 2 characters."),
   location: z.string().min(2, "Location must be at least 2 characters."),
+  coachEmail: z.string().email("Please enter a valid email for the coach."),
+  coachPassword: z.string().min(6, "Password must be at least 6 characters."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-// MOCK DATA: Replace with your actual org ID when auth is back
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
 export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
@@ -49,8 +50,10 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: stadium?.name || "",
-      location: stadium?.location || "",
+      stadiumName: "",
+      location: "",
+      coachEmail: "",
+      coachPassword: "",
     },
   });
 
@@ -58,25 +61,35 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
     setIsLoading(true);
 
     try {
-      await addDoc(collection(firestore, "stadiums"), {
-        ...values,
-        organizationId: MOCK_ORGANIZATION_ID, // Using mock org ID
-        createdAt: serverTimestamp(),
+      const functions = getFunctions(app, 'us-central1'); // Make sure to use the correct region
+      const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
+      
+      const result = await createStadiumAndCoach({
+        organizationId: MOCK_ORGANIZATION_ID,
+        stadiumName: values.stadiumName,
+        location: values.location,
+        coachEmail: values.coachEmail,
+        coachPassword: values.coachPassword,
+        coachFullName: "Coach " + values.stadiumName, // Generating a placeholder name
       });
 
-      toast({
-        title: "Success!",
-        description: `Stadium "${values.name}" has been created.`,
-      });
+      if (result.data.success) {
+        toast({
+          title: "Success!",
+          description: `Stadium "${values.stadiumName}" and a new coach account have been created.`,
+        });
+        form.reset();
+        setOpen(false);
+      } else {
+        throw new Error(result.data.error || "An unknown error occurred.");
+      }
 
-      form.reset();
-      setOpen(false);
-    } catch (error) {
-      console.error("Error adding stadium:", error);
+    } catch (error: any) {
+      console.error("Error creating stadium and coach:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not create stadium. Please try again.",
+        description: error.message || "Could not create stadium. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -93,16 +106,16 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{stadium ? "Edit Stadium" : "Add New Stadium"}</DialogTitle>
+          <DialogTitle>Add New Stadium & Coach</DialogTitle>
           <DialogDescription>
-            {stadium ? "Update the details of the stadium." : "Fill in the details for the new stadium."}
+            Fill in the details to create a new stadium and a dedicated coach account.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
             <FormField
               control={form.control}
-              name="name"
+              name="stadiumName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Stadium Name</FormLabel>
@@ -121,6 +134,32 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
                   <FormLabel>Location</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Downtown Metro Area" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="coachEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Coach's Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="coach@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="coachPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Coach's Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

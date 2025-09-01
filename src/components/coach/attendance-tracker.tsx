@@ -17,11 +17,9 @@ type AttendanceStatus = {
   [studentId: string]: 'present' | 'absent' | null;
 };
 
-// MOCK DATA
 const MOCK_STADIUM_ID = "mock-stadium-id";
 const MOCK_COACH_ID = "mock-coach-id";
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-
 
 export function AttendanceTracker() {
   const { toast } = useToast();
@@ -31,14 +29,34 @@ export function AttendanceTracker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you would fetch the coach's assigned stadium and students.
     setLoading(true);
-    // Simulating empty state
-    setTimeout(() => {
-        setStudents([]);
+    // In a real app, you would get the logged-in coach's assigned stadium ID
+    const q = query(collection(firestore, "students"), where("stadiumId", "==", MOCK_STADIUM_ID));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
+        setStudents(studentsData);
+
+        if(studentsData.length > 0) {
+            getDoc(doc(firestore, "stadiums", MOCK_STADIUM_ID)).then(stadiumDoc => {
+                if(stadiumDoc.exists()) {
+                    setStadiumName(stadiumDoc.data().name);
+                }
+            });
+        }
         setLoading(false);
-    }, 1000);
-  }, []);
+    }, (error) => {
+        console.error("Error fetching students: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not fetch student data.",
+        });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
 
   const handleMarkAttendance = async (studentId: string, status: 'present' | 'absent') => {
     const todayStr = format(new Date(), "yyyy-MM-dd");
