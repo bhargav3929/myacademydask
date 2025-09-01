@@ -9,53 +9,70 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
-import { format } from "date-fns";
+import { MotionDiv } from "@/components/motion";
 
 type StatCardProps = {
   title: string;
   icon: React.ReactNode;
-  collectionName: string;
+  value: string;
+  trendValue: string;
+  trendIcon: React.ReactNode;
+  trendColor: string;
+  trendPeriod?: string;
+  collectionName: string; // Keep for potential future hook-up
   role?: "coach" | "owner";
   today?: boolean;
 };
 
-// MOCK DATA: Replace with your actual org ID when auth is back
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-
-export function StatCard({ title, icon, collectionName, role, today }: StatCardProps) {
-  const [count, setCount] = useState<number | null>(null);
+export function StatCard({ 
+  title, 
+  icon, 
+  value,
+  trendValue,
+  trendIcon,
+  trendColor,
+  trendPeriod = "vs last month"
+}: StatCardProps) {
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // This component will currently not fetch real data without an authenticated user.
-    // We are setting a mock count to allow UI development.
-    // When authentication is re-enabled, this logic will need to be updated.
-    
-    // Simulate loading
-    setCount(null);
-    // Simulate fetching data
-    setTimeout(() => {
-        setCount(Math.floor(Math.random() * 100)); // Use random data for visuals
-    }, 1000);
-
-  }, [collectionName, role, today]);
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <Card className="transition-all duration-300 ease-out hover:bg-card/95 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
+    <Card className="group relative overflow-hidden border-border/50 shadow-sm transition-all duration-300 ease-in-out hover:border-primary/30 hover:shadow-lg hover:-translate-y-1">
+      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-br from-background via-background to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+      <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2 z-10">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <div className="p-2 bg-accent/50 rounded-lg">
+            {icon}
+        </div>
       </CardHeader>
-      <CardContent>
-        {count === null ? (
-          <Skeleton className="h-8 w-20" />
+      <CardContent className="relative z-10">
+        {loading ? (
+          <Skeleton className="h-8 w-24 mt-1" />
         ) : (
-          <div className="text-2xl font-bold">{count}</div>
+          <MotionDiv 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-3xl font-bold"
+          >
+            {value}
+          </MotionDiv>
         )}
-        <p className="text-xs text-muted-foreground">
-          Using randomized mock data
-        </p>
+        {loading ? (
+          <Skeleton className="h-4 w-40 mt-2" />
+        ) : (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+             <span className={`flex items-center gap-1 font-medium ${trendColor}`}>
+                {trendIcon}
+                {trendValue}
+            </span>
+            <span>{trendPeriod}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

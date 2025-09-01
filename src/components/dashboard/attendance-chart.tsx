@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { subDays, format } from "date-fns";
@@ -10,8 +10,8 @@ import { subDays, format } from "date-fns";
 type ChartData = {
   date: string;
   name: string;
-  present: number;
-  absent: number;
+  Present: number;
+  Absent: number;
 };
 
 // MOCK DATA: Using static data for UI development
@@ -21,39 +21,82 @@ const generateMockData = () => {
         const day = subDays(today, i);
         return {
             date: format(day, "yyyy-MM-dd"),
-            name: format(day, "MMM d"),
-            present: Math.floor(Math.random() * 25) + 5,
-            absent: Math.floor(Math.random() * 5),
+            name: format(day, "eee"),
+            Present: Math.floor(Math.random() * 25) + 5, // Keep present numbers higher
+            Absent: Math.floor(Math.random() * 5) + 1,
         };
     }).reverse();
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col space-y-1">
+            <span className="text-[10px] uppercase text-muted-foreground">
+              {label}
+            </span>
+            <span className="font-bold text-foreground">
+              {format(new Date(payload[0].payload.date), "MMM d")}
+            </span>
+          </div>
+          <div className="flex flex-col space-y-1">
+            {payload.map((p: any, i: number) => (
+                <div key={i} className="flex items-center gap-2">
+                    <div className="size-2.5 rounded-full" style={{backgroundColor: p.color}}/>
+                    <span className="text-xs text-muted-foreground">{`${p.name}:`}</span>
+                    <span className="text-xs font-bold">{p.value}</span>
+                </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
 
 export function AttendanceChart() {
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Using mock data since auth is disabled
     setLoading(true);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
         setData(generateMockData());
         setLoading(false);
     }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <Card className="h-full flex flex-col transition-all duration-300 ease-out hover:bg-card/95 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
+    <Card className="h-full flex flex-col shadow-sm border-border/50">
       <CardHeader>
-        <CardTitle>Attendance Overview</CardTitle>
-        <CardDescription>Last 7 days attendance summary (using mock data).</CardDescription>
+        <CardTitle className="text-xl font-semibold">Weekly Attendance</CardTitle>
+        <CardDescription>A summary of student attendance over the last 7 days.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow pb-4">
         {loading ? (
-          <Skeleton className="w-full h-[250px]" />
+          <Skeleton className="w-full h-[250px] rounded-md" />
         ) : (
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data}>
+            <AreaChart 
+                data={data}
+                margin={{ top: 5, right: 20, left: -10, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorAbsent" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
               <XAxis
                 dataKey="name"
                 stroke="hsl(var(--muted-foreground))"
@@ -67,20 +110,20 @@ export function AttendanceChart() {
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${value}`}
+                width={30}
               />
               <Tooltip
-                cursor={{ fill: "hsl(var(--accent))", radius: "var(--radius)" }}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  borderColor: "hsl(var(--border))",
-                  borderRadius: "var(--radius)",
-                  boxShadow: "0 4px 12px hsla(var(--foreground), 0.1)",
-                }}
+                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: "3 3" }}
+                content={<CustomTooltip />}
               />
-              <Legend wrapperStyle={{fontSize: "14px"}}/>
-              <Bar dataKey="present" name="Present" fill="hsla(var(--primary), 0.8)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="absent" name="Absent" fill="hsla(var(--muted-foreground), 0.5)" radius={[4, 4, 0, 0]} />
-            </BarChart>
+              <Legend 
+                wrapperStyle={{fontSize: "14px", paddingTop: "10px"}}
+                iconSize={10}
+                iconType="circle"
+              />
+              <Area type="monotone" dataKey="Present" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorPresent)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Absent" stroke="hsl(var(--muted-foreground))" fillOpacity={1} fill="url(#colorAbsent)" strokeWidth={2}/>
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </CardContent>
