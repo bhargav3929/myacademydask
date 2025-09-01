@@ -70,7 +70,7 @@ export function SignUpForm() {
         fullName: data.fullName,
         email: user.email,
         organizationId: orgRef.id,
-        role: "owner", // The first user is always the owner
+        // The 'role' is now determined implicitly by being the ownerId of the organization
         createdAt: serverTimestamp(),
       });
       
