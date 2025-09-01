@@ -23,6 +23,7 @@ import { Student, Stadium } from "@/lib/types";
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { MotionDiv } from "../motion";
+import { motion } from "framer-motion";
 
 type StudentsTableProps = {
   data: Student[];
@@ -53,6 +54,8 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
       },
     }),
   };
+  
+  const MotionTableRow = motion(TableRow);
 
   return (
     <div className="rounded-xl border">
@@ -71,9 +74,8 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
         </TableHeader>
         <TableBody>
           {data.length > 0 ? data.map((student, i) => (
-            <MotionDiv
+            <MotionTableRow
                 key={student.id}
-                as={TableRow}
                 variants={itemVariants}
                 initial="hidden"
                 animate="visible"
@@ -114,7 +116,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
-            </MotionDiv>
+            </MotionTableRow>
           )) : (
             <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
