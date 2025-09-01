@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to get the user's custom claims/profile data
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Rule: Can a user access data for a specific organization?
+    function isMemberOfOrg(orgId) {
+      return getUserData().organizationId == orgId;
+    }
+
+    // Rule: Is the user the owner of a specific organization?
+    function isOwnerOfOrg(orgId) {
+        return isMemberOfOrg(orgId) && getUserData().role == 'owner';
+    }
+
+    // Rule: Is the coach assigned to the specific stadium?
+    function isCoachAssignedToStadium(stadiumId) {
+        return getUserData().role == 'coach' && stadiumId in getUserData().assignedStadiums;
+    }
+
+    // USERS collection
+    match /users/{userId} {
+      // Users can read their own profile. Owners can read profiles in their org.
+      allow read: if request.auth.uid == userId || isOwnerOfOrg(resource.data.organizationId);
+      // Users can create their own profile upon signup.
+      allow create: if request.auth.uid == userId;
+      // Users can only update their own profile.
+      allow update: if request.auth.uid == userId;
+    }
+
+    // ORGANIZATIONS, STADIUMS, STUDENTS, ATTENDANCE
+    match /{collection}/{docId}
+      where collection in ['organizations', 'stadiums', 'students', 'attendance'] {
+        
+        // READ access
+        allow read: if (isOwnerOfOrg(resource.data.organizationId)) ||
+                       (collection != 'organizations' && isCoachAssignedToStadium(resource.data.stadiumId));
+                       
+        // WRITE access (create, update, delete)
+        // Only owners can manage these resources.
+        allow write: if isOwnerOfOrg(request.resource.data.organizationId);
+    }
+    
+    // Special rule for Attendance creation by coaches
+    match /attendance/{docId} {
+        // Allow owners to manage attendance records as well
+        allow read, update, delete: if isOwnerOfOrg(resource.data.organizationId);
+        // Coaches can create attendance records for stadiums they are assigned to.
+        allow create: if isCoachAssignedToStadium(request.resource.data.stadiumId);
+    }
+  }
+}
