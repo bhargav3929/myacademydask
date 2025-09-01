@@ -5,8 +5,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { app } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +40,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
+// This should be replaced with your actual Cloud Function URL
+const CLOUD_FUNCTION_URL = "https://us-central1-courtcommand.cloudfunctions.net/createStadiumAndCoach";
+
+
 export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -61,19 +63,24 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
     setIsLoading(true);
 
     try {
-      const functions = getFunctions(app, 'us-central1'); // Make sure to use the correct region
-      const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
-      
-      const result = await createStadiumAndCoach({
-        organizationId: MOCK_ORGANIZATION_ID,
-        stadiumName: values.stadiumName,
-        location: values.location,
-        coachEmail: values.coachEmail,
-        coachPassword: values.coachPassword,
-        coachFullName: "Coach " + values.stadiumName, // Generating a placeholder name
+      const response = await fetch(CLOUD_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          organizationId: MOCK_ORGANIZATION_ID,
+          stadiumName: values.stadiumName,
+          location: values.location,
+          coachEmail: values.coachEmail,
+          coachPassword: values.coachPassword,
+          coachFullName: "Coach " + values.stadiumName, // Generating a placeholder name
+        }),
       });
 
-      if (result.data.success) {
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         toast({
           title: "Success!",
           description: `Stadium "${values.stadiumName}" and a new coach account have been created.`,
@@ -81,7 +88,7 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
         form.reset();
         setOpen(false);
       } else {
-        throw new Error(result.data.error || "An unknown error occurred.");
+        throw new Error(result.error || "An unknown error occurred.");
       }
 
     } catch (error: any) {

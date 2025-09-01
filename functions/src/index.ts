@@ -9,8 +9,11 @@
  */
 
 import * as logger from "firebase-functions/logger";
-import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { HttpsError, onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import * as cors from "cors";
+
+const corsHandler = cors({ origin: true });
 
 admin.initializeApp();
 
@@ -24,77 +27,78 @@ interface CreateStadiumAndCoachData {
     coachFullName: string;
 }
 
-export const createStadiumAndCoach = onCall(async (request) => {
-  const data: CreateStadiumAndCoachData = request.data;
-  
-  // This function is currently open to be called by any client.
-  // In a production app, you would add role-based security checks here.
-  // For example:
-  // if (request.auth?.token.role !== 'owner') {
-  //   throw new HttpsError("permission-denied", "You must be an organization owner to perform this action.");
-  // }
-
-  logger.info("Starting stadium and coach creation for org:", data.organizationId);
-
-  try {
-    // 1. Create a new user in Firebase Authentication
-    const userRecord = await admin.auth().createUser({
-      email: data.coachEmail,
-      password: data.coachPassword,
-      displayName: data.coachFullName,
-      emailVerified: true, // Or false, depending on your flow
-      disabled: false,
-    });
-    logger.info("Successfully created new user:", userRecord.uid);
-
-    // 2. Set custom claims for the new user (e.g., role: 'coach')
-    await admin.auth().setCustomUserClaims(userRecord.uid, {
-        role: "coach",
-        organizationId: data.organizationId,
-    });
-    logger.info("Set custom claims for user:", userRecord.uid);
-
-
-    // Use a batch to ensure atomic operations
-    const db = admin.firestore();
-    const batch = db.batch();
-
-    // 3. Create the stadium document in Firestore
-    const stadiumRef = db.collection("stadiums").doc(); // Auto-generate ID
-    batch.set(stadiumRef, {
-        name: data.stadiumName,
-        location: data.location,
-        organizationId: data.organizationId,
-        assignedCoachId: userRecord.uid,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    logger.info("Added stadium creation to batch:", stadiumRef.id);
-
-    // 4. Create the coach's user profile in Firestore
-    const userProfileRef = db.collection("users").doc(userRecord.uid);
-    batch.set(userProfileRef, {
-        uid: userRecord.uid,
-        email: data.coachEmail,
-        fullName: data.coachFullName,
-        organizationId: data.organizationId,
-        role: "coach",
-        assignedStadiums: [stadiumRef.id], // Link coach to the new stadium
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    logger.info("Added user profile creation to batch for user:", userRecord.uid);
-
-    // Commit the batch
-    await batch.commit();
-    logger.info("Batch committed successfully.");
-
-    return { success: true, stadiumId: stadiumRef.id, coachId: userRecord.uid };
-
-  } catch (error) {
-    logger.error("Error creating stadium and coach:", error);
-    // Re-throw as an HttpsError to send a structured error to the client
-    if (error instanceof Error) {
-        throw new HttpsError("internal", error.message, error);
+export const createStadiumAndCoach = onRequest((request, response) => {
+  corsHandler(request, response, async () => {
+    if (request.method !== "POST") {
+      response.status(405).send("Method Not Allowed");
+      return;
     }
-    throw new HttpsError("internal", "An unknown error occurred.");
-  }
+
+    const data: CreateStadiumAndCoachData = request.body;
+
+    logger.info("Starting stadium and coach creation for org:", data.organizationId);
+
+    try {
+      // 1. Create a new user in Firebase Authentication
+      const userRecord = await admin.auth().createUser({
+        email: data.coachEmail,
+        password: data.coachPassword,
+        displayName: data.coachFullName,
+        emailVerified: true,
+        disabled: false,
+      });
+      logger.info("Successfully created new user:", userRecord.uid);
+
+      // 2. Set custom claims for the new user (e.g., role: 'coach')
+      await admin.auth().setCustomUserClaims(userRecord.uid, {
+          role: "coach",
+          organizationId: data.organizationId,
+      });
+      logger.info("Set custom claims for user:", userRecord.uid);
+
+
+      // Use a batch to ensure atomic operations
+      const db = admin.firestore();
+      const batch = db.batch();
+
+      // 3. Create the stadium document in Firestore
+      const stadiumRef = db.collection("stadiums").doc(); // Auto-generate ID
+      batch.set(stadiumRef, {
+          name: data.stadiumName,
+          location: data.location,
+          organizationId: data.organizationId,
+          assignedCoachId: userRecord.uid,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      logger.info("Added stadium creation to batch:", stadiumRef.id);
+
+      // 4. Create the coach's user profile in Firestore
+      const userProfileRef = db.collection("users").doc(userRecord.uid);
+      batch.set(userProfileRef, {
+          uid: userRecord.uid,
+          email: data.coachEmail,
+          fullName: data.coachFullName,
+          organizationId: data.organizationId,
+          role: "coach",
+          assignedStadiums: [stadiumRef.id], // Link coach to the new stadium
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      logger.info("Added user profile creation to batch for user:", userRecord.uid);
+
+      // Commit the batch
+      await batch.commit();
+      logger.info("Batch committed successfully.");
+
+      response.status(200).send({ success: true, stadiumId: stadiumRef.id, coachId: userRecord.uid });
+
+    } catch (error) {
+      logger.error("Error creating stadium and coach:", error);
+      // Re-throw as an HttpsError to send a structured error to the client
+      if (error instanceof Error) {
+        response.status(500).send({ success: false, error: error.message });
+      } else {
+        response.status(500).send({ success: false, error: "An unknown error occurred." });
+      }
+    }
+  });
 });
