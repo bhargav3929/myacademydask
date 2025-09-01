@@ -26,13 +26,12 @@ interface CreateStadiumAndCoachData {
 
 export const createStadiumAndCoach = onCall(async (request) => {
   const data: CreateStadiumAndCoachData = request.data;
-  const auth = request.auth;
-
-  // Check if the user is authenticated (e.g., an org owner)
-  // In a real app, you'd check for a specific role here.
-  // For now, we'll just check if they are logged in.
-  // if (!auth) {
-  //   throw new HttpsError("unauthenticated", "You must be logged in to create a stadium.");
+  
+  // This function is currently open to be called by any client.
+  // In a production app, you would add role-based security checks here.
+  // For example:
+  // if (request.auth?.token.role !== 'owner') {
+  //   throw new HttpsError("permission-denied", "You must be an organization owner to perform this action.");
   // }
 
   logger.info("Starting stadium and coach creation for org:", data.organizationId);
