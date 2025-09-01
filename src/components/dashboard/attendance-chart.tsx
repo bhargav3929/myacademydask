@@ -1,10 +1,8 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
-import { collection, query, where, onSnapshot, getDocs } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
-import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { subDays, format } from "date-fns";
@@ -16,64 +14,39 @@ type ChartData = {
   absent: number;
 };
 
+// MOCK DATA: Using static data for UI development
+const generateMockData = () => {
+    const today = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+        const day = subDays(today, i);
+        return {
+            date: format(day, "yyyy-MM-dd"),
+            name: format(day, "MMM d"),
+            present: Math.floor(Math.random() * 25) + 5,
+            absent: Math.floor(Math.random() * 5),
+        };
+    }).reverse();
+};
+
+
 export function AttendanceChart() {
-  const { userData } = useAuth();
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userData?.organizationId) return;
-
-    const today = new Date();
-    const last7Days = Array.from({ length: 7 }, (_, i) => subDays(today, i));
-    const startDate = format(last7Days[6], "yyyy-MM-dd");
-
-    const attendanceQuery = query(
-      collection(firestore, "attendance"),
-      where("organizationId", "==", userData.organizationId),
-      where("date", ">=", startDate)
-    );
-
-    const unsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
-      const dailyData: { [key: string]: { present: number; absent: number } } = {};
-
-      last7Days.forEach(day => {
-        const dateStr = format(day, "yyyy-MM-dd");
-        dailyData[dateStr] = { present: 0, absent: 0 };
-      });
-      
-      snapshot.docs.forEach((doc) => {
-        const record = doc.data();
-        if (dailyData[record.date]) {
-          if (record.status === 'present') {
-            dailyData[record.date].present++;
-          } else if (record.status === 'absent') {
-            dailyData[record.date].absent++;
-          }
-        }
-      });
-
-      const chartData = Object.entries(dailyData).map(([date, counts]) => ({
-        date: date,
-        name: format(new Date(date), "MMM d"),
-        ...counts,
-      })).reverse();
-
-      setData(chartData);
-      setLoading(false);
-    }, (error) => {
-        console.error("Error fetching attendance data: ", error);
+    // Using mock data since auth is disabled
+    setLoading(true);
+    setTimeout(() => {
+        setData(generateMockData());
         setLoading(false);
-    });
-    
-    return () => unsubscribe();
-  }, [userData?.organizationId]);
+    }, 1000);
+  }, []);
 
   return (
     <Card className="h-full flex flex-col transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
       <CardHeader>
         <CardTitle>Attendance Overview</CardTitle>
-        <CardDescription>Last 7 days attendance summary.</CardDescription>
+        <CardDescription>Last 7 days attendance summary (using mock data).</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         {loading ? (

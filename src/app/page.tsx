@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -63,12 +64,9 @@ export default function Home() {
             <span className="font-bold">CourtCommand</span>
           </Link>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
             <Button asChild>
-              <Link href="/signup">
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+              <Link href="/dashboard">
+                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </nav>
@@ -99,13 +97,8 @@ export default function Home() {
           </motion.p>
           <motion.div variants={itemVariants} className="mt-8 flex gap-4">
             <Button size="lg" asChild>
-              <Link href="/signup">
-                Sign Up for Free
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/login">
-                Access Your Portal
+              <Link href="/dashboard">
+                Access Dashboard
               </Link>
             </Button>
           </motion.div>

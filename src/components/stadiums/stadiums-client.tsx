@@ -1,26 +1,26 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
-import { useAuth } from "@/hooks/use-auth";
 import { Stadium } from "@/lib/types";
 import { StadiumsTable } from "./stadiums-table";
 import { AddStadiumDialog } from "./stadium-form-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "../motion";
 
+// MOCK DATA: Replace with your actual org ID when auth is back
+const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
+
 export function StadiumsClient() {
-  const { userData } = useAuth();
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userData?.organizationId) return;
-
     const q = query(
       collection(firestore, "stadiums"),
-      where("organizationId", "==", userData.organizationId),
+      where("organizationId", "==", MOCK_ORGANIZATION_ID),
       orderBy("createdAt", "desc")
     );
 
@@ -37,7 +37,7 @@ export function StadiumsClient() {
     });
 
     return () => unsubscribe();
-  }, [userData?.organizationId]);
+  }, []);
 
   return (
     <MotionDiv 

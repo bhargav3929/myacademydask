@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -8,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/use-auth";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { format } from "date-fns";
@@ -21,16 +21,31 @@ type StatCardProps = {
   today?: boolean;
 };
 
+// MOCK DATA: Replace with your actual org ID when auth is back
+const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
+
 export function StatCard({ title, icon, collectionName, role, today }: StatCardProps) {
-  const { user, userData } = useAuth();
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!user || !userData?.organizationId) return;
+    // This component will currently not fetch real data without an authenticated user.
+    // We are setting a mock count to allow UI development.
+    // When authentication is re-enabled, this logic will need to be updated.
+    
+    // Simulate loading
+    setCount(null);
+    // Simulate fetching data
+    setTimeout(() => {
+        setCount(0);
+    }, 1000);
+
+    // The original Firestore logic is commented out below for when auth is re-added.
+    /*
+    if (!MOCK_ORGANIZATION_ID) return;
 
     let q = query(
       collection(firestore, collectionName),
-      where("organizationId", "==", userData.organizationId)
+      where("organizationId", "==", MOCK_ORGANIZATION_ID)
     );
 
     if (role) {
@@ -54,7 +69,8 @@ export function StatCard({ title, icon, collectionName, role, today }: StatCardP
     );
 
     return () => unsubscribe();
-  }, [user, userData, collectionName, role, today]);
+    */
+  }, [collectionName, role, today]);
 
   return (
     <Card className="transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
@@ -69,7 +85,7 @@ export function StatCard({ title, icon, collectionName, role, today }: StatCardP
           <div className="text-2xl font-bold">{count}</div>
         )}
         <p className="text-xs text-muted-foreground">
-          Based on your organization&apos;s data
+          Live data is currently disabled
         </p>
       </CardContent>
     </Card>

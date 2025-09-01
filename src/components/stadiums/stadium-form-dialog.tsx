@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
-import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,8 +38,10 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// MOCK DATA: Replace with your actual org ID when auth is back
+const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
+
 export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
-  const { userData } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,18 +55,12 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
   });
 
   async function onSubmit(values: FormValues) {
-    if (!userData?.organizationId) {
-      toast({ variant: "destructive", title: "Error", description: "Organization not found." });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // For now, only handles adding new stadiums. Editing would require doc(firestore, 'stadiums', stadium.id) and updateDoc.
       await addDoc(collection(firestore, "stadiums"), {
         ...values,
-        organizationId: userData.organizationId,
+        organizationId: MOCK_ORGANIZATION_ID, // Using mock org ID
         createdAt: serverTimestamp(),
       });
 
