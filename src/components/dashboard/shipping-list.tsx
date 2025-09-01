@@ -40,7 +40,7 @@ const shippingData = [
     statusVariant: "warning" as const,
   },
   {
-    trackingId: "#RQ7487",
+    trackingId: "#RQ7488",
     deliverer: {
       name: "Kristin Watson",
       avatar: "https://i.pravatar.cc/150?u=kristin",
