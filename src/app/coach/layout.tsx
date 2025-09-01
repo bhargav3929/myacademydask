@@ -3,12 +3,12 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { OwnerSidebar } from '@/components/layouts/owner-sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { CoachSidebar } from '@/components/layouts/coach-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
-function OwnerProtectedLayout({ children }: { children: React.ReactNode }) {
+function CoachProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, userData, loading } = useAuth();
   const router = useRouter();
 
@@ -16,13 +16,13 @@ function OwnerProtectedLayout({ children }: { children: React.ReactNode }) {
     if (!loading) {
       if (!user) {
         router.replace('/login');
-      } else if (userData && userData.role !== 'owner') {
-        router.replace('/coach/dashboard');
+      } else if (userData && userData.role !== 'coach') {
+        router.replace('/dashboard');
       }
     }
   }, [user, userData, loading, router]);
 
-  if (loading || !userData || userData.role !== 'owner') {
+  if (loading || !userData || userData.role !== 'coach') {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <div className="flex flex-col items-center gap-4">
@@ -38,7 +38,7 @@ function OwnerProtectedLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <OwnerSidebar />
+      <CoachSidebar />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
@@ -47,7 +47,7 @@ function OwnerProtectedLayout({ children }: { children: React.ReactNode }) {
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
-            <OwnerProtectedLayout>{children}</OwnerProtectedLayout>
+            <CoachProtectedLayout>{children}</CoachProtectedLayout>
         </AuthProvider>
     )
 }
