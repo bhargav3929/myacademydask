@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Stadium } from "@/lib/types";
 import { StadiumsTable } from "./stadiums-table";
@@ -10,17 +10,15 @@ import { AddStadiumDialog } from "./stadium-form-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "../motion";
 
-// MOCK DATA: Replace with your actual org ID when auth is back
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-
 export function StadiumsClient() {
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Note: The query is now simplified to fetch all stadiums.
+    // We will add organization-specific queries back when user authentication is implemented.
     const q = query(
       collection(firestore, "stadiums"),
-      where("organizationId", "==", MOCK_ORGANIZATION_ID),
       orderBy("createdAt", "desc")
     );
 
