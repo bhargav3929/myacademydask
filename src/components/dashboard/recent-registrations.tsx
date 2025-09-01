@@ -93,7 +93,7 @@ export function RecentRegistrations() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem>View Profile</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Plan</_DropdownMenuItem>
+                            <DropdownMenuItem>Edit Plan</DropdownMenuItem>
                             <DropdownMenuItem>Cancel Membership</DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
