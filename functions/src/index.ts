@@ -9,7 +9,7 @@
  */
 
 import * as logger from "firebase-functions/logger";
-import { HttpsError, onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as cors from "cors";
 
@@ -93,7 +93,6 @@ export const createStadiumAndCoach = onRequest((request, response) => {
 
     } catch (error) {
       logger.error("Error creating stadium and coach:", error);
-      // Re-throw as an HttpsError to send a structured error to the client
       if (error instanceof Error) {
         response.status(500).send({ success: false, error: error.message });
       } else {
