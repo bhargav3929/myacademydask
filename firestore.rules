@@ -1,39 +1,49 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read and write their own user document
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Allow authenticated users to create new organizations
+    function isOwner(orgId) {
+      // Check if the user is the owner of the given organization.
+      return isSignedIn() && get(/databases/$(database)/documents/organizations/$(orgId)).data.ownerId == request.auth.uid;
+    }
+    
+    function isCreatingOwnDocument() {
+      // Check if the user is creating a document with their own UID as the ID.
+      return request.auth.uid == request.resource.id;
+    }
+
+    // Organizations:
+    // - Allow create if the user is signed in and is setting themselves as the owner.
+    // - Allow read/update if the user is the owner of the organization.
     match /organizations/{orgId} {
-      allow create: if request.auth != null;
-      // Only the owner can read/update the organization
-      allow read, update: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow read, update: if isOwner(orgId);
+      // Delete is disallowed for safety.
+      allow delete: if false;
     }
 
-    // Stadiums can be managed by the organization owner
-    match /stadiums/{stadiumId} {
-        allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+    // Users:
+    // - Allow create if a user is creating their own profile document.
+    // - Allow read/update if a user is accessing their own document.
+    match /users/{userId} {
+      allow create: if isCreatingOwnDocument();
+      allow read, update: if request.auth.uid == userId;
+       // Allow owners to read data of users within their organization
+      allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'
+                  && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == resource.data.organizationId;
     }
 
-    // Students can be managed by the organization owner
-     match /students/{studentId} {
-        allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
-    }
-
-    // Attendance can be marked by an assigned coach or managed by the owner
-    match /attendance/{attendanceId} {
-        allow read, write: if request.auth != null && 
-          (
-            // Coach can write
-            exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'coach' && request.resource.data.stadiumId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedStadiums
-          ) || (
-            // Owner can write
-            exists(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)) && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid
-          );
+    // Stadiums, Students, Attendance:
+    // - Allow full access if the user is the owner of the associated organization.
+    match /{collection}/{docId} where collection in ['stadiums', 'students', 'attendance'] {
+       allow read, write: if isSignedIn() && isOwner(request.resource.data.organizationId);
     }
   }
 }
