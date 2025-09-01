@@ -55,11 +55,28 @@ const shippingData = [
     status: "In Transit",
     statusVariant: "info" as const,
   },
+  {
+    trackingId: "#RQ7489",
+    deliverer: {
+      name: "Robert Fox",
+      avatar: "https://i.pravatar.cc/150?u=robert",
+    },
+    shippedDate: "20 June 2024",
+    country: {
+      name: "Germany",
+      flag: "https://flagcdn.com/w20/de.png",
+    },
+    weight: "1.2kg",
+    price: "$18.50",
+    status: "Delivered",
+    statusVariant: "success" as const,
+  },
 ];
 
 const badgeVariants = {
     warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
     info: "bg-blue-100 text-blue-800 border-blue-200",
+    success: "bg-green-100 text-green-800 border-green-200",
 }
 
 
