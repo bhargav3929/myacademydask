@@ -2,7 +2,7 @@
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ShipmentStatistics } from "@/components/dashboard/shipment-statistics";
-import { LiveTracking } from "@/components/dashboard/live-tracking";
+import { LiveTracking } from "@/components/dashboard/recent-activity";
 import { DeliveryTime } from "@/components/dashboard/delivery-time";
 import { ShippingList } from "@/components/dashboard/shipping-list";
 
