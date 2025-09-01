@@ -1,24 +1,38 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Users can only create their own user profile, and must set their role to 'owner'
+
+    // Users can create their own user profile upon sign-up.
+    // They can only read/update their own profile.
     match /users/{userId} {
-      allow read: if request.auth.uid == userId;
-      allow create: if request.auth.uid == userId && request.resource.data.role == 'owner';
-      allow update: if request.auth.uid == userId;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
     }
 
-    // Organizations can be created if the user is making themselves the owner.
+    // A user can create an organization if they set themselves as the owner.
+    // Only the owner can read or update an organization's details.
     match /organizations/{orgId} {
-      allow create: if request.auth.uid == request.resource.data.ownerId;
-      // Allow reads/writes if the user is the owner of the organization.
-      allow read, write: if get(/databases/$(database)/documents/organizations/$(orgId)).data.ownerId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow read, update: if request.auth != null && get(/databases/$(database)/documents/organizations/$(orgId)).data.ownerId == request.auth.uid;
     }
     
-    // Allow actions on related documents (stadiums, students, attendance) if the user is the owner of the organization.
-    match /{collection}/{docId} {
-      allow read, write: if get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+    // Stadiums can be managed by the owner of the organization.
+    match /stadiums/{stadiumId} {
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+    }
+
+    // Students can be managed by the owner of the organization.
+    match /students/{studentId} {
+       allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+    }
+
+    // Attendance can be read by the organization owner.
+    // Attendance can be written by any authenticated user (coaches).
+    // More specific coach-based rules can be added later.
+    match /attendance/{attendanceId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/organizations/$(request.resource.data.organizationId)).data.ownerId == request.auth.uid;
+      allow write: if request.auth != null;
     }
   }
 }
