@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <StatCard
                 title="Total Students"
                 value="73"
-                icon={<Users className="size-5 text-blue-500" />}
+                icon={<Users className="size-5 text-primary" />}
                 trendValue="+12.5%"
                 trendIcon={<TrendingUp className="size-4 text-emerald-500" />}
                 trendColor="text-emerald-500"

@@ -90,7 +90,7 @@ export function RecentActivity() {
   const icons: Record<ActivityType, React.ReactNode> = {
       present: <CheckCircle2 className="size-5 text-green-500" />,
       absent: <XCircle className="size-5 text-red-500" />,
-      login: <LogIn className="size-5 text-blue-500" />,
+      login: <LogIn className="size-5 text-primary" />,
       new_student: <UserPlus className="size-5 text-purple-500" />,
   };
 
