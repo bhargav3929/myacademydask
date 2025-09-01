@@ -43,7 +43,7 @@ export function AttendanceChart() {
   }, []);
 
   return (
-    <Card className="h-full flex flex-col transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
+    <Card className="h-full flex flex-col transition-all duration-300 ease-out hover:bg-card/95 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
       <CardHeader>
         <CardTitle>Attendance Overview</CardTitle>
         <CardDescription>Last 7 days attendance summary (using mock data).</CardDescription>
@@ -69,16 +69,17 @@ export function AttendanceChart() {
                 tickFormatter={(value) => `${value}`}
               />
               <Tooltip
-                cursor={{ fill: "hsl(var(--card))" }}
+                cursor={{ fill: "hsl(var(--accent))", radius: "var(--radius)" }}
                 contentStyle={{
                   backgroundColor: "hsl(var(--background))",
                   borderColor: "hsl(var(--border))",
                   borderRadius: "var(--radius)",
+                  boxShadow: "0 4px 12px hsla(var(--foreground), 0.1)",
                 }}
               />
               <Legend wrapperStyle={{fontSize: "14px"}}/>
-              <Bar dataKey="present" name="Present" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="absent" name="Absent" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="present" name="Present" fill="hsla(var(--primary), 0.8)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent" name="Absent" fill="hsla(var(--muted-foreground), 0.5)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

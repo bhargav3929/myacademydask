@@ -36,44 +36,13 @@ export function StatCard({ title, icon, collectionName, role, today }: StatCardP
     setCount(null);
     // Simulate fetching data
     setTimeout(() => {
-        setCount(0);
+        setCount(Math.floor(Math.random() * 100)); // Use random data for visuals
     }, 1000);
 
-    // The original Firestore logic is commented out below for when auth is re-added.
-    /*
-    if (!MOCK_ORGANIZATION_ID) return;
-
-    let q = query(
-      collection(firestore, collectionName),
-      where("organizationId", "==", MOCK_ORGANIZATION_ID)
-    );
-
-    if (role) {
-      q = query(q, where("role", "==", role));
-    }
-
-    if (today) {
-      const todayStr = format(new Date(), "yyyy-MM-dd");
-      q = query(q, where("date", "==", todayStr), where("status", "==", "present"));
-    }
-
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        setCount(querySnapshot.size);
-      },
-      (error) => {
-        console.error(`Error fetching ${collectionName}: `, error);
-        setCount(0);
-      }
-    );
-
-    return () => unsubscribe();
-    */
   }, [collectionName, role, today]);
 
   return (
-    <Card className="transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
+    <Card className="transition-all duration-300 ease-out hover:bg-card/95 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}
@@ -85,7 +54,7 @@ export function StatCard({ title, icon, collectionName, role, today }: StatCardP
           <div className="text-2xl font-bold">{count}</div>
         )}
         <p className="text-xs text-muted-foreground">
-          Live data is currently disabled
+          Using randomized mock data
         </p>
       </CardContent>
     </Card>

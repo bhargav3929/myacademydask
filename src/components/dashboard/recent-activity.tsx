@@ -44,29 +44,29 @@ export function RecentActivity() {
   }, []);
 
   return (
-    <Card className="h-full flex flex-col transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
+    <Card className="h-full flex flex-col transition-all duration-300 ease-out hover:bg-card/95 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
         <CardDescription>Latest attendance markings (using mock data).</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <ScrollArea className="h-[250px]">
+        <ScrollArea className="h-[250px] pr-4">
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : activities.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {activities.map((activity) => (
-                <div key={activity.id} className="flex items-center">
+                <div key={activity.id} className="flex items-center p-2 rounded-md transition-colors hover:bg-accent">
                   <Avatar className="h-9 w-9">
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-transparent">
                       {activity.status === 'present' ? <CheckCircle2 className="text-green-500" /> : <XCircle className="text-red-500" />}
                     </AvatarFallback>
                   </Avatar>
                   <div className="ml-4 space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {activity.studentName} marked as {activity.status}
+                      <span className="font-semibold">{activity.studentName}</span> marked as {activity.status}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       by {activity.coachName} at {activity.timestamp}

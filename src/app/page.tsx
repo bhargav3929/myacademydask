@@ -129,7 +129,7 @@ export default function Home() {
           >
             {features.map((feature, i) => (
               <motion.div variants={itemVariants} key={i}>
-                <Card className="h-full transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
+                <Card className="h-full bg-card/80 backdrop-blur-sm transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1">
                   <CardHeader className="flex flex-row items-center gap-4">
                     {feature.icon}
                     <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
