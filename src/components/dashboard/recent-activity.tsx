@@ -33,17 +33,33 @@ export function RecentActivity() {
   useEffect(() => {
     setLoading(true);
 
-    const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
-    const attendanceQuery = query(collectionGroup(firestore, "attendance"), orderBy("timestamp", "desc"), limit(5));
+    const studentsQuery = query(collectionGroup(firestore, "students"), limit(5));
+    // Querying without orderBy to avoid needing a composite index. Sorting will be done client-side.
+    const attendanceQuery = query(collectionGroup(firestore, "attendance"), limit(10));
 
     const studentDocsCache = new Map<string, Student>();
     let combinedActivities: Activity[] = [];
+    let initialLoadComplete = { students: false, attendance: false };
+
+    const checkLoadingComplete = () => {
+        if (initialLoadComplete.students && initialLoadComplete.attendance) {
+            setLoading(false);
+        }
+    }
 
     const mergeAndSortActivities = (newActivities: Activity[]) => {
-      combinedActivities = [...newActivities, ...combinedActivities]
+      // Combine new activities with existing ones
+      const activityMap = new Map<string, Activity>();
+      [...combinedActivities, ...newActivities].forEach(act => {
+          activityMap.set(act.id, act);
+      });
+      
+      // Sort and slice
+      const sorted = Array.from(activityMap.values())
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // Remove duplicates
         .slice(0, 5);
+
+      combinedActivities = sorted;
       setActivities(combinedActivities);
     };
 
@@ -59,11 +75,12 @@ export function RecentActivity() {
         };
       });
       mergeAndSortActivities(studentActivities);
-      setLoading(false);
+      initialLoadComplete.students = true;
+      checkLoadingComplete();
     }, (error) => {
-      // If this query fails due to index, we can just ignore new user activities for now.
       console.warn("Could not fetch recent students for activity feed, probably missing index:", error.message);
-      setLoading(false);
+      initialLoadComplete.students = true;
+      checkLoadingComplete();
     });
 
     const unsubAttendance = onSnapshot(attendanceQuery, async (snapshot) => {
@@ -71,7 +88,6 @@ export function RecentActivity() {
             const data = attendanceDoc.data();
             let studentName = "A student";
             
-            // This is a potential source of error if a student is deleted but attendance remains
             try {
                  if (studentDocsCache.has(data.studentId)) {
                     studentName = studentDocsCache.get(data.studentId)!.fullName;
@@ -87,8 +103,6 @@ export function RecentActivity() {
                     }
                 }
             } catch (e) {
-                // Stale reference, student might have been deleted.
-                // We can ignore this error for the activity feed.
                 console.warn(`Could not find student with ID ${data.studentId} in stadium ${data.stadiumId}`);
             }
            
@@ -103,7 +117,12 @@ export function RecentActivity() {
 
         const attendanceActivities = await Promise.all(attendancePromises);
         mergeAndSortActivities(attendanceActivities);
-        setLoading(false);
+        initialLoadComplete.attendance = true;
+        checkLoadingComplete();
+    }, (error) => {
+         console.error("Error fetching attendance activity:", error.message);
+         initialLoadComplete.attendance = true;
+         checkLoadingComplete();
     });
 
     return () => {
