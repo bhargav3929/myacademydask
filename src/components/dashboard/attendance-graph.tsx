@@ -2,17 +2,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collectionGroup, query, getDocs, Timestamp } from "firebase/firestore";
+import { collectionGroup, query, where, onSnapshot, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { format, subDays, startOfDay, endOfDay, eachMonthOfInterval, startOfMonth, endOfMonth } from 'date-fns';
-import { Student } from "@/lib/types";
+import { format, subDays, startOfDay, eachDayOfInterval } from 'date-fns';
+import { Attendance } from "@/lib/types";
 
 interface ChartData {
   name: string;
-  Students: number;
+  Attendance: number;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -23,7 +23,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "hsl(var(--chart-1))" }} />
-            <span className="text-sm text-muted-foreground">Total Students:</span>
+            <span className="text-sm text-muted-foreground">Students Present:</span>
             <span className="text-sm font-bold">{payload[0].value}</span>
           </div>
         </div>
@@ -33,71 +33,62 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function StudentEnrollmentChart() {
+export function AttendanceGraph() {
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const studentsQuery = query(collectionGroup(firestore, "students"));
-        const snapshot = await getDocs(studentsQuery);
-        const students = snapshot.docs.map(doc => doc.data() as Student).filter(s => s.joinDate);
+    setLoading(true);
+    const today = new Date();
+    const tenDaysAgo = startOfDay(subDays(today, 9));
 
-        if (students.length === 0) {
-            setData([]);
-            setLoading(false);
-            return;
+    const attendanceQuery = query(
+      collectionGroup(firestore, "attendance"),
+      where("timestamp", ">=", Timestamp.fromDate(tenDaysAgo)),
+      where("status", "==", "present")
+    );
+
+    const unsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
+      const attendanceRecords = snapshot.docs.map(doc => doc.data() as Attendance);
+
+      const attendanceCountsByDay: { [key: string]: number } = {};
+
+      attendanceRecords.forEach(record => {
+        const dateStr = record.date; // Uses the YYYY-MM-DD string
+        if (!attendanceCountsByDay[dateStr]) {
+          attendanceCountsByDay[dateStr] = 0;
         }
+        attendanceCountsByDay[dateStr]++;
+      });
 
-        students.sort((a, b) => a.joinDate.toMillis() - b.joinDate.toMillis());
-        
-        const firstStudentDate = students[0].joinDate.toDate();
-        const lastStudentDate = new Date(); // Or find the latest join date if you prefer
+      const last10Days = eachDayOfInterval({
+        start: tenDaysAgo,
+        end: today
+      });
 
-        const months = eachMonthOfInterval({
-          start: startOfMonth(firstStudentDate),
-          end: startOfMonth(lastStudentDate)
-        });
+      const chartData = last10Days.map(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        return {
+          name: format(day, "MMM d"),
+          Attendance: attendanceCountsByDay[dateKey] || 0,
+        };
+      });
 
-        const monthlyEnrollments: { [key: string]: number } = {};
+      setData(chartData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching attendance data for chart:", error);
+      setLoading(false);
+    });
 
-        students.forEach(student => {
-            const monthKey = format(student.joinDate.toDate(), 'yyyy-MM');
-            if (!monthlyEnrollments[monthKey]) {
-                monthlyEnrollments[monthKey] = 0;
-            }
-            monthlyEnrollments[monthKey]++;
-        });
-        
-        let cumulativeStudents = 0;
-        const chartData = months.map(monthStart => {
-          const monthKey = format(monthStart, 'yyyy-MM');
-          cumulativeStudents += (monthlyEnrollments[monthKey] || 0);
-          return {
-            name: format(monthStart, "MMM yy"),
-            Students: cumulativeStudents,
-          };
-        });
-
-        setData(chartData);
-
-      } catch (error) {
-        console.error("Error fetching student data for chart:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    return () => unsubscribe();
   }, []);
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Student Enrollment Growth</CardTitle>
-        <CardDescription>Cumulative student registrations over time.</CardDescription>
+        <CardTitle>Attendance Graph</CardTitle>
+        <CardDescription>Total student attendance across all stadiums for the last 10 days.</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow pb-4 -ml-4">
         {loading ? (
@@ -109,7 +100,7 @@ export function StudentEnrollmentChart() {
               margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
             >
               <defs>
-                <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.4} />
                   <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                 </linearGradient>
@@ -128,7 +119,6 @@ export function StudentEnrollmentChart() {
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${value}`}
-                domain={[0, 'dataMax + 10']}
                 allowDecimals={false}
                 width={35}
               />
@@ -139,9 +129,9 @@ export function StudentEnrollmentChart() {
               />
               <Area 
                 type="monotone" 
-                dataKey="Students" 
+                dataKey="Attendance" 
                 stroke="hsl(var(--chart-1))"
-                fill="url(#colorStudents)" 
+                fill="url(#colorAttendance)" 
                 strokeWidth={2.5}
                 dot={{
                   r: 4,
@@ -153,8 +143,8 @@ export function StudentEnrollmentChart() {
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-2">
-            <p className="text-sm">No enrollment data to display yet.</p>
-             <p className="text-xs">Add your first student to see the chart.</p>
+            <p className="text-sm">No attendance data to display yet.</p>
+             <p className="text-xs">Once a coach marks attendance, it will appear here.</p>
           </div>
         )}
       </CardContent>

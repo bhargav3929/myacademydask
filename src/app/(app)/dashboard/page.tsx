@@ -11,7 +11,7 @@ import { Student } from "@/lib/types";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { StudentEnrollmentChart } from "@/components/dashboard/student-enrollment-chart";
+import { AttendanceGraph } from "@/components/dashboard/attendance-graph";
 import { Button } from "@/components/ui/button";
 import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -291,7 +291,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <StudentEnrollmentChart />
+            <AttendanceGraph />
         </MotionDiv>
          <MotionDiv variants={itemVariants} className="lg:col-span-2">
             <RecentActivity />
