@@ -73,12 +73,12 @@ export default function Home() {
             </Link>
             <Button asChild variant="ghost">
               <Link href="/login">
-                Login
+                Owner Login
               </Link>
             </Button>
             <Button asChild>
               <Link href="/login">
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                Coach Login <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </nav>
