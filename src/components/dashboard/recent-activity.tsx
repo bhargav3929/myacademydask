@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collectionGroup, query, orderBy, limit, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collectionGroup, query, orderBy, limit, onSnapshot, doc, getDoc, getDocs, where } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck, CalendarX } from "lucide-react";
@@ -60,19 +60,26 @@ export function RecentActivity() {
       });
       mergeAndSortActivities(studentActivities);
       setLoading(false);
+    }, (error) => {
+      // If this query fails due to index, we can just ignore new user activities for now.
+      console.warn("Could not fetch recent students for activity feed, probably missing index:", error.message);
+      setLoading(false);
     });
 
     const unsubAttendance = onSnapshot(attendanceQuery, async (snapshot) => {
         const attendancePromises = snapshot.docs.map(async (attendanceDoc) => {
             const data = attendanceDoc.data();
             let studentName = "A student";
-            const studentRef = doc(attendanceDoc.ref.parent.parent!, "students", data.studentId);
-
+            
+            // This is a potential source of error if a student is deleted but attendance remains
             try {
                  if (studentDocsCache.has(data.studentId)) {
                     studentName = studentDocsCache.get(data.studentId)!.fullName;
                 } else {
+                    const studentSubcollectionRef = collection(firestore, `stadiums/${data.stadiumId}/students`);
+                    const studentRef = doc(studentSubcollectionRef, data.studentId);
                     const studentDoc = await getDoc(studentRef);
+
                     if (studentDoc.exists()) {
                         const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
                         studentName = studentData.fullName;
@@ -82,6 +89,7 @@ export function RecentActivity() {
             } catch (e) {
                 // Stale reference, student might have been deleted.
                 // We can ignore this error for the activity feed.
+                console.warn(`Could not find student with ID ${data.studentId} in stadium ${data.stadiumId}`);
             }
            
             return {
