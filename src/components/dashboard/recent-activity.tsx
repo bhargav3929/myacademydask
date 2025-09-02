@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck, CalendarX } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
+import { Student } from "@/lib/types";
 
 type ActivityType = 'present' | 'absent' | 'new_student';
 
@@ -30,12 +31,23 @@ export function RecentActivity() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // This is a simplified fetch for demonstration. A real-world app might use a dedicated 'activities' collection
+    // or more optimized queries. For now, we combine two separate queries.
     const fetchActivities = async () => {
       setLoading(true);
 
-      // Fetch students
+      // 1. Fetch recent student registrations
       const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
-      const studentsSnapshot = await getDocs(studentsQuery);
+      
+      // 2. Fetch recent attendance records
+      const attendanceQuery = query(collectionGroup(firestore, "attendance"), orderBy("timestamp", "desc"), limit(5));
+      
+      const [studentsSnapshot, attendanceSnapshot] = await Promise.all([
+          getDocs(studentsQuery),
+          getDocs(attendanceQuery),
+      ]);
+      
+      // Map student registrations to activity format
       const studentActivities = studentsSnapshot.docs.map(doc => {
         const data = doc.data();
         return {
@@ -47,29 +59,28 @@ export function RecentActivity() {
         };
       });
 
-      // Fetch attendance
-      const attendanceQuery = query(collectionGroup(firestore, "attendance"), orderBy("timestamp", "desc"), limit(5));
-      const attendanceSnapshot = await getDocs(attendanceQuery);
+      // Map attendance records to activity format
+      const studentDocsCache = new Map<string, Student>();
       const attendanceActivitiesPromises = attendanceSnapshot.docs.map(async (attendanceDoc) => {
         const data = attendanceDoc.data();
-        
-        // We need to find which student this attendance belongs to.
-        // This is inefficient, but necessary with the current data structure.
-        // A better structure might be to store studentName on the attendance record.
-        const studentRef = attendanceDoc.ref.parent.parent?.collection('students').doc(data.studentId);
-        if(!studentRef) return null;
-        
-        // This part is tricky because we don't know the stadium ID from the attendance doc directly
-        // This will require a more complex query or data duplication in a real app.
-        // For this mock, we'll assume we can get the student.
-        // A better approach: store student name on attendance record.
-        const studentDoc = await getDoc(collection(firestore, `stadiums/${data.stadiumId}/students/${data.studentId}`));
-
         let studentName = "A student";
-        if (studentDoc.exists()) {
-           studentName = studentDoc.data().fullName;
-        }
 
+        // To get the student's name, we need their document.
+        // The attendance record lives at `stadiums/{stadiumId}/attendance/{attendanceId}`
+        // The student record lives at `stadiums/{stadiumId}/students/{studentId}`
+        const studentRef = doc(attendanceDoc.ref.parent.parent!, "students", data.studentId);
+        
+        if (studentDocsCache.has(data.studentId)) {
+          studentName = studentDocsCache.get(data.studentId)!.fullName;
+        } else {
+          const studentDoc = await getDoc(studentRef);
+          if (studentDoc.exists()) {
+            const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
+            studentName = studentData.fullName;
+            studentDocsCache.set(data.studentId, studentData);
+          }
+        }
+        
         return {
           id: attendanceDoc.id,
           person: studentName,
@@ -81,6 +92,7 @@ export function RecentActivity() {
 
       const attendanceActivities = (await Promise.all(attendanceActivitiesPromises)).filter(Boolean) as Activity[];
       
+      // Combine, sort, and slice to get the 5 most recent activities of any type
       const combinedActivities = [...studentActivities, ...attendanceActivities]
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
         .slice(0, 5);
@@ -91,8 +103,8 @@ export function RecentActivity() {
 
     fetchActivities();
     
-    // Using onSnapshot would be more complex here due to multiple collection groups
-    // For simplicity, we fetch once. For realtime, separate listeners would be needed.
+    // Note: For real-time updates, you'd set up `onSnapshot` listeners for both queries
+    // and manage merging the results, which can be complex. Fetching on load is simpler.
 
   }, []);
 

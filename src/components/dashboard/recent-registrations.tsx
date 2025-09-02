@@ -22,14 +22,17 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { format } from "date-fns";
 import { Student } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-const badgeVariants = {
-    warning: "border-yellow-300 bg-yellow-50 text-yellow-600",
-    info: "border-blue-300 bg-blue-50 text-blue-600",
-    success: "border-green-300 bg-green-50 text-green-600",
-}
 
 export function RecentRegistrations({ data }: { data: Student[] }) {
+
+  const badgeVariants: Record<Student['status'], string> = {
+    active: "bg-green-100 text-green-800 border-green-200",
+    trial: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    inactive: "bg-red-100 text-red-800 border-red-200",
+  };
+
   return (
     <Card>
         <CardHeader>
@@ -61,7 +64,9 @@ export function RecentRegistrations({ data }: { data: Student[] }) {
                     </TableCell>
                     <TableCell>{format(item.joinDate.toDate(), "dd MMM yyyy")}</TableCell>
                     <TableCell>
-                        <Badge variant="outline" className={badgeVariants.success}>Active</Badge>
+                        <Badge variant="outline" className={cn(badgeVariants[item.status || 'active'], "capitalize")}>
+                          {item.status || 'Active'}
+                        </Badge>
                     </TableCell>
                     <TableCell>
                         <DropdownMenu>
