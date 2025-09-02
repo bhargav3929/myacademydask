@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Icons } from '@/components/icons';
+import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
 
 export default function Home() {
   const containerVariants = {
@@ -47,7 +47,7 @@ export default function Home() {
     {
       icon: <BarChart className="h-8 w-8 text-primary" />,
       title: 'Insightful Analytics',
-      description: 'Visualize your organization\'s growth and performance with beautiful, real-time charts.',
+      description: "Visualize your organization's growth and performance with beautiful, real-time charts.",
     },
     {
       icon: <ShieldCheck className="h-8 w-8 text-primary" />,
@@ -86,60 +86,62 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <motion.section
-          className="container flex flex-col items-center justify-center py-24 text-center md:py-32 lg:py-40"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants} className="mb-4 rounded-full border bg-card px-4 py-1.5 text-sm font-medium text-primary shadow-sm">
-            The #1 Platform for Sports Academies
-          </motion.div>
-          <motion.h1
-            variants={itemVariants}
-            className="text-4xl font-extrabold tracking-tighter md:text-6xl lg:text-7xl"
-          >
-            Command Your Court
-          </motion.h1>
-          <motion.p
-            variants={itemVariants}
-            className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
-          >
-            CourtCommand is the ultimate all-in-one solution for managing your sports academy. Streamline operations, track performance, and unlock your academy's potential.
-          </motion.p>
-          <motion.div variants={itemVariants} className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button size="lg" asChild>
-              <Link href="/dashboard">
-                Claim Your Academy <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#">
-                Book a Demo
-              </Link>
-            </Button>
-          </motion.div>
-        </motion.section>
-        
-        <motion.section
-           className="container relative -mt-16"
-           initial={{ opacity: 0, y: 50 }}
-           whileInView={{ opacity: 1, y: 0 }}
-           viewport={{ once: true, amount: 0.3 }}
-           transition={{ duration: 0.5 }}
-        >
-            <div className="relative rounded-xl border bg-card p-2 shadow-2xl shadow-primary/10">
-                 <Image 
-                    src="https://picsum.photos/1200/600"
-                    alt="Dashboard preview"
-                    width={1200}
-                    height={600}
-                    className="rounded-lg"
-                    data-ai-hint="dashboard user interface"
-                />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/80 via-background/0 to-background/0" />
-            </div>
-        </motion.section>
+        <BackgroundBeamsWithCollision>
+            <motion.section
+            className="container flex flex-col items-center justify-center py-24 text-center md:py-32 lg:py-40"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            >
+            <motion.div variants={itemVariants} className="mb-4 rounded-full border bg-card px-4 py-1.5 text-sm font-medium text-primary shadow-sm">
+                The #1 Platform for Sports Academies
+            </motion.div>
+            <motion.h1
+                variants={itemVariants}
+                className="text-4xl font-extrabold tracking-tighter md:text-6xl lg:text-7xl"
+            >
+                Command Your Court
+            </motion.h1>
+            <motion.p
+                variants={itemVariants}
+                className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
+            >
+                CourtCommand is the ultimate all-in-one solution for managing your sports academy. Streamline operations, track performance, and unlock your academy's potential.
+            </motion.p>
+            <motion.div variants={itemVariants} className="mt-8 flex flex-wrap justify-center gap-4">
+                <Button size="lg" asChild>
+                <Link href="/dashboard">
+                    Claim Your Academy <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                <Link href="#">
+                    Book a Demo
+                </Link>
+                </Button>
+            </motion.div>
+            </motion.section>
+            
+            <motion.section
+            className="container relative -mt-16"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
+            >
+                <div className="relative rounded-xl border bg-card p-2 shadow-2xl shadow-primary/10">
+                    <Image 
+                        src="https://picsum.photos/1200/600"
+                        alt="Dashboard preview"
+                        width={1200}
+                        height={600}
+                        className="rounded-lg"
+                        data-ai-hint="dashboard user interface"
+                    />
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/80 via-background/0 to-background/0" />
+                </div>
+            </motion.section>
+        </BackgroundBeamsWithCollision>
 
 
         <section id="features" className="container py-24 md:py-32">
