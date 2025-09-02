@@ -7,7 +7,7 @@ import { firestore } from "@/lib/firebase";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { format, subDays, startOfDay, eachDayOfInterval } from 'date-fns';
+import { format, subDays, startOfDay, eachDayOfInterval, isAfter, isEqual } from 'date-fns';
 import { Attendance } from "@/lib/types";
 
 interface ChartData {
@@ -42,15 +42,17 @@ export function AttendanceGraph() {
     const today = new Date();
     const tenDaysAgo = startOfDay(subDays(today, 9));
 
-    const attendanceQuery = query(
-      collectionGroup(firestore, "attendance"),
-      where("timestamp", ">=", Timestamp.fromDate(tenDaysAgo))
-    );
+    // Query without timestamp filter to avoid needing a composite index.
+    const attendanceQuery = query(collectionGroup(firestore, "attendance"));
 
     const unsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
       const attendanceRecords = snapshot.docs
         .map(doc => doc.data() as Attendance)
-        .filter(record => record.status === 'present');
+        .filter(record => {
+          // Client-side filtering
+          const recordDate = record.timestamp.toDate();
+          return (isAfter(recordDate, tenDaysAgo) || isEqual(recordDate, tenDaysAgo)) && record.status === 'present';
+        });
 
       const attendanceCountsByDay: { [key: string]: number } = {};
 
