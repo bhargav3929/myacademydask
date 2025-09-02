@@ -59,7 +59,9 @@ export function RecentActivity() {
         const studentActivities: Activity[] = await Promise.all(
           studentsSnapshot.docs.map(async (docSnap) => {
             const data = docSnap.data() as Student;
-            const stadiumId = docSnap.ref.parent.parent!.id;
+            const stadiumId = data.stadiumId; // Safer way to get stadiumId
+            if (!stadiumId) return null; // Skip if student has no stadiumId
+
             const stadium = await getStadium(stadiumId);
             return {
               id: docSnap.id,
@@ -69,7 +71,7 @@ export function RecentActivity() {
               timestamp: data.createdAt.toDate(),
             };
           })
-        );
+        ).then(res => res.filter(Boolean) as Activity[]); // Filter out nulls
 
         // 2. Fetch recent attendance submissions
         const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
