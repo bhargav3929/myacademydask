@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { collectionGroup, query, onSnapshot, Timestamp } from "firebase/firestore";
+import { collectionGroup, query, onSnapshot, Timestamp, where } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function AttendanceGraph() {
+export function AttendanceGraph({ organizationId }: { organizationId: string | null }) {
   const [allAttendance, setAllAttendance] = useState<Attendance[]>([]);
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +50,15 @@ export function AttendanceGraph() {
   });
 
   useEffect(() => {
+    if (!organizationId) {
+        setLoading(false);
+        return;
+    };
     setLoading(true);
-    const attendanceQuery = query(collectionGroup(firestore, "attendance"));
+    const attendanceQuery = query(
+        collectionGroup(firestore, "attendance"),
+        where("organizationId", "==", organizationId)
+    );
 
     const unsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
       const attendanceRecords = snapshot.docs.map(doc => doc.data() as Attendance);
@@ -63,7 +70,7 @@ export function AttendanceGraph() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [organizationId]);
 
   const processChartData = useCallback((records: Attendance[], range: DateRange) => {
     if (!range.from) return;

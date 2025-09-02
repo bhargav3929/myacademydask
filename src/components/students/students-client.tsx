@@ -2,8 +2,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, onSnapshot, orderBy, collectionGroup } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { collection, query, onSnapshot, orderBy, collectionGroup, where, doc, getDoc } from "firebase/firestore";
+import { firestore, auth } from "@/lib/firebase";
 import { Student, Stadium } from "@/lib/types";
 import { StudentsTable } from "./students-table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,27 +11,55 @@ import { MotionDiv } from "../motion";
 import { StudentsToolbar } from "./students-toolbar";
 
 export function StudentsClient() {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
+      const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+          if (user) {
+              const userDocRef = doc(firestore, "users", user.uid);
+              const userDocSnap = await getDoc(userDocRef);
+              if (userDocSnap.exists()) {
+                  const orgId = userDocSnap.data().organizationId;
+                  setOrganizationId(orgId);
+              } else {
+                  setLoading(false);
+              }
+          } else {
+              setLoading(false);
+          }
+      });
+      return () => unsubscribeAuth();
+  }, []);
+
+
+  useEffect(() => {
+    if (!organizationId) {
+        setLoading(false);
+        return;
+    };
+
     setLoading(true);
-    // Listener for students from all stadium subcollections
-    const studentsQuery = query(collectionGroup(firestore, "students"));
+
+    // Listener for students from all stadium subcollections within the organization
+    const studentsQuery = query(
+        collectionGroup(firestore, "students"), 
+        where("organizationId", "==", organizationId)
+    );
     const studentsUnsubscribe = onSnapshot(studentsQuery, (snapshot) => {
       const studentsData = snapshot.docs.map(doc => {
-        // We need to get the stadiumId from the parent document path
         const path = doc.ref.path.split('/');
         const stadiumId = path[1];
         return {
           id: doc.id,
-          stadiumId, // Add stadiumId to the student object
+          stadiumId, 
           ...doc.data(),
         } as Student;
       });
-      setStudents(studentsData);
+      setAllStudents(studentsData);
       setFilteredStudents(studentsData);
       setLoading(false);
     }, (error) => {
@@ -39,8 +67,11 @@ export function StudentsClient() {
       setLoading(false);
     });
 
-    // Listener for stadiums
-    const stadiumsQuery = query(collection(firestore, "stadiums"));
+    // Listener for stadiums within the organization
+    const stadiumsQuery = query(
+        collection(firestore, "stadiums"),
+        where("organizationId", "==", organizationId)
+    );
     const stadiumsUnsubscribe = onSnapshot(stadiumsQuery, (snapshot) => {
         const stadiumsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Stadium[];
         setStadiums(stadiumsData);
@@ -50,7 +81,7 @@ export function StudentsClient() {
         studentsUnsubscribe();
         stadiumsUnsubscribe();
     };
-  }, []);
+  }, [organizationId]);
 
   return (
     <MotionDiv 
@@ -60,7 +91,7 @@ export function StudentsClient() {
       className="space-y-4"
     >
       <StudentsToolbar 
-        students={students}
+        students={allStudents}
         stadiums={stadiums}
         setFilteredStudents={setFilteredStudents}
       />

@@ -59,8 +59,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-
 export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -106,7 +104,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         contact: values.contact || "",
         stadiumId: values.stadiumId,
         coachId: selectedStadium.assignedCoachId,
-        organizationId: MOCK_ORGANIZATION_ID,
+        organizationId: selectedStadium.organizationId, // Inherit organizationId from the stadium
         joinDate: Timestamp.fromDate(values.joinDate),
         status: values.status,
         fees: values.fees,

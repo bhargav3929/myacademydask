@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { firestore, auth } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { NewAdmissions } from "@/components/dashboard/new-admissions";
@@ -20,12 +20,10 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
 
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
-const MOCK_USER_ID = "mock-owner-id"; // For fetching director's name
-
 type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all" | "custom";
 
 export default function DashboardPage() {
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [totalStudents, setTotalStudents] = useState(0);
@@ -80,10 +78,36 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    setIsLoading(true);
-    const studentsQuery = query(collectionGroup(firestore, "students"));
+    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const orgId = userDocSnap.data().organizationId;
+          setOrganizationId(orgId);
+          setDirectorName(userDocSnap.data().fullName || "Academy Director");
+        } else {
+            setIsLoading(false);
+            setDirectorName("Academy Director");
+        }
+      } else {
+        setIsLoading(false);
+      }
+    });
+    return () => unsubscribeAuth();
+  }, []);
 
-    const unsubscribe = onSnapshot(studentsQuery, snapshot => {
+
+  useEffect(() => {
+    if (!organizationId) return;
+
+    setIsLoading(true);
+    const studentsQuery = query(
+        collectionGroup(firestore, "students"),
+        where("organizationId", "==", organizationId)
+    );
+
+    const unsubscribeStudents = onSnapshot(studentsQuery, snapshot => {
       const studentsData = snapshot.docs.map(doc => {
           const path = doc.ref.path.split('/');
           const stadiumId = path[1];
@@ -102,31 +126,20 @@ export default function DashboardPage() {
       setIsLoading(false);
     });
 
-    const fetchDirectorName = async () => {
-        try {
-            const userDocRef = doc(firestore, "users", MOCK_USER_ID);
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-                setDirectorName(userDocSnap.data().fullName || "Academy Director");
-            }
-        } catch (error) {
-            console.error("Failed to fetch director's name:", error);
-            setDirectorName("Academy Director");
-        }
-    };
-
-    const stadiumsQuery = query(collection(firestore, "stadiums"), where("status", "==", "active"));
+    const stadiumsQuery = query(
+        collection(firestore, "stadiums"), 
+        where("organizationId", "==", organizationId),
+        where("status", "==", "active")
+    );
     const unsubscribeStadiums = onSnapshot(stadiumsQuery, (snapshot) => {
         setActiveStadiums(snapshot.size);
     });
     
-    fetchDirectorName();
-
     return () => {
-        unsubscribe();
+        unsubscribeStudents();
         unsubscribeStadiums();
     };
-  }, [timeFilter, filterStudentsByDate, customDateRange]);
+  }, [organizationId, timeFilter, filterStudentsByDate, customDateRange]);
 
   useEffect(() => {
     const revenue = filteredStudents.reduce((acc, student) => acc + (student.fees || 0), 0);
@@ -301,10 +314,10 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <AttendanceGraph />
+            <AttendanceGraph organizationId={organizationId} />
         </MotionDiv>
          <MotionDiv variants={itemVariants} className="lg:col-span-1">
-            <RecentActivity />
+            <RecentActivity organizationId={organizationId} />
         </MotionDiv>
       </div>
 

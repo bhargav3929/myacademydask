@@ -1,97 +1,76 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
+
     // Helper functions
-    function isOwner(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'owner';
-    }
-    
-    function isCoach(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'coach';
+    function isOwnerOfOrg(orgId) {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId;
     }
 
+    function isCoachInOrg(orgId) {
+       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'coach';
+    }
+    
     function isSuperAdmin() {
-      return request.auth.token.email == 'superadmin@courtcommand.com';
-    }
-    
-    function userOwnsOrg(userId, orgId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.organizationId == orgId;
-    }
-    
-    function coachIsAssignedToStadium(userId, stadiumId) {
-       return stadiumId in get(/databases/$(database)/documents/users/$(userId)).data.assignedStadiums;
+      // In a real app, you would set a custom claim on the user's token.
+      // For this demo, we can check a field in a super_admin_users collection.
+      return request.auth != null && exists(/databases/$(database)/documents/super_admin_users/$(request.auth.uid));
     }
 
-    // USERS collection
-    match /users/{userId} {
-      // Any authenticated user can read their own profile
-      allow read: if request.auth.uid == userId;
-      // An owner can read profiles of users within their organization
-      allow read: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, resource.data.organizationId);
-      // A super admin can read any user profile
-      allow read: if request.auth != null && isSuperAdmin();
-      // A user can update their own profile
-      allow update: if request.auth.uid == userId;
-       // Super admin can create users (for coaches/owners)
-      allow create: if request.auth != null && isSuperAdmin();
-    }
-    
-    // ORGANIZATIONS collection
-    match /organizations/{orgId} {
-        // An owner can read/write their own organization document
-        allow read, write: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, orgId);
-    }
-    
-    // STADIUMS collection
+
+    // App Data Collections
     match /stadiums/{stadiumId} {
-      // An owner can read/write stadiums within their organization
-      allow read, write: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, resource.data.organizationId);
-      // A coach can read the stadium they are assigned to
-      allow read: if request.auth != null && isCoach(request.auth.uid) && coachIsAssignedToStadium(request.auth.uid, stadiumId);
+      allow read, write: if isOwnerOfOrg(resource.data.organizationId);
+      
+      match /students/{studentId} {
+        allow read: if isOwnerOfOrg(resource.data.organizationId) || isCoachInOrg(resource.data.organizationId);
+        allow create, update, delete: if isOwnerOfOrg(request.resource.data.organizationId) || isCoachInOrg(request.resource.data.organizationId);
+      }
+
+      match /attendance/{attendanceId} {
+         allow read: if isOwnerOfOrg(resource.data.organizationId) || isCoachInOrg(resource.data.organizationId);
+         allow create: if isCoachInOrg(request.resource.data.organizationId);
+      }
+    }
+
+    // This allows a collectionGroup query on "students" but only if the user is part of the organization
+    match /{path=**}/students/{studentId} {
+       allow read: if isOwnerOfOrg(get(/databases/$(database)/documents/$(path)).data.organizationId);
     }
     
-    // STUDENTS subcollection
-    match /stadiums/{stadiumId}/students/{studentId} {
-      // An owner can manage students in their org's stadiums
-      allow read, write, delete: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-      // A coach can manage students in their assigned stadium
-      allow read, write, delete: if request.auth != null && isCoach(request.auth.uid) && coachIsAssignedToStadium(request.auth.uid, stadiumId);
+     // This allows a collectionGroup query on "attendance" but only if the user is part of the organization
+    match /{path=**}/attendance/{attendanceId} {
+       allow read: if isOwnerOfOrg(get(/databases/$(database)/documents/$(path)).data.organizationId);
     }
-
-    // ATTENDANCE subcollection
-     match /stadiums/{stadiumId}/attendance/{attendanceId} {
-       // An owner can read attendance in their org's stadiums
-      allow read: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-      // A coach can read and write attendance in their assigned stadium
-      allow read, write: if request.auth != null && isCoach(request.auth.uid) && coachIsAssignedToStadium(request.auth.uid, stadiumId);
-    }
-
-    // ATTENDANCE SUBMISSIONS collection
+    
     match /attendance_submissions/{submissionId} {
-       // An owner can read attendance submissions in their org
-       allow read: if request.auth != null && isOwner(request.auth.uid); // Needs refinement if orgId is added
-       // A coach can create attendance submissions
-       allow create: if request.auth != null && isCoach(request.auth.uid);
-       // Super admin can read all submissions
-       allow read: if request.auth != null && isSuperAdmin();
+        allow read: if isOwnerOfOrg(resource.data.organizationId);
+        allow create: if isCoachInOrg(request.resource.data.organizationId);
     }
-    
-    // SUPER ADMIN collections
+
+    // User and Organization Management
+    match /users/{userId} {
+      // Any authenticated user can create their own user document (for signup)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Users can read/update their own profile. Owners can read any user in their org.
+      allow read, update: if request.auth.uid == userId || isOwnerOfOrg(get(/databases/$(database)/documents/users/$(userId)).data.organizationId);
+    }
+
+    match /organizations/{orgId} {
+        allow read, update: if isOwnerOfOrg(orgId);
+    }
+
+
+    // Super Admin Collections
     match /stadium_owners/{ownerId} {
-      // Only super admin can read or write stadium owner documents
-      allow read, write: if request.auth != null && isSuperAdmin();
+      allow read, create, update: if isSuperAdmin();
     }
 
     match /super_admin_users/{adminId} {
-      // Only a super admin can read their own document
-      allow read, write: if request.auth != null && isSuperAdmin() && request.auth.uid == adminId;
-    }
-
-    match /system_metrics/{document=**} {
-      // Only super admin can read system metrics
-      allow read: if request.auth != null && isSuperAdmin();
+      allow read: if isSuperAdmin();
+      allow create, update: if isSuperAdmin() && request.auth.uid == adminId;
     }
   }
 }

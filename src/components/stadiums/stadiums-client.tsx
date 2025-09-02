@@ -2,8 +2,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { collection, query, onSnapshot, orderBy, where, doc, getDoc } from "firebase/firestore";
+import { firestore, auth } from "@/lib/firebase";
 import { Stadium } from "@/lib/types";
 import { StadiumsTable } from "./stadiums-table";
 import { AddStadiumDialog } from "./stadium-form-dialog";
@@ -15,25 +15,43 @@ export function StadiumsClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, this query should be filtered by organizationId based on the authenticated user.
-    const q = query(
-      collection(firestore, "stadiums"),
-      orderBy("createdAt", "desc")
-    );
+    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            // Fetch the owner's organization ID from their user profile
+            const userDocRef = doc(firestore, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const stadiumsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Stadium[];
-      setStadiums(stadiumsData);
-      setLoading(false);
-    }, (error) => {
-        console.error("Error fetching stadiums:", error);
+            if (userDocSnap.exists()) {
+                const organizationId = userDocSnap.data().organizationId;
+                if(organizationId) {
+                    const q = query(
+                        collection(firestore, "stadiums"),
+                        where("organizationId", "==", organizationId),
+                        orderBy("createdAt", "desc")
+                    );
+
+                    const unsubscribeSnap = onSnapshot(q, (snapshot) => {
+                        const stadiumsData = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data(),
+                        })) as Stadium[];
+                        setStadiums(stadiumsData);
+                        setLoading(false);
+                    }, (error) => {
+                        console.error("Error fetching stadiums:", error);
+                        setLoading(false);
+                    });
+                    
+                    // Return the snapshot unsubscribe function to be called on cleanup
+                    return () => unsubscribeSnap();
+                }
+            }
+        }
+        // If user is not logged in or doesn't have an org ID
         setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
   return (

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// In a real app, this would come from the authenticated user's session
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-
 
 export function AddStadiumDialog() {
   const { toast } = useToast();
@@ -77,12 +74,12 @@ export function AddStadiumDialog() {
     }
   };
 
-  const checkStadiumNameExists = async (name: string) => {
-    if (!name) return false;
+  const checkStadiumNameExists = async (name: string, organizationId: string) => {
+    if (!name || !organizationId) return false;
     const q = query(
         collection(firestore, "stadiums"), 
         where("name", "==", name), 
-        where("organizationId", "==", MOCK_ORGANIZATION_ID)
+        where("organizationId", "==", organizationId)
     );
     const querySnapshot = await getDocs(q);
     return !querySnapshot.empty;
@@ -91,14 +88,32 @@ export function AddStadiumDialog() {
     if (!username) return false;
     const q = query(collection(firestore, "users"), where("username", "==", username));
     const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
+    return !query_snapshot.empty;
   }
 
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    
+    const owner = auth.currentUser;
+    if (!owner) {
+        toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to create a stadium." });
+        setIsLoading(false);
+        return;
+    }
 
     try {
+        // Fetch the owner's organization ID from their user profile
+        const ownerUserDocRef = doc(firestore, "users", owner.uid);
+        const ownerUserDocSnap = await getDoc(ownerUserDocRef);
+        if (!ownerUserDocSnap.exists()) {
+            throw new Error("Owner user profile not found.");
+        }
+        const organizationId = ownerUserDocSnap.data().organizationId;
+        if (!organizationId) {
+            throw new Error("Organization ID is missing from owner profile.");
+        }
+
         // 1. Create Coach Auth User
         const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, values.coachPassword);
         const coachUid = userCredential.user.uid;
@@ -111,7 +126,7 @@ export function AddStadiumDialog() {
         batch.set(stadiumDocRef, {
             name: values.stadiumName,
             location: values.location,
-            organizationId: MOCK_ORGANIZATION_ID,
+            organizationId: organizationId, // Use the fetched organizationId
             assignedCoachId: coachUid,
             coachDetails: {
                 name: values.coachFullName,
@@ -132,7 +147,7 @@ export function AddStadiumDialog() {
             username: values.coachUsername,
             fullName: values.coachFullName,
             role: "coach",
-            organizationId: MOCK_ORGANIZATION_ID,
+            organizationId: organizationId, // Use the same organizationId
             assignedStadiums: [stadiumDocRef.id],
             createdAt: timestamp,
         });
@@ -193,8 +208,16 @@ export function AddStadiumDialog() {
                         {...field} 
                         onBlur={async (e) => {
                             field.onBlur();
-                            if(await checkStadiumNameExists(e.target.value)) {
-                                form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists."});
+                            const owner = auth.currentUser;
+                            if (owner) {
+                               const ownerUserDocRef = doc(firestore, "users", owner.uid);
+                               const ownerUserDocSnap = await getDoc(ownerUserDocRef);
+                               if (ownerUserDocSnap.exists()) {
+                                   const orgId = ownerUserDocSnap.data().organizationId;
+                                   if(await checkStadiumNameExists(e.target.value, orgId)) {
+                                       form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
+                                   }
+                               }
                             }
                         }}
                         />

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, limit, doc, getDoc, getDocs, collectionGroup } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, getDoc, getDocs, collectionGroup, where } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck } from "lucide-react";
@@ -25,7 +25,7 @@ const activityIcons: Record<ActivityType, React.ReactNode> = {
   new_student: <UserPlus className="size-5 text-primary" />,
 };
 
-export function RecentActivity() {
+export function RecentActivity({ organizationId }: { organizationId: string | null }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
@@ -35,6 +35,11 @@ export function RecentActivity() {
   }, []);
 
   useEffect(() => {
+    if (!organizationId) {
+        setLoading(false);
+        return;
+    };
+
     const fetchActivities = async () => {
       setLoading(true);
       try {
@@ -58,6 +63,7 @@ export function RecentActivity() {
             // 1. Fetch recent student admissions
             const studentsQuery = query(
               collectionGroup(firestore, "students"), 
+              where("organizationId", "==", organizationId),
               orderBy("createdAt", "desc"),
               limit(5)
             );
@@ -90,7 +96,12 @@ export function RecentActivity() {
 
 
         // 2. Fetch recent attendance submissions
-        const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
+        const attendanceQuery = query(
+            collection(firestore, "attendance_submissions"), 
+            where("organizationId", "==", organizationId),
+            orderBy("timestamp", "desc"), 
+            limit(5)
+        );
         const attendanceSnapshot = await getDocs(attendanceQuery);
         const attendanceActivities: Activity[] = await Promise.all(
           attendanceSnapshot.docs.map(async (docSnap) => {
@@ -121,7 +132,7 @@ export function RecentActivity() {
     };
     
     fetchActivities();
-  }, []);
+  }, [organizationId]);
 
   return (
     <Card className="h-full flex flex-col">
