@@ -51,6 +51,7 @@ const formSchema = z.object({
   age: z.coerce.number().min(3, "Age must be at least 3.").max(100),
   parentContact: z.string().min(10, "Please enter a valid contact number."),
   parentEmail: z.string().email("Please enter a valid parent email."),
+  fees: z.coerce.number().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -67,6 +68,10 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     defaultValues: {
       fullName: "",
       status: 'active',
+      age: undefined,
+      parentContact: "",
+      parentEmail: "",
+      fees: undefined,
     },
   });
 
@@ -85,10 +90,11 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         parentContact: values.parentContact,
         parentEmail: values.parentEmail,
         stadiumId: values.stadiumId,
-        coachId: selectedStadium.assignedCoachId, // Correctly add the coachId
+        coachId: selectedStadium.assignedCoachId,
         organizationId: MOCK_ORGANIZATION_ID,
         joinDate: values.joinDate,
         status: values.status,
+        fees: values.fees || 0,
         createdAt: serverTimestamp(),
       });
 
@@ -276,6 +282,19 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                     )}
                 />
             </div>
+             <FormField
+                control={form.control}
+                name="fees"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fees (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 100" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -289,5 +308,3 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     </Dialog>
   );
 }
-
-    

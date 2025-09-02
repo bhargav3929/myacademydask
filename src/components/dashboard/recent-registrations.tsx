@@ -62,7 +62,7 @@ export function RecentRegistrations({ data }: { data: Student[] }) {
                             <span className="font-medium">{item.fullName}</span>
                         </div>
                     </TableCell>
-                    <TableCell>{format(item.joinDate.toDate(), "dd MMM yyyy")}</TableCell>
+                    <TableCell>{item.joinDate?.toDate ? format(item.joinDate.toDate(), "dd MMM yyyy") : 'N/A'}</TableCell>
                     <TableCell>
                         <Badge variant="outline" className={cn(badgeVariants[item.status || 'active'], "capitalize")}>
                           {item.status || 'Active'}

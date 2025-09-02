@@ -38,7 +38,7 @@ export interface Stadium {
   status: "active" | "inactive";
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  settings: {
+  settings?: {
     operatingDays: string[];
     defaultSchedule: string;
   }
@@ -55,6 +55,7 @@ export interface Student {
   organizationId: string;
   joinDate: Timestamp;
   status: 'active' | 'trial' | 'inactive';
+  fees?: number;
   createdAt: Timestamp;
 }
 

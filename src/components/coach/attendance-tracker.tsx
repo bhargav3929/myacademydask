@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, query, where, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { firestore, auth } from "@/lib/firebase";
 import { Student } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,60 +12,78 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { AddStudentDialog } from "../students/student-form-dialog";
 
 type AttendanceStatus = {
   [studentId: string]: 'present' | 'absent' | null;
 };
 
-// These should be replaced with the actual authenticated coach's details
-const MOCK_STADIUM_ID = "mock-stadium-id"; // This needs to be dynamically determined
-const MOCK_COACH_ID = "mock-coach-id";
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-
 export function AttendanceTracker() {
   const { toast } = useToast();
+  const [stadiumId, setStadiumId] = useState<string | null>(null);
   const [stadiumName, setStadiumName] = useState("Your Assigned Stadium");
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<AttendanceStatus>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you would get the logged-in coach's assigned stadium ID
-    if (!MOCK_STADIUM_ID) return;
+    const fetchCoachData = async (uid: string) => {
+        const userDocRef = doc(firestore, "users", uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists() && userDocSnap.data().assignedStadiums?.[0]) {
+            const assignedStadiumId = userDocSnap.data().assignedStadiums[0];
+            setStadiumId(assignedStadiumId);
+        } else {
+            setLoading(false);
+        }
+    };
 
-    const q = query(collection(firestore, `stadiums/${MOCK_STADIUM_ID}/students`));
+    const unsubscribeAuth = auth.onAuthStateChanged(user => {
+        if (user) {
+            fetchCoachData(user.uid);
+        } else {
+            setLoading(false);
+        }
+    });
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!stadiumId) return;
+
+    // Fetch stadium details
+    const stadiumDocRef = doc(firestore, "stadiums", stadiumId);
+    const unsubscribeStadium = onSnapshot(stadiumDocRef, (stadiumDoc) => {
+        if (stadiumDoc.exists()) {
+            setStadiumName(stadiumDoc.data().name);
+        }
+    });
+
+    // Fetch students for the stadium
+    const q = query(collection(firestore, `stadiums/${stadiumId}/students`));
+    const unsubscribeStudents = onSnapshot(q, (snapshot) => {
         const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
         setStudents(studentsData);
-
-        if (MOCK_STADIUM_ID) {
-            getDoc(doc(firestore, "stadiums", MOCK_STADIUM_ID)).then(stadiumDoc => {
-                if(stadiumDoc.exists()) {
-                    setStadiumName(stadiumDoc.data().name);
-                }
-            });
-        }
         setLoading(false);
     }, (error) => {
         console.error("Error fetching students: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not fetch student data.",
-        });
+        toast({ variant: "destructive", title: "Error", description: "Could not fetch student data." });
         setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [toast]);
+    return () => {
+        unsubscribeStadium();
+        unsubscribeStudents();
+    };
+  }, [stadiumId, toast]);
 
   const handleMarkAttendance = async (studentId: string, status: 'present' | 'absent') => {
-    if (!MOCK_STADIUM_ID) return;
+    if (!stadiumId || !auth.currentUser) return;
 
     const todayStr = format(new Date(), "yyyy-MM-dd");
     const attendanceDocId = `${studentId}_${todayStr}`;
-    const attendanceRef = doc(firestore, `stadiums/${MOCK_STADIUM_ID}/attendance`, attendanceDocId);
+    const attendanceRef = doc(firestore, `stadiums/${stadiumId}/attendance`, attendanceDocId);
 
     const originalStatus = attendance[studentId];
     setAttendance(prev => ({ ...prev, [studentId]: status }));
@@ -75,10 +93,10 @@ export function AttendanceTracker() {
         studentId,
         date: todayStr,
         status,
-        markedByCoachId: MOCK_COACH_ID,
-        organizationId: MOCK_ORGANIZATION_ID,
+        markedByCoachId: auth.currentUser.uid,
+        organizationId: (await getDoc(doc(firestore, "stadiums", stadiumId))).data()?.organizationId,
         timestamp: serverTimestamp(),
-      }, { merge: true }); // Use merge to update if entry for today already exists
+      }, { merge: true });
       toast({
         title: "Success",
         description: `Marked ${students.find(s=>s.id===studentId)?.fullName} as ${status}.`,
@@ -124,11 +142,14 @@ export function AttendanceTracker() {
 
   return (
       <Card>
-        <CardHeader>
-          <CardTitle>Mark Today's Attendance</CardTitle>
-          <CardDescription>
-            For {stadiumName} on {format(new Date(), 'PPP')}.
-          </CardDescription>
+        <CardHeader className="flex flex-row justify-between items-start">
+            <div>
+              <CardTitle>Mark Today's Attendance</CardTitle>
+              <CardDescription>
+                For {stadiumName} on {format(new Date(), 'PPP')}.
+              </CardDescription>
+            </div>
+             <AddStudentDialog stadiums={stadiumId ? [{id: stadiumId, name: stadiumName} as any] : []} />
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
