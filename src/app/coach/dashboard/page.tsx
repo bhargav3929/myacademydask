@@ -1,7 +1,6 @@
 
 "use client";
 import { AttendanceTracker } from "@/components/coach/attendance-tracker";
-import { DailyAttendanceSummary } from "@/components/coach/daily-attendance-summary";
 import { MotionDiv } from "@/components/motion";
 
 export default function CoachDashboardPage() {
@@ -21,7 +20,6 @@ export default function CoachDashboardPage() {
                 </div>
             </div>
             <AttendanceTracker />
-            <DailyAttendanceSummary />
         </MotionDiv>
     )
 }
