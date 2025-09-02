@@ -1,58 +1,44 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ORGANIZATION
-    match /organizations/{orgId} {
-      // Owners can read and write their own organization document
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
-    }
-
-    // USERS
-    match /users/{userId} {
-      // A user can read/write their own profile.
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // An owner can read any user profile within their organization.
-      allow read: if request.auth != null && request.auth.token.role == "owner" &&
-                  exists(/databases/$(database)/documents/organizations/$(request.auth.token.organizationId)) &&
-                  get(/databases/$(database)/documents/organizations/$(request.auth.token.organizationId)).data.ownerId == request.auth.uid;
-    }
-
-    // STADIUMS
+    // Allow owners to read/write stadiums they own
     match /stadiums/{stadiumId} {
-      // Allow owners to read/write stadiums in their organization
       allow read, write: if request.auth != null && 
-                         request.auth.token.role == "owner" &&
-                         request.auth.token.organizationId == resource.data.organizationId;
-    }
-
-    // STUDENTS (subcollection of stadiums)
-    match /stadiums/{stadiumId}/students/{studentId} {
-      // Owners can read/write students in their organization's stadiums
-      allow read, write: if request.auth != null && 
-                         request.auth.token.role == "owner" &&
-                         request.auth.token.organizationId == resource.data.organizationId;
-                         
-      // Coaches can read/write students in their assigned stadium
-      allow read, write: if request.auth != null &&
-                         request.auth.token.role == "coach" &&
-                         request.auth.uid == resource.data.coachId;
+        request.auth.token.role == "owner" && 
+        resource.data.organizationId == request.auth.token.organizationId;
     }
     
-    // ATTENDANCE (subcollection of stadiums)
-    match /stadiums/{stadiumId}/attendance/{attendanceId} {
-       // Owners can read/write attendance in their organization's stadiums
-      allow read, write: if request.auth != null && 
-                         request.auth.token.role == "owner" &&
-                         request.auth.token.organizationId == resource.data.organizationId;
-      
-      // Coaches can read/write attendance for their assigned stadium
-      allow read, write: if request.auth != null &&
-                         request.auth.token.role == "coach" &&
-                         request.auth.uid == resource.data.markedByCoachId;
+    // Allow coaches to read their assigned stadium
+    match /stadiums/{stadiumId} {
+      allow read: if request.auth != null && 
+        request.auth.token.role == "coach" && 
+        resource.data.assignedCoachId == request.auth.uid;
+    }
+    
+    // Students collection access
+    match /students/{studentId} {
+      allow read, write: if request.auth != null && (
+        (request.auth.token.role == "owner" && request.auth.token.organizationId == resource.data.organizationId) ||
+        (request.auth.token.role == "coach" && request.auth.uid == resource.data.coachId)
+      );
+    }
+
+     // User profile access
+    match /users/{userId} {
+      // Owners can read all user profiles in their org, coaches can read their own
+      allow read: if request.auth != null &&
+        (
+          (request.auth.token.role == 'owner' && get(/databases/$(database)/documents/users/$(userId)).data.organizationId == request.auth.token.organizationId) ||
+          (request.auth.uid == userId)
+        );
+
+      // Only owners can create new users (as part of stadium creation)
+      // Users can update their own profile
+      allow write: if request.auth != null &&
+        (
+          (request.auth.token.role == 'owner') || // Owners can create
+          (request.auth.uid == userId) // Users can update their own
+        );
     }
   }
 }
-    
