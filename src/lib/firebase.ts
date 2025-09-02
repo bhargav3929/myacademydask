@@ -3,6 +3,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getFunctions, Functions } from "firebase/functions";
+require('dotenv').config({ path: './.env.local' });
 
 // This file can be logged to the server console, so it's safe to log env vars.
 // console.log("--- Firebase Initialization ---");
