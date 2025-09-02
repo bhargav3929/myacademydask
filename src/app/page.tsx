@@ -72,14 +72,10 @@ export default function Home() {
               Pricing
             </Link>
             <Button asChild variant="ghost">
-              <Link href="/login">
-                Owner Login
-              </Link>
+              <Link href="/login">Owner Login</Link>
             </Button>
             <Button asChild>
-              <Link href="/login">
-                Coach Login
-              </Link>
+              <Link href="/login">Coach Login</Link>
             </Button>
              <Button asChild variant="outline" size="sm">
               <Link href="/super-admin/login">
@@ -208,3 +204,4 @@ export default function Home() {
     </div>
   );
 }
+ 
