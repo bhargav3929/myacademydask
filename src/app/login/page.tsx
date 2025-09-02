@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, FirebaseError } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
@@ -107,9 +107,9 @@ export default function LoginPage() {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
         await handleSuccessfulLogin(userCredential.user);
-      } catch (error: any) {
-        // If login fails, check if it's the default owner and create them if they don't exist
-        if (error.code === 'auth/invalid-credential' && email === OWNER_EMAIL && data.password === OWNER_PASSWORD) {
+      } catch (error) {
+        if (error instanceof FirebaseError && error.code === 'auth/invalid-credential' && email === OWNER_EMAIL && data.password === OWNER_PASSWORD) {
+          // This is the first-time login for the default owner. Create the account.
           try {
             const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
             const user = userCredential.user;
@@ -123,14 +123,17 @@ export default function LoginPage() {
               createdAt: serverTimestamp(),
             });
             await handleSuccessfulLogin(user);
-
           } catch (creationError) {
-              console.error("Failed to create default owner:", creationError);
-              throw new Error("Failed to initialize owner account.");
+            console.error("Failed to create default owner:", creationError);
+            toast({
+                variant: "destructive",
+                title: "Setup Failed",
+                description: "Could not initialize the owner account. Please try again.",
+            });
           }
         } else {
-            // Re-throw other errors
-            throw error;
+          // For any other error, show the generic login failed message
+          throw error;
         }
       }
     } catch (error: any) {
@@ -138,7 +141,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
+        description: "Invalid credentials. Please check your email and password.",
       });
     } finally {
       setIsLoading(false);
