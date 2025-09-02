@@ -1,99 +1,97 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+  
+    // Helper functions
+    function isOwner(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'owner';
+    }
     
-    // Helper function to check if a user is a super admin
+    function isCoach(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'coach';
+    }
+
     function isSuperAdmin() {
-      return exists(/databases/$(database)/documents/super_admin_users/$(request.auth.uid));
+      return request.auth.token.email == 'superadmin@courtcommand.com';
     }
     
-    // Helper function to check if a user is an owner of a specific organization
-    function isOwner(organizationId) {
-      return request.auth.uid == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.uid
-             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == organizationId
-             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
+    function userOwnsOrg(userId, orgId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.organizationId == orgId;
     }
     
-    // Helper function to check if a user is a coach assigned to a specific stadium
-    function isCoach(stadiumId) {
-      let user = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return user.role == 'coach' && stadiumId in user.assignedStadiums;
-    }
-    
-    // --- Super Admin Collections ---
-    
-    match /super_admin_users/{userId} {
-      allow read: if isSuperAdmin();
-      allow write: if isSuperAdmin() && request.auth.uid == userId;
-    }
-    
-    match /stadium_owners/{ownerId} {
-      allow read, write: if isSuperAdmin();
+    function coachIsAssignedToStadium(userId, stadiumId) {
+       return stadiumId in get(/databases/$(database)/documents/users/$(userId)).data.assignedStadiums;
     }
 
-    match /system_metrics/{document=**} {
-      allow read: if isSuperAdmin();
-      allow write: if false; // Should only be written by backend functions
-    }
-    
-    // --- Application Collections ---
-
-    // USERS collection stores profiles for owners AND coaches
+    // USERS collection
     match /users/{userId} {
       // Any authenticated user can read their own profile
-      allow get: if request.auth.uid == userId;
-      // Owners can read profiles of coaches in their organization
-      allow list: if isOwner(request.auth.token.organizationId); 
-      // Super admins can read any user profile
-      allow read: if isSuperAdmin();
-      // Users can update their own profile (e.g., name)
+      allow read: if request.auth.uid == userId;
+      // An owner can read profiles of users within their organization
+      allow read: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, resource.data.organizationId);
+      // A super admin can read any user profile
+      allow read: if request.auth != null && isSuperAdmin();
+      // A user can update their own profile
       allow update: if request.auth.uid == userId;
-      // Creation is handled by Super Admin (for owners) or Stadium creation (for coaches)
-      allow create: if isSuperAdmin();
+       // Super admin can create users (for coaches/owners)
+      allow create: if request.auth != null && isSuperAdmin();
     }
     
-    // ORGANIZATIONS collection (currently used for settings)
+    // ORGANIZATIONS collection
     match /organizations/{orgId} {
-        // Only the owner of that organization can read/write
-        allow read, write: if isOwner(orgId);
+        // An owner can read/write their own organization document
+        allow read, write: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, orgId);
     }
     
     // STADIUMS collection
     match /stadiums/{stadiumId} {
-        // An owner can read stadiums in their org
-        allow read: if isOwner(resource.data.organizationId);
-        // An owner can create stadiums for their org
-        allow create: if isOwner(request.resource.data.organizationId);
-        // An owner can update stadiums in their org
-        allow update: if isOwner(resource.data.organizationId);
-        // Coaches can read the details of the stadium they are assigned to
-        allow get: if isCoach(stadiumId);
+      // An owner can read/write stadiums within their organization
+      allow read, write: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, resource.data.organizationId);
+      // A coach can read the stadium they are assigned to
+      allow read: if request.auth != null && isCoach(request.auth.uid) && coachIsAssignedToStadium(request.auth.uid, stadiumId);
     }
     
     // STUDENTS subcollection
     match /stadiums/{stadiumId}/students/{studentId} {
-        // The owner of the organization can R/W students in any of their stadiums
-        allow read, write: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-        // The coach of that specific stadium can R/W students
-      allow read, write: if isCoach(stadiumId);
-    }
-    
-    // ATTENDANCE subcollection
-    match /stadiums/{stadiumId}/attendance/{attendanceId} {
-       // The owner of the organization can read attendance
-      allow read: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-       // The coach of that specific stadium can R/W attendance
-      allow read, write: if isCoach(stadiumId);
+      // An owner can manage students in their org's stadiums
+      allow read, write, delete: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
+      // A coach can manage students in their assigned stadium
+      allow read, write, delete: if request.auth != null && isCoach(request.auth.uid) && coachIsAssignedToStadium(request.auth.uid, stadiumId);
     }
 
-    // ATTENDANCE_SUBMISSIONS collection for recent activity feed
+    // ATTENDANCE subcollection
+     match /stadiums/{stadiumId}/attendance/{attendanceId} {
+       // An owner can read attendance in their org's stadiums
+      allow read: if request.auth != null && isOwner(request.auth.uid) && userOwnsOrg(request.auth.uid, get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
+      // A coach can read and write attendance in their assigned stadium
+      allow read, write: if request.auth != null && isCoach(request.auth.uid) && coachIsAssignedToStadium(request.auth.uid, stadiumId);
+    }
+
+    // ATTENDANCE SUBMISSIONS collection
     match /attendance_submissions/{submissionId} {
-       // Owners can read submissions for their org's stadiums
-      allow read: if isOwner(get(/databases/$(database)/documents/stadiums/$(resource.data.stadiumId)).data.organizationId);
-      // Only authenticated coaches can create them
-      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.resource.data.submittedByCoachId)).data.role == 'coach';
+       // An owner can read attendance submissions in their org
+       allow read: if request.auth != null && isOwner(request.auth.uid); // Needs refinement if orgId is added
+       // A coach can create attendance submissions
+       allow create: if request.auth != null && isCoach(request.auth.uid);
+       // Super admin can read all submissions
+       allow read: if request.auth != null && isSuperAdmin();
+    }
+    
+    // SUPER ADMIN collections
+    match /stadium_owners/{ownerId} {
+      // Only super admin can read or write stadium owner documents
+      allow read, write: if request.auth != null && isSuperAdmin();
+    }
+
+    match /super_admin_users/{adminId} {
+      // Only a super admin can read their own document
+      allow read, write: if request.auth != null && isSuperAdmin() && request.auth.uid == adminId;
+    }
+
+    match /system_metrics/{document=**} {
+      // Only super admin can read system metrics
+      allow read: if request.auth != null && isSuperAdmin();
     }
   }
 }

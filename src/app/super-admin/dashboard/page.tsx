@@ -20,7 +20,7 @@ export default function SuperAdminDashboardPage() {
         </div>
       </div>
       
-      {/* <BasicAnalytics /> */}
+      <BasicAnalytics />
 
       <StadiumOwnerManager />
 
