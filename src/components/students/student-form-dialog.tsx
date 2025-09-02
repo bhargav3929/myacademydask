@@ -102,8 +102,6 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         age: values.age,
         batch: values.batch,
         contact: values.contact || "",
-        stadiumId: values.stadiumId,
-        coachId: selectedStadium.assignedCoachId,
         organizationId: selectedStadium.organizationId, // Inherit organizationId from the stadium
         joinDate: Timestamp.fromDate(values.joinDate),
         status: values.status,
@@ -333,3 +331,5 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     </Dialog>
   );
 }
+
+    

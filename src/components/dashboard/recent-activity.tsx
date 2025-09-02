@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, limit, doc, getDoc, getDocs, collectionGroup, where } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, getDoc, getDocs, collectionGroup, where, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck } from "lucide-react";
@@ -71,7 +71,7 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
             studentActivities = await Promise.all(
               studentsSnapshot.docs.map(async (docSnap) => {
                 const data = docSnap.data() as Student;
-                const stadiumId = data.stadiumId;
+                const stadiumId = docSnap.ref.parent.parent?.id;
                 if (!stadiumId || !data.createdAt) return null;
     
                 const stadium = await getStadium(stadiumId);
@@ -80,12 +80,12 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
                   title: data.fullName,
                   description: `Joined ${stadium?.name || "a stadium"}.`,
                   type: "new_student" as ActivityType,
-                  timestamp: data.createdAt.toDate(),
+                  timestamp: (data.createdAt as Timestamp).toDate(),
                 };
               })
             ).then(res => res.filter(Boolean) as Activity[]);
         } catch (error) {
-             if (error instanceof Error && error.message.includes("requires a COLLECTION_GROUP_DESC index")) {
+             if (error instanceof Error && error.message.includes("requires an index")) {
                 console.error("Firestore index missing for students collection group. Please create it in the Firebase console to see new student activities.", error);
                 // Gracefully fail and continue without student activities.
                 studentActivities = [];
@@ -112,7 +112,7 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
               title: `${stadium?.name || "A stadium"}`,
               description: `${data.batch} attendance taken.`,
               type: 'attendance_submission' as ActivityType,
-              timestamp: data.timestamp.toDate(),
+              timestamp: (data.timestamp as Timestamp).toDate(),
             };
           })
         );
@@ -180,3 +180,5 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
     </Card>
   );
 }
+
+    

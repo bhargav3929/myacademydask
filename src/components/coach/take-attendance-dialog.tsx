@@ -10,9 +10,10 @@ import {
   writeBatch,
   doc,
   serverTimestamp,
+  collectionGroup,
 } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
-import { Student, Stadium, StudentBatches, Attendance } from "@/lib/types";
+import { Student, Stadium, StudentBatches, Attendance, AttendanceSubmission } from "@/lib/types";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -157,6 +158,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
       const submissionDocRef = doc(collection(firestore, "attendance_submissions"));
       dbBatch.set(submissionDocRef, {
         stadiumId: stadium.id,
+        organizationId: stadium.organizationId,
         batch: selectedBatch,
         date: dateStr,
         submittedByCoachId: auth.currentUser.uid,
@@ -343,3 +345,5 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     </Dialog>
   );
 }
+
+    
