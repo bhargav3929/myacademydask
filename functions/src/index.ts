@@ -63,7 +63,6 @@ export const createStadiumAndCoach = functions.https.onCall(
       // 4. Create the coach's user profile in the 'users' collection
       const userProfileRef = db.collection("users").doc(userRecord.uid);
       batch.set(userProfileRef, {
-        uid: userRecord.uid,
         email: data.coachEmail,
         fullName: data.coachFullName,
         organizationId: data.organizationId,
