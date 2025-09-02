@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp, endOfDay } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { StudentEnrollmentChart } from "@/components/dashboard/student-enrollment-chart";
 import { Button } from "@/components/ui/button";
-import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format } from "date-fns";
+import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
