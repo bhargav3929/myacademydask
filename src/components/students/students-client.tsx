@@ -19,7 +19,7 @@ export function StudentsClient() {
   useEffect(() => {
     setLoading(true);
     // Listener for students from all stadium subcollections
-    const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("fullName"));
+    const studentsQuery = query(collectionGroup(firestore, "students"));
     const studentsUnsubscribe = onSnapshot(studentsQuery, (snapshot) => {
       const studentsData = snapshot.docs.map(doc => {
         // We need to get the stadiumId from the parent document path
