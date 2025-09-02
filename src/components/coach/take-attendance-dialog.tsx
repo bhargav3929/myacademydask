@@ -64,6 +64,8 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     } else {
       setStudentsInBatch([]);
     }
+    // Reset attendance when batch changes
+    setAttendance({});
   }, [selectedBatch, allStudents]);
 
   const fetchAttendance = useCallback(async () => {
@@ -125,8 +127,10 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     studentsInBatch.forEach((student) => {
       const status = attendance[student.id];
       if (status) { // Only write if a status is set
-        const attendanceDocId = `${student.id}_${dateStr}`;
-        const attendanceRef = doc(firestore, `stadiums/${stadium.id}/attendance`, attendanceDocId);
+        // Use a unique ID for each record to prevent overwrites on re-submission.
+        const attendanceCollectionRef = collection(firestore, `stadiums/${stadium.id}/attendance`);
+        const attendanceRef = doc(attendanceCollectionRef, `${student.id}_${dateStr}`);
+        
         batch.set(attendanceRef, {
           studentId: student.id,
           date: dateStr,
@@ -136,7 +140,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
           organizationId: stadium.organizationId,
           stadiumId: stadium.id,
           timestamp: serverTimestamp(),
-        }, { merge: true }); // Use merge to avoid overwriting unrelated data if doc exists
+        }, { merge: true }); // Use merge to create/update the record for that student on that day.
       }
     });
 
@@ -320,3 +324,5 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     </Dialog>
   );
 }
+
+    
