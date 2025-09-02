@@ -88,7 +88,7 @@ export function AddStadiumDialog() {
     if (!username) return false;
     const q = query(collection(firestore, "users"), where("username", "==", username));
     const querySnapshot = await getDocs(q);
-    return !query_snapshot.empty;
+    return !querySnapshot.empty;
   }
 
 
