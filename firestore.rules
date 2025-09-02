@@ -1,68 +1,62 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is an owner of a given organization
-    function isOwner(orgId) {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
-    }
-
-    // Helper function to check if a user is a coach of a given stadium
-    function isCoachOfStadium(stadiumId) {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'coach' &&
-             stadiumId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedStadiums;
+  
+    // Helper functions
+    function isOwner(organizationId) {
+      return request.auth.token.role == 'owner' && request.auth.token.organizationId == organizationId;
     }
     
-    // Helper function to check if a user is part of an organization
-    function isMemberOfOrg(orgId) {
-        return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId;
+    function isCoach(organizationId) {
+      return request.auth.token.role == 'coach' && request.auth.token.organizationId == organizationId;
+    }
+    
+    function isAssignedToStadium(stadiumId) {
+      // Check if the coach's UID is in the assignedStadiums array in their user profile
+      return request.auth.uid in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedStadiums;
     }
 
-    // Users can only read their own profile, admins can read any profile in their org.
-    match /users/{userId} {
-      allow read: if request.auth.uid == userId || isOwner(resource.data.organizationId);
-      allow create: if request.auth.uid != null; // Let Cloud Function handle role assignment
-      allow update: if request.auth.uid == userId; // Users can update their own profile
-    }
-
-    // Organizations can be read by any member of that organization
+    // Organizations: Owners can read their own organization document
     match /organizations/{orgId} {
-        allow read: if isMemberOfOrg(orgId);
-        allow update: if isOwner(orgId); // Only owners can update org details
-        allow create: write: if request.auth.uid != null; // Let Cloud Function handle creation
+      allow read: if isOwner(orgId);
+      allow write: if isOwner(orgId);
     }
 
-    // Stadiums can be read by any member of the org, written by owners.
+    // Users: Users can read/update their own profile. Owners can read profiles in their org.
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow read: if isOwner(resource.data.organizationId);
+      // Create is handled by the cloud function
+      allow create: if true; 
+    }
+
+    // Stadiums: Owners can manage stadiums within their organization
     match /stadiums/{stadiumId} {
-      allow read: if isMemberOfOrg(resource.data.organizationId);
-      allow create, update, delete: if isOwner(resource.data.organizationId);
+      allow read, write, delete: if isOwner(resource.data.organizationId);
       
-      // Students sub-collection
-      match /students/{studentId} {
-        allow read: if isMemberOfOrg(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-        allow create: if isCoachOfStadium(stadiumId); // Coaches can add students to their stadium
-        allow update, delete: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId); // Only owners can modify/delete
-      }
-      
-      // Attendance sub-collection
-      match /attendance/{attendanceId} {
-        allow read: if isMemberOfOrg(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-        allow create: if isCoachOfStadium(stadiumId); // Coaches mark attendance for their stadium
-        allow update: if isCoachOfStadium(stadiumId); // Coaches can update attendance (e.g. fix mistake)
-        // No delete for attendance records for auditing purposes. Can be changed if needed.
-      }
-      
-      // Schedules sub-collection
-      match /schedules/{scheduleId} {
-        allow read: if isMemberOfOrg(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
-        allow create, update: if isCoachOfStadium(stadiumId); // Coaches manage schedules for their stadium
-      }
+      // Coaches can read the stadium they are assigned to
+      allow get: if isCoach(resource.data.organizationId) && isAssignedToStadium(stadiumId);
+    }
+    
+    // Nested Collections under Stadiums
+    match /stadiums/{stadiumId} {
+    
+        // Students: Coaches can manage students in their assigned stadium.
+        match /students/{studentId} {
+            allow read, create, update, delete: if isCoach(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId) 
+                                               && isAssignedToStadium(stadiumId);
+            // Owners can also read students in their org's stadiums
+            allow read: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
+        }
+        
+        // Attendance: Coaches can manage attendance in their assigned stadium.
+        match /attendance/{attendanceId} {
+            allow read, create, update, delete: if isCoach(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId) 
+                                               && isAssignedToStadium(stadiumId);
+            // Owners can read attendance
+            allow read: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
+        }
     }
   }
 }
