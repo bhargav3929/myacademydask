@@ -176,7 +176,7 @@ const CollisionMechanism = React.forwardRef<
         setBeamKey((prevKey) => prevKey + 1);
       }, 2000);
     }
-  }, [collision]);
+  }, [collision.detected, collision.coordinates]);
 
   return (
     <>
