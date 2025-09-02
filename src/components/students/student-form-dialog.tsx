@@ -270,7 +270,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
-                            </Trigger>
+                            </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                                 <SelectItem value="active">Active</SelectItem>
