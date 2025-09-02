@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarCheck } from "lucide-react";
+import { CalendarCheck, CheckCircle2, XCircle, CircleSlash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MiniCalendar } from "../ui/mini-calendar";
 import { RainbowButton } from "../ui/rainbow-button";
@@ -94,6 +94,22 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
   useEffect(() => {
     fetchAttendance();
   }, [fetchAttendance]);
+  
+  const attendanceCounts = useMemo(() => {
+    const counts = { present: 0, absent: 0, unmarked: 0 };
+    if (studentsInBatch.length === 0) return counts;
+
+    for (const student of studentsInBatch) {
+      const status = attendance[student.id];
+      if (status === 'present') {
+        counts.present++;
+      } else if (status === 'absent') {
+        counts.absent++;
+      }
+    }
+    counts.unmarked = studentsInBatch.length - (counts.present + counts.absent);
+    return counts;
+  }, [attendance, studentsInBatch]);
 
   const handleMarkAttendance = (studentId: string, status: AttendanceStatus) => {
     setAttendance((prev) => ({ ...prev, [studentId]: status }));
@@ -191,11 +207,39 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
                         </SelectContent>
                     </Select>
                 </div>
+                 {selectedBatch && (
+                    <div className="space-y-3 pt-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground">Attendance Summary</h4>
+                        <div className="flex justify-between items-center rounded-lg border bg-background p-3 text-sm">
+                            <div className="flex items-center gap-2 text-green-600">
+                                <CheckCircle2 className="size-5" />
+                                <div>
+                                    <div className="font-bold">{attendanceCounts.present}</div>
+                                    <div className="text-xs">Present</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-red-600">
+                                <XCircle className="size-5" />
+                                <div>
+                                    <div className="font-bold">{attendanceCounts.absent}</div>
+                                    <div className="text-xs">Absent</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <CircleSlash className="size-5" />
+                                <div>
+                                    <div className="font-bold">{attendanceCounts.unmarked}</div>
+                                    <div className="text-xs">Unmarked</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                 )}
             </div>
             
             {/* Right Pane */}
             <div className="p-6 flex flex-col">
-                <h3 className="font-semibold mb-4">Student List</h3>
+                <h3 className="font-semibold mb-4">Student List ({studentsInBatch.length})</h3>
                 <div className="flex-grow space-y-3 pr-2 overflow-y-auto max-h-[400px]">
                     <AnimatePresence>
                         {isLoading ? (
@@ -233,7 +277,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
                                     size="sm"
                                     variant={attendance[student.id] === 'present' ? 'default' : 'outline'}
                                     onClick={() => handleMarkAttendance(student.id, 'present')}
-                                    className={cn("transition-all", attendance[student.id] === 'present' ? 'bg-green-600 hover:bg-green-700' : '')}
+                                    className={cn("transition-all", attendance[student.id] === 'present' ? 'bg-green-600 hover:bg-green-700 text-white' : '')}
                                 >
                                     Present
                                 </Button>
