@@ -37,16 +37,20 @@ export function RecentActivity() {
   useEffect(() => {
     setLoading(true);
 
-    const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
-    const attendanceQuery = query(collectionGroup(firestore, "attendance"), orderBy("timestamp", "desc"), limit(10));
+    // This query is causing issues because it requires a composite index on (createdAt, __name__)
+    // For now, we'll fetch students and sort client-side. This might not be optimal for very large datasets.
+    const studentsQuery = query(collectionGroup(firestore, "students"), limit(10));
+    const attendanceQuery = query(collectionGroup(firestore, "attendance"), limit(10));
     
     let combinedActivities: Activity[] = [];
 
     const mergeAndSortActivities = (newActivities: Activity[]) => {
       const activityMap = new Map<string, Activity>();
+      // Use a combined key to handle potential ID conflicts between students and attendance
       [...combinedActivities, ...newActivities].forEach(act => {
-        if (!activityMap.has(act.id)) {
-            activityMap.set(act.id, act);
+        const activityKey = `${act.type}-${act.id}`;
+        if (!activityMap.has(activityKey)) {
+            activityMap.set(activityKey, act);
         }
       });
       
@@ -55,18 +59,19 @@ export function RecentActivity() {
         .slice(0, 7);
 
       combinedActivities = sorted;
-      setActivities(combinedActivities);
+      setActivities(sorted);
     };
 
     const unsubStudents = onSnapshot(studentsQuery, async (snapshot) => {
-      const studentDocs = snapshot.docs;
+      const studentDocs = snapshot.docs.sort((a,b) => b.data().createdAt.toMillis() - a.data().createdAt.toMillis()).slice(0,5);
+
       if (studentDocs.length === 0) {
           setLoading(false);
           return;
       };
 
       // Pre-fetch stadium data if needed
-      const stadiumIds = new Set(studentDocs.map(doc => doc.data().stadiumId));
+      const stadiumIds = new Set(studentDocs.map(doc => doc.ref.parent.parent!.id));
       const newStadiums = new Map(dataCache.stadiums);
       let fetchRequired = false;
       for (const id of stadiumIds) {
@@ -84,7 +89,8 @@ export function RecentActivity() {
 
       const studentActivities = studentDocs.map(doc => {
         const data = doc.data() as Student;
-        const stadiumName = newStadiums.get(data.stadiumId)?.name || "a stadium";
+        const stadiumId = doc.ref.parent.parent!.id;
+        const stadiumName = newStadiums.get(stadiumId)?.name || "a stadium";
         return {
           id: doc.id,
           title: data.fullName,
@@ -101,7 +107,8 @@ export function RecentActivity() {
     });
 
     const unsubAttendance = onSnapshot(attendanceQuery, async (snapshot) => {
-      const attendanceDocs = snapshot.docs;
+      const attendanceDocs = snapshot.docs.sort((a, b) => b.data().timestamp.toMillis() - a.data().timestamp.toMillis());
+
       if (attendanceDocs.length === 0) {
           setLoading(false);
           return;
@@ -155,7 +162,7 @@ export function RecentActivity() {
       unsubStudents();
       unsubAttendance();
     };
-  }, []);
+  }, []); // Empty dependency array is correct here, we only want to set up listeners once.
 
   return (
     <Card className="h-full flex flex-col">
@@ -177,8 +184,8 @@ export function RecentActivity() {
           <div className="relative pl-4">
             {/* Timeline line */}
             <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-border rounded-full" />
-            {activities.map((activity, index) => (
-             <div key={activity.id} className="flex items-start gap-4 py-3 relative">
+            {activities.map((activity) => (
+             <div key={`${activity.type}-${activity.id}`} className="flex items-start gap-4 py-3 relative">
                 <div className="z-10 mt-1 size-5 rounded-full bg-background flex items-center justify-center border-2 border-primary">
                     <div className="size-2.5 rounded-full bg-primary" />
                 </div>
