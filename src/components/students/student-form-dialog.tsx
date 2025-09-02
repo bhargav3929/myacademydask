@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -71,18 +71,29 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
       parentContact: "",
       parentEmail: "",
       fees: 0,
-      stadiumId: "",
+      stadiumId: stadiums.length === 1 ? stadiums[0].id : "",
       joinDate: new Date(),
     },
   });
+  
+  // If there's only one stadium (coach view), set it as default
+  useState(() => {
+    if (stadiums.length === 1) {
+        form.setValue("stadiumId", stadiums[0].id);
+    }
+  });
+
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      const selectedStadium = stadiums.find(s => s.id === values.stadiumId);
-      if (!selectedStadium) {
-        throw new Error("Selected stadium not found.");
+      const stadiumDocRef = doc(firestore, "stadiums", values.stadiumId);
+      const stadiumDocSnap = await getDoc(stadiumDocRef);
+
+      if (!stadiumDocSnap.exists()) {
+        throw new Error("Selected stadium not found in database.");
       }
+      const selectedStadium = stadiumDocSnap.data() as Stadium;
       
       const studentCollectionRef = collection(firestore, `stadiums/${values.stadiumId}/students`);
       await addDoc(studentCollectionRef, {
@@ -202,7 +213,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                     <FormLabel>Assign to Stadium</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger disabled={stadiums.length === 1}>
                             <SelectValue placeholder="Select a stadium" />
                         </SelectTrigger>
                         </FormControl>
