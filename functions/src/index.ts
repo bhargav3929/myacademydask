@@ -44,6 +44,7 @@ export const createStadiumAndCoach = functions.https.onCall(
 
       // Use a batch for atomic writes to Firestore
       const batch = db.batch();
+      const creationTime = new Date();
 
       // 3. Create the stadium document in Firestore
       const stadiumRef = db.collection("stadiums").doc(); // Auto-generate ID
@@ -56,7 +57,7 @@ export const createStadiumAndCoach = functions.https.onCall(
             name: data.coachFullName,
             email: data.coachEmail,
         },
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: creationTime,
       });
       functions.logger.info("Added stadium creation to batch:", stadiumRef.id);
 
@@ -68,7 +69,7 @@ export const createStadiumAndCoach = functions.https.onCall(
         organizationId: data.organizationId,
         role: "coach",
         assignedStadiums: [stadiumRef.id], // Link coach to the new stadium
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: creationTime,
       });
       functions.logger.info("Added user profile creation to batch for user:", userRecord.uid);
 
