@@ -38,13 +38,13 @@ export function RecentActivity() {
     const fetchActivities = async () => {
       setLoading(true);
       try {
-        // Cache for stadium data to avoid re-fetching
         const stadiumsCache = new Map<string, Stadium>();
         const getStadium = async (stadiumId: string): Promise<Stadium | null> => {
           if (stadiumsCache.has(stadiumId)) {
             return stadiumsCache.get(stadiumId)!;
           }
-          const stadiumDoc = await getDoc(doc(firestore, "stadiums", stadiumId));
+          const stadiumDocRef = doc(firestore, "stadiums", stadiumId);
+          const stadiumDoc = await getDoc(stadiumDocRef);
           if (stadiumDoc.exists()) {
             const stadiumData = { id: stadiumId, ...stadiumDoc.data() } as Stadium;
             stadiumsCache.set(stadiumId, stadiumData);
@@ -54,10 +54,15 @@ export function RecentActivity() {
         };
 
         // 1. Fetch recent student admissions
-        const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
+        const studentsQuery = query(collectionGroup(firestore, "students"), limit(10));
         const studentsSnapshot = await getDocs(studentsQuery);
+        let studentDocs = studentsSnapshot.docs;
+        // Sort manually on the client
+        studentDocs.sort((a, b) => b.data().createdAt.toMillis() - a.data().createdAt.toMillis());
+        studentDocs = studentDocs.slice(0, 5);
+        
         const studentActivities: Activity[] = await Promise.all(
-          studentsSnapshot.docs.map(async (docSnap) => {
+          studentDocs.map(async (docSnap) => {
             const data = docSnap.data() as Student;
             const stadiumId = docSnap.ref.parent.parent!.id;
             const stadium = await getStadium(stadiumId);
@@ -80,7 +85,7 @@ export function RecentActivity() {
                 const stadium = await getStadium(data.stadiumId);
                 return {
                     id: docSnap.id,
-                    title: stadium?.name || "A stadium",
+                    title: `${stadium?.name || "A stadium"}`,
                     description: `${data.batch} attendance taken.`,
                     type: 'attendance_submission' as ActivityType,
                     timestamp: data.timestamp.toDate(),
@@ -102,15 +107,14 @@ export function RecentActivity() {
       }
     };
     
-    fetchActivities();
-    
-    // Set up a listener to refetch activities on changes
-    const attendanceSubmissionsQuery = query(collection(firestore, "attendance_submissions"));
-    const unsubscribe = onSnapshot(attendanceSubmissionsQuery, () => {
-        fetchActivities();
-    });
+    // Set up listeners to refetch activities on changes
+    const attendanceUnsubscribe = onSnapshot(query(collection(firestore, "attendance_submissions")), fetchActivities);
+    const studentUnsubscribe = onSnapshot(query(collectionGroup(firestore, "students")), fetchActivities);
 
-    return () => unsubscribe();
+    return () => {
+        attendanceUnsubscribe();
+        studentUnsubscribe();
+    };
 
   }, []);
 
@@ -119,17 +123,19 @@ export function RecentActivity() {
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow p-6 pt-0 space-y-2">
+      <CardContent className="flex-grow p-6 pt-0">
         {loading ? (
-           Array.from({ length: 5 }).map((_, i) => (
-             <div key={i} className="flex items-center gap-4 py-2">
-                <Skeleton className="flex size-10 items-center justify-center rounded-full" />
-                <div className="flex-grow space-y-1.5">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/4" />
+           <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 py-2">
+                    <Skeleton className="flex size-10 items-center justify-center rounded-full" />
+                    <div className="flex-grow space-y-1.5">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/4" />
+                    </div>
                 </div>
-             </div>
-            ))
+                ))}
+           </div>
         ) : activities.length > 0 ? (
           <div>
             {activities.map((activity) => (
