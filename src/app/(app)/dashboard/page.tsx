@@ -11,6 +11,8 @@ import { RecentRegistrations } from "@/components/dashboard/recent-registrations
 import { Student } from "@/lib/types";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { AttendanceChart } from "@/components/dashboard/attendance-chart";
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
 const MOCK_USER_ID = "mock-owner-id"; // For fetching director's name
@@ -158,8 +160,11 @@ export default function DashboardPage() {
       </MotionDiv>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-        <MotionDiv variants={itemVariants} className="lg:col-span-5">
-             <CoachAssignments />
+        <MotionDiv variants={itemVariants} className="lg:col-span-3">
+            <AttendanceChart />
+        </MotionDiv>
+         <MotionDiv variants={itemVariants} className="lg:col-span-2">
+            <RecentActivity />
         </MotionDiv>
       </div>
 
