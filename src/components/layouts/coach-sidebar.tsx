@@ -12,7 +12,6 @@ export function CoachSidebar() {
 
     const navItems = [
         { href: "/coach/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { href: "/coach/students", icon: Users, label: "Students" },
         { href: "/coach/attendance", icon: CalendarCheck, label: "Attendance History" },
     ];
 
@@ -29,9 +28,9 @@ export function CoachSidebar() {
                     <SidebarNavLink 
                         key={item.href} 
                         href={item.href} 
-                        active={pathname === item.href}
+                        active={pathname.startsWith(item.href)}
                     >
-                        <item.icon className="size-4" />
+                        <item.icon className="size-4 mr-2" />
                         {item.label}
                     </SidebarNavLink>
                 ))}

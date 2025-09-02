@@ -1,6 +1,7 @@
 
 "use client";
 import { AttendanceTracker } from "@/components/coach/attendance-tracker";
+import { StudentManagement } from "@/components/coach/student-management";
 import { MotionDiv } from "@/components/motion";
 
 export default function CoachDashboardPage() {
@@ -20,6 +21,7 @@ export default function CoachDashboardPage() {
                 </div>
             </div>
             <AttendanceTracker />
+            <StudentManagement />
         </MotionDiv>
     )
 }
