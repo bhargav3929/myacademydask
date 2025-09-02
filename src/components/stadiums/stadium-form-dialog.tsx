@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Checkbox } from "../ui/checkbox";
+import { ScrollArea } from "../ui/scroll-area";
 
 const formSchema = z.object({
   stadiumName: z.string().min(3, "Stadium name must be at least 3 characters."),
@@ -208,143 +209,144 @@ export function AddStadiumDialog() {
             This will create a new stadium and a dedicated coach account.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="stadiumName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stadium Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Champions Arena" 
-                      {...field} 
-                      onBlur={async (e) => {
-                        field.onBlur();
-                        if(await checkStadiumNameExists(e.target.value)) {
-                            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists."});
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl><Input placeholder="e.g., North Downtown" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <hr/>
-             <h3 className="font-semibold text-sm">Coach Details</h3>
-              <FormField
-              control={form.control}
-              name="coachFullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coach's Full Name</FormLabel>
-                  <FormControl><Input placeholder="e.g., John Smith" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="coachEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coach's Email</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="coach@example.com" 
-                      {...field}
-                      onBlur={async (e) => {
-                          field.onBlur();
-                          if(e.target.value && await checkEmailExists(e.target.value)) {
-                              form.setError("coachEmail", { type: "manual", message: "This email is already in use."});
-                          }
-                      }}
-                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="coachPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coach's Phone</FormLabel>
-                  <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {!generatedCredentials && (
-                 <Button type="button" variant="outline" className="w-full" onClick={handleGenerateCredentials}>Generate Coach Credentials</Button>
-            )}
-
-            {generatedCredentials && (
-                <Alert variant="default" className="bg-primary/5 border-primary/20">
-                    <AlertTriangle className="h-4 w-4 text-primary" />
-                    <AlertDescription className="space-y-3">
-                        <p className="font-semibold">Save these credentials securely!</p>
-                        <div className="text-sm">
-                            <span className="font-medium text-muted-foreground">Username:</span>
-                            <span className="ml-2 font-mono p-1 rounded bg-muted">{generatedCredentials.username}</span>
-                        </div>
-                        <div className="text-sm flex items-center">
-                            <span className="font-medium text-muted-foreground">Password:</span>
-                             <div className="flex items-center ml-2 font-mono p-1 rounded bg-muted">
-                                <span>{showPassword ? generatedCredentials.password : '••••••••••'}</span>
-                                <Button type="button" variant="ghost" size="icon" className="h-5 w-5 ml-2" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                </Button>
-                             </div>
-                        </div>
-                         <FormField
-                            control={form.control}
-                            name="credentialsConfirmed"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md pt-4">
-                                <FormControl>
-                                    <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                    />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                    <FormLabel>
-                                        I have noted down the coach credentials.
-                                    </FormLabel>
-                                    <FormMessage />
-                                </div>
-                                </FormItem>
-                            )}
+        <ScrollArea className="max-h-[70vh] p-1">
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-6">
+                <FormField
+                control={form.control}
+                name="stadiumName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Stadium Name</FormLabel>
+                    <FormControl>
+                        <Input 
+                        placeholder="e.g., Champions Arena" 
+                        {...field} 
+                        onBlur={async (e) => {
+                            field.onBlur();
+                            if(await checkStadiumNameExists(e.target.value)) {
+                                form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists."});
+                            }
+                        }}
                         />
-                    </AlertDescription>
-                </Alert>
-            )}
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl><Input placeholder="e.g., North Downtown" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <hr/>
+                <h3 className="font-semibold text-sm">Coach Details</h3>
+                <FormField
+                control={form.control}
+                name="coachFullName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Coach's Full Name</FormLabel>
+                    <FormControl><Input placeholder="e.g., John Smith" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="coachEmail"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Coach's Email</FormLabel>
+                    <FormControl>
+                        <Input 
+                        type="email" 
+                        placeholder="coach@example.com" 
+                        {...field}
+                        onBlur={async (e) => {
+                            field.onBlur();
+                            if(e.target.value && await checkEmailExists(e.target.value)) {
+                                form.setError("coachEmail", { type: "manual", message: "This email is already in use."});
+                            }
+                        }}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="coachPhone"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Coach's Phone</FormLabel>
+                    <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                
+                {!generatedCredentials && (
+                    <Button type="button" variant="outline" className="w-full" onClick={handleGenerateCredentials}>Generate Coach Credentials</Button>
+                )}
 
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isLoading || !generatedCredentials || !form.formState.isValid}>
-                {isLoading ? "Creating..." : "Create Stadium"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                {generatedCredentials && (
+                    <Alert variant="default" className="bg-primary/5 border-primary/20">
+                        <AlertTriangle className="h-4 w-4 text-primary" />
+                        <AlertDescription className="space-y-3">
+                            <p className="font-semibold">Save these credentials securely!</p>
+                            <div className="text-sm">
+                                <span className="font-medium text-muted-foreground">Username:</span>
+                                <span className="ml-2 font-mono p-1 rounded bg-muted">{generatedCredentials.username}</span>
+                            </div>
+                            <div className="text-sm flex items-center">
+                                <span className="font-medium text-muted-foreground">Password:</span>
+                                <div className="flex items-center ml-2 font-mono p-1 rounded bg-muted">
+                                    <span>{showPassword ? generatedCredentials.password : '••••••••••'}</span>
+                                    <Button type="button" variant="ghost" size="icon" className="h-5 w-5 ml-2" onClick={() => setShowPassword(!showPassword)}>
+                                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                    </Button>
+                                </div>
+                            </div>
+                            <FormField
+                                control={form.control}
+                                name="credentialsConfirmed"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md pt-4">
+                                    <FormControl>
+                                        <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <div className="space-y-1 leading-none">
+                                        <FormLabel>
+                                            I have noted down the coach credentials.
+                                        </FormLabel>
+                                        <FormMessage />
+                                    </div>
+                                    </FormItem>
+                                )}
+                            />
+                        </AlertDescription>
+                    </Alert>
+                )}
+                <DialogFooter className="pt-4 !justify-between">
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={isLoading || !generatedCredentials || !form.formState.isValid}>
+                        {isLoading ? "Creating..." : "Create Stadium"}
+                    </Button>
+                </DialogFooter>
+            </form>
+            </Form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
