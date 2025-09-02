@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, getCountFromServer, limit, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getCountFromServer, limit, orderBy, doc, getDoc, collectionGroup } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -27,14 +27,14 @@ export default function DashboardPage() {
   const [isLoadingName, setIsLoadingName] = useState(true);
   
   useEffect(() => {
-    // Listener for total students
-    const studentsQuery = query(collection(firestore, "students"));
+    // Listener for total students across all stadiums
+    const studentsQuery = query(collectionGroup(firestore, "students"));
     const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
 
     // Listener for new students (joined in the last 30 days)
     const thirtyDaysAgo = subDays(new Date(), 30);
     const newStudentsQuery = query(
-      collection(firestore, "students"),
+      collectionGroup(firestore, "students"),
       where("joinDate", ">=", thirtyDaysAgo)
     );
     const newStudentsUnsubscribe = onSnapshot(newStudentsQuery, snapshot => setNewStudents(snapshot.size));
@@ -45,7 +45,7 @@ export default function DashboardPage() {
     
      // Listener for recent registrations (last 5)
     const recentRegQuery = query(
-        collection(firestore, "students"),
+        collectionGroup(firestore, "students"),
         orderBy("joinDate", "desc"),
         limit(5)
     );

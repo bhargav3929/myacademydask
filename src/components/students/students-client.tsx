@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, collectionGroup } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Student, Stadium } from "@/lib/types";
 import { StudentsTable } from "./students-table";
@@ -18,13 +18,19 @@ export function StudentsClient() {
 
   useEffect(() => {
     setLoading(true);
-    // Listener for students
-    const studentsQuery = query(collection(firestore, "students"), orderBy("joinDate", "desc"));
+    // Listener for students from all stadium subcollections
+    const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("joinDate", "desc"));
     const studentsUnsubscribe = onSnapshot(studentsQuery, (snapshot) => {
-      const studentsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Student[];
+      const studentsData = snapshot.docs.map(doc => {
+        // We need to get the stadiumId from the parent document path
+        const path = doc.ref.path.split('/');
+        const stadiumId = path[1];
+        return {
+          id: doc.id,
+          stadiumId, // Add stadiumId to the student object
+          ...doc.data(),
+        } as Student;
+      });
       setStudents(studentsData);
       setFilteredStudents(studentsData);
       setLoading(false);

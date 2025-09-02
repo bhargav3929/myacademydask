@@ -2,12 +2,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { collectionGroup, query, where, getDocs } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 interface ChartData {
   name: string;
@@ -49,10 +49,9 @@ export function AttendanceChart() {
         for (let i = 6; i >= 0; i--) {
           const day = subDays(today, i);
           const dayStr = format(day, "yyyy-MM-dd");
-          const dayName = format(day, "eee");
 
           const attendanceQuery = query(
-            collection(firestore, "attendance"),
+            collectionGroup(firestore, "attendance"),
             where("date", "==", dayStr)
           );
           promises.push(getDocs(attendanceQuery));

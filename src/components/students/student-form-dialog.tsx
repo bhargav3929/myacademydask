@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -68,9 +68,9 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      await addDoc(collection(firestore, "students"), {
+      const studentCollectionRef = collection(firestore, `stadiums/${values.stadiumId}/students`);
+      await addDoc(studentCollectionRef, {
         fullName: values.fullName,
-        stadiumId: values.stadiumId,
         joinDate: values.joinDate,
         organizationId: MOCK_ORGANIZATION_ID,
         createdAt: serverTimestamp(),

@@ -31,14 +31,15 @@ export function AttendanceTracker() {
 
   useEffect(() => {
     // In a real app, you would get the logged-in coach's assigned stadium ID
-    // For now, we'll use a mock ID. This is a critical point for integration with auth.
-    const q = query(collection(firestore, "students"), where("stadiumId", "==", MOCK_STADIUM_ID));
+    if (!MOCK_STADIUM_ID) return;
+
+    const q = query(collection(firestore, `stadiums/${MOCK_STADIUM_ID}/students`));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
         setStudents(studentsData);
 
-        if(studentsData.length > 0 && MOCK_STADIUM_ID) {
+        if (MOCK_STADIUM_ID) {
             getDoc(doc(firestore, "stadiums", MOCK_STADIUM_ID)).then(stadiumDoc => {
                 if(stadiumDoc.exists()) {
                     setStadiumName(stadiumDoc.data().name);
@@ -60,9 +61,11 @@ export function AttendanceTracker() {
   }, [toast]);
 
   const handleMarkAttendance = async (studentId: string, status: 'present' | 'absent') => {
+    if (!MOCK_STADIUM_ID) return;
+
     const todayStr = format(new Date(), "yyyy-MM-dd");
-    const attendanceId = `${studentId}_${todayStr}`;
-    const attendanceRef = doc(firestore, "attendance", attendanceId);
+    const attendanceDocId = `${studentId}_${todayStr}`;
+    const attendanceRef = doc(firestore, `stadiums/${MOCK_STADIUM_ID}/attendance`, attendanceDocId);
 
     const originalStatus = attendance[studentId];
     setAttendance(prev => ({ ...prev, [studentId]: status }));
@@ -73,7 +76,6 @@ export function AttendanceTracker() {
         date: todayStr,
         status,
         markedByCoachId: MOCK_COACH_ID,
-        stadiumId: MOCK_STADIUM_ID,
         organizationId: MOCK_ORGANIZATION_ID,
         timestamp: serverTimestamp(),
       }, { merge: true }); // Use merge to update if entry for today already exists
