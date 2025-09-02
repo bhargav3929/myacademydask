@@ -74,7 +74,7 @@ export default function LoginPage() {
 
   const handleSuccessfulLogin = async (user: any) => {
     const userDocRef = doc(firestore, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
+    let userDocSnap = await getDoc(userDocRef);
 
     if (!userDocSnap.exists()) {
         // This can happen if auth user exists but firestore doc doesn't.
@@ -90,6 +90,8 @@ export default function LoginPage() {
                 organizationId: MOCK_ORGANIZATION_ID,
                 createdAt: serverTimestamp(),
             });
+            // Re-fetch the snap after creating it
+            userDocSnap = await getDoc(userDocRef);
         } else {
              // This case should ideally not be reached if sign-up is controlled.
              // For robustness, we can show an error or create a default profile.
@@ -103,7 +105,7 @@ export default function LoginPage() {
         }
     }
     
-    const userRole = userDocSnap.exists() ? userDocSnap.data().role : "owner";
+    const userRole = userDocSnap.exists() ? userDocSnap.data()?.role : "owner";
 
     toast({
       title: "Login Successful",
@@ -217,5 +219,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
