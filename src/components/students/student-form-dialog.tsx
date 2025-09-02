@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
+import { RainbowButton } from "../ui/rainbow-button";
 
 const studentBatches: StudentBatches[] = ["First Batch", "Second Batch", "Third Batch", "Fourth Batch"];
 
@@ -75,16 +76,17 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
       parentContact: "",
       parentEmail: "",
       fees: 0,
-      stadiumId: stadiums.length === 1 ? stadiums[0].id : "",
+      stadiumId: stadiums.length === 1 ? stadiums[0].id : undefined,
+      batch: undefined,
       joinDate: new Date(),
     },
   });
   
-  useState(() => {
+  useEffect(() => {
     if (stadiums.length === 1) {
         form.setValue("stadiumId", stadiums[0].id);
     }
-  });
+  }, [stadiums, form]);
 
 
   async function onSubmit(values: FormValues) {
@@ -136,10 +138,10 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <RainbowButton>
           <PlusCircle className="mr-2 h-4 w-4" />
           New Student
-        </Button>
+        </RainbowButton>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>

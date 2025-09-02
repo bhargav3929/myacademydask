@@ -39,6 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MiniCalendar } from "../ui/mini-calendar";
+import { RainbowButton } from "../ui/rainbow-button";
 
 type AttendanceStatus = "present" | "absent";
 type AttendanceRecord = { [studentId: string]: AttendanceStatus };
@@ -158,10 +159,10 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <RainbowButton>
             <CalendarCheck className="mr-2 h-4 w-4" />
             Take Attendance
-        </Button>
+        </RainbowButton>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl p-0">
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr]">
