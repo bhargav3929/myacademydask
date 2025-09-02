@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, where } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export function AddStadiumDialog() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    mode: "onBlur", // Validate on blur
+    mode: "onBlur",
   });
 
   const checkEmailExists = async (email: string) => {
@@ -76,7 +76,7 @@ export function AddStadiumDialog() {
         const methods = await fetchSignInMethodsForEmail(auth, email);
         return methods.length > 0;
     } catch (error) {
-        return false; // Email does not exist
+        return false;
     }
   };
 
@@ -118,23 +118,16 @@ export function AddStadiumDialog() {
         const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, generatedCredentials.password);
         const coachUid = userCredential.user.uid;
 
+        // In a real app with backend functions, you would set custom claims here.
+        // admin.auth().setCustomUserClaims(coachUid, { role: "coach", organizationId: MOCK_ORGANIZATION_ID });
+        
+        // 2. Use a batch for atomic writes to Firestore
+        const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
-
-        // 2. Create User Profile in 'users' collection
-        const userDocRef = doc(firestore, "users", coachUid);
-        await setDoc(userDocRef, {
-            email: values.coachEmail,
-            fullName: values.coachFullName,
-            role: "coach",
-            organizationId: MOCK_ORGANIZATION_ID,
-            assignedStadiums: [], // Will be updated after stadium creation
-            createdAt: timestamp,
-            lastLoginAt: null
-        });
 
         // 3. Create Stadium Document
         const stadiumDocRef = doc(collection(firestore, "stadiums"));
-        await setDoc(stadiumDocRef, {
+        batch.set(stadiumDocRef, {
             name: values.stadiumName,
             location: values.location,
             organizationId: MOCK_ORGANIZATION_ID,
@@ -154,8 +147,20 @@ export function AddStadiumDialog() {
             }
         });
 
-        // 4. Update coach's profile with assigned stadium
-        await setDoc(userDocRef, { assignedStadiums: [stadiumDocRef.id] }, { merge: true });
+        // 4. Create User Profile in 'users' collection
+        const userDocRef = doc(firestore, "users", coachUid);
+        batch.set(userDocRef, {
+            email: values.coachEmail,
+            fullName: values.coachFullName,
+            role: "coach",
+            organizationId: MOCK_ORGANIZATION_ID,
+            assignedStadiums: [stadiumDocRef.id],
+            createdAt: timestamp,
+            lastLoginAt: null
+        });
+
+        // Commit the batch
+        await batch.commit();
 
         toast({
             title: "Success!",
@@ -258,7 +263,7 @@ export function AddStadiumDialog() {
                       {...field}
                       onBlur={async (e) => {
                           field.onBlur();
-                          if(await checkEmailExists(e.target.value)) {
+                          if(e.target.value && await checkEmailExists(e.target.value)) {
                               form.setError("coachEmail", { type: "manual", message: "This email is already in use."});
                           }
                       }}
@@ -290,8 +295,8 @@ export function AddStadiumDialog() {
                     <AlertDescription className="space-y-3">
                         <p className="font-semibold">Save these credentials securely!</p>
                         <div className="text-sm">
-                            <span className="font-medium text-muted-foreground">Username:</span>
-                            <span className="ml-2 font-mono p-1 rounded bg-muted">{generatedCredentials.username}</span>
+                            <span className="font-medium text-muted-foreground">Email:</span>
+                            <span className="ml-2 font-mono p-1 rounded bg-muted">{form.getValues("coachEmail")}</span>
                         </div>
                         <div className="text-sm flex items-center">
                             <span className="font-medium text-muted-foreground">Password:</span>
@@ -328,7 +333,7 @@ export function AddStadiumDialog() {
 
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isLoading || !generatedCredentials}>
+              <Button type="submit" disabled={isLoading || !generatedCredentials || !form.formState.isValid}>
                 {isLoading ? "Creating..." : "Create Stadium"}
               </Button>
             </DialogFooter>

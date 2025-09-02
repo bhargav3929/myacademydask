@@ -6,11 +6,8 @@ import { collection, query, where, onSnapshot, getCountFromServer, limit, orderB
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { AttendanceChart } from "@/components/dashboard/attendance-chart";
-import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { CoachAssignments } from "@/components/dashboard/coach-assignments";
 import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
-import { subDays } from "date-fns";
 import { Student } from "@/lib/types";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,9 +27,6 @@ export default function DashboardPage() {
     // Listener for total students across all stadiums
     const studentsQuery = query(collectionGroup(firestore, "students"));
     const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
-
-    // // Listener for new students (joined in the last 30 days) - THIS QUERY REQUIRES A CUSTOM INDEX
-    const newStudentsUnsubscribe = () => {}; // No-op function for cleanup
 
     // Listener for active stadiums
     const stadiumsQuery = query(collection(firestore, "stadiums"));
@@ -72,7 +66,6 @@ export default function DashboardPage() {
     // Cleanup listeners on unmount
     return () => {
       studentsUnsubscribe();
-      newStudentsUnsubscribe();
       stadiumsUnsubscribe();
       recentRegUnsubscribe();
     };
@@ -164,17 +157,9 @@ export default function DashboardPage() {
       </MotionDiv>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-        <MotionDiv variants={itemVariants} className="lg:col-span-3">
+        <MotionDiv variants={itemVariants} className="lg:col-span-5">
              <CoachAssignments />
         </MotionDiv>
-        <div className="lg:col-span-2 space-y-8">
-            <MotionDiv variants={itemVariants}>
-               
-            </MotionDiv>
-            <MotionDiv variants={itemVariants}>
-               
-            </MotionDiv>
-        </div>
       </div>
 
        <MotionDiv variants={itemVariants}>

@@ -1,52 +1,49 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Allow owners to read/write their own user document
-    match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
+    // ORGANIZATION
+    match /organizations/{orgId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
     }
 
-    // Allow owners to read coach user documents within their organization
+    // USERS
+    // Owners can manage all users in their org. Users can read their own profile.
     match /users/{userId} {
-      allow read: if request.auth != null && 
-        request.auth.token.role == "owner" &&
-        get(/databases/$(database)/documents/users/$(userId)).data.organizationId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId;
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.organizationId == resource.data.organizationId);
+      allow write: if request.auth != null && request.auth.token.organizationId == resource.data.organizationId && request.auth.token.role == 'owner';
     }
 
-    // Allow owners to read/write stadiums they own
+    // STADIUMS
+    // Owners can manage stadiums in their org. Coaches can read their assigned stadiums.
     match /stadiums/{stadiumId} {
-      allow read, write: if request.auth != null && 
+      allow read: if request.auth != null && (
+        (request.auth.token.role == "owner" && request.auth.token.organizationId == resource.data.organizationId) ||
+        (request.auth.token.role == "coach" && request.auth.uid == resource.data.assignedCoachId)
+      );
+      allow write: if request.auth != null && 
         request.auth.token.role == "owner" && 
-        (request.resource.data.organizationId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId || resource.data.organizationId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId);
+        request.auth.token.organizationId == resource.data.organizationId;
     }
     
-    // Allow coaches to read their assigned stadium
-    match /stadiums/{stadiumId} {
-      allow read: if request.auth != null && 
-        request.auth.token.role == "coach" &&
-        request.auth.uid in resource.data.assignedCoaches;
-    }
-    
-    // Students subcollection access
+    // STUDENTS
+    // Owners can manage students in their org. Coaches can manage students in their assigned stadium.
     match /stadiums/{stadiumId}/students/{studentId} {
       allow read, write: if request.auth != null && (
-        (request.auth.token.role == "owner" && get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId) ||
+        (request.auth.token.role == "owner" && request.auth.token.organizationId == resource.data.organizationId) ||
         (request.auth.token.role == "coach" && request.auth.uid == get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.assignedCoachId)
       );
     }
     
-     // Attendance subcollection access
-    match /stadiums/{stadiumId}/attendance/{attendanceId} {
-      allow read, write: if request.auth != null && (
-        (request.auth.token.role == "owner" && get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId) ||
-        (request.auth.token.role == "coach" && request.auth.uid == resource.data.markedByCoachId)
-      );
-    }
-
-    // Organization data access
-     match /organizations/{orgId} {
-      allow read, write: if request.auth != null && request.auth.token.role == "owner" && request.auth.uid == resource.data.ownerId;
+    // ATTENDANCE
+    // Owners can read all attendance. Coaches can manage attendance for their stadium.
+     match /stadiums/{stadiumId}/attendance/{attendanceId} {
+      allow read: if request.auth != null && request.auth.token.organizationId == resource.data.organizationId;
+      allow write: if request.auth != null && 
+        request.auth.token.role == "coach" &&
+        request.auth.uid == get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.assignedCoachId;
     }
   }
 }
