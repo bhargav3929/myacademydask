@@ -295,11 +295,11 @@ export default function DashboardPage() {
         </MotionDiv>
       </MotionDiv>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
             <AttendanceGraph />
         </MotionDiv>
-         <MotionDiv variants={itemVariants} className="lg:col-span-2">
+         <MotionDiv variants={itemVariants} className="lg:col-span-1">
             <RecentActivity />
         </MotionDiv>
       </div>
