@@ -37,13 +37,19 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-lg md:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Gamepad2 className="size-7 text-primary" />
-          <span className="text-lg font-bold">CourtCommand</span>
-        </Link>
+      <header className="fixed top-0 left-0 right-0 z-30 flex h-20 items-center justify-between px-4 md:px-6">
+        <div className="flex items-center gap-3 bg-background/5 border border-border backdrop-blur-lg p-2 rounded-full shadow-lg">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Gamepad2 className="size-7 text-primary" />
+            <span className="text-lg font-bold hidden sm:inline-block">CourtCommand</span>
+          </Link>
+        </div>
         
-        <div className="flex items-center gap-2">
+        <div className="absolute left-1/2 -translate-x-1/2">
+            <NavBar items={navItems} />
+        </div>
+
+        <div className="flex items-center gap-2 bg-background/5 border border-border backdrop-blur-lg p-1 rounded-full shadow-lg">
           <Button variant="ghost" size="icon" className="rounded-full">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
@@ -54,21 +60,20 @@ export function AppHeader() {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1 h-auto">
+              <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
                  <Avatar className="size-8">
                   <AvatarImage src="https://i.pravatar.cc/150?u=owner" />
                   <AvatarFallback>AD</AvatarFallback>
                 </Avatar>
-                <div className="text-left hidden md:block">
-                  <p className="text-xs font-medium">Academy Director</p>
-                  <p className="text-xs text-muted-foreground">admin@court.com</p>
-                </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
                 <span className="sr-only">Toggle user menu</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <p>Academy Director</p>
+                <p className="text-xs text-muted-foreground font-normal">admin@court.com</p>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
@@ -78,7 +83,6 @@ export function AppHeader() {
           </DropdownMenu>
         </div>
       </header>
-      <NavBar items={navItems} />
     </>
   );
 }
