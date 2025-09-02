@@ -54,7 +54,7 @@ export function DailyAttendanceSummary() {
     const unsubStudents = onSnapshot(studentsQuery, (snapshot) => {
         const studentData = snapshot.docs.map(doc => doc.data() as Student);
         const batches = [...new Set(studentData.map(s => s.batch))];
-        setActiveBatches(batches);
+        setActiveBatches(batches as StudentBatches[]);
     });
 
     // Get attendance data
