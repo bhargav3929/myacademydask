@@ -54,13 +54,17 @@ export function RecentActivity() {
         };
 
         // 1. Fetch recent student admissions
-        const studentsQuery = query(collectionGroup(firestore, "students"), limit(15));
+        const studentsQuery = query(
+          collectionGroup(firestore, "students"), 
+          orderBy("createdAt", "desc"),
+          limit(5)
+        );
         const studentsSnapshot = await getDocs(studentsQuery);
         const studentActivities: Activity[] = await Promise.all(
           studentsSnapshot.docs.map(async (docSnap) => {
             const data = docSnap.data() as Student;
-            const stadiumId = data.stadiumId; // Safer way to get stadiumId
-            if (!stadiumId) return null; // Skip if student has no stadiumId
+            const stadiumId = data.stadiumId;
+            if (!stadiumId || !data.createdAt) return null;
 
             const stadium = await getStadium(stadiumId);
             return {
@@ -71,7 +75,7 @@ export function RecentActivity() {
               timestamp: data.createdAt.toDate(),
             };
           })
-        ).then(res => res.filter(Boolean) as Activity[]); // Filter out nulls
+        ).then(res => res.filter(Boolean) as Activity[]);
 
         // 2. Fetch recent attendance submissions
         const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
