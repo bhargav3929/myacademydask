@@ -7,7 +7,7 @@ import { firestore } from "@/lib/firebase";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, eachMonthOfInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { Student } from "@/lib/types";
 
 interface ChartData {
@@ -43,25 +43,40 @@ export function StudentEnrollmentChart() {
       try {
         const studentsQuery = query(collectionGroup(firestore, "students"));
         const snapshot = await getDocs(studentsQuery);
-        const students = snapshot.docs.map(doc => doc.data() as Student);
+        const students = snapshot.docs.map(doc => doc.data() as Student).filter(s => s.joinDate);
 
-        const monthlyEnrollments = Array(12).fill(0);
+        if (students.length === 0) {
+            setData([]);
+            setLoading(false);
+            return;
+        }
 
-        students.forEach(student => {
-          if (student.joinDate) {
-            const joinDate = student.joinDate.toDate();
-            if (joinDate.getFullYear() === 2025) {
-              const month = joinDate.getMonth();
-              monthlyEnrollments[month]++;
-            }
-          }
+        students.sort((a, b) => a.joinDate.toMillis() - b.joinDate.toMillis());
+        
+        const firstStudentDate = students[0].joinDate.toDate();
+        const lastStudentDate = new Date(); // Or find the latest join date if you prefer
+
+        const months = eachMonthOfInterval({
+          start: startOfMonth(firstStudentDate),
+          end: startOfMonth(lastStudentDate)
         });
 
+        const monthlyEnrollments: { [key: string]: number } = {};
+
+        students.forEach(student => {
+            const monthKey = format(student.joinDate.toDate(), 'yyyy-MM');
+            if (!monthlyEnrollments[monthKey]) {
+                monthlyEnrollments[monthKey] = 0;
+            }
+            monthlyEnrollments[monthKey]++;
+        });
+        
         let cumulativeStudents = 0;
-        const chartData = monthlyEnrollments.map((enrollments, i) => {
-          cumulativeStudents += enrollments;
+        const chartData = months.map(monthStart => {
+          const monthKey = format(monthStart, 'yyyy-MM');
+          cumulativeStudents += (monthlyEnrollments[monthKey] || 0);
           return {
-            name: format(new Date(2025, i, 1), "MMM"),
+            name: format(monthStart, "MMM yy"),
             Students: cumulativeStudents,
           };
         });
@@ -82,7 +97,7 @@ export function StudentEnrollmentChart() {
     <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Student Enrollment Growth</CardTitle>
-        <CardDescription>Cumulative student registrations for 2025.</CardDescription>
+        <CardDescription>Cumulative student registrations over time.</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow pb-4 -ml-4">
         {loading ? (
@@ -138,7 +153,8 @@ export function StudentEnrollmentChart() {
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-2">
-            <p className="text-sm">No enrollment data to display yet for 2025.</p>
+            <p className="text-sm">No enrollment data to display yet.</p>
+             <p className="text-xs">Add your first student to see the chart.</p>
           </div>
         )}
       </CardContent>
