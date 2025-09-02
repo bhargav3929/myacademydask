@@ -223,7 +223,7 @@ export default function SettingsPage() {
         <MotionDiv variants={itemVariants}>
             <h2 className="text-3xl font-semibold tracking-tight">Settings</h2>
             <p className="text-muted-foreground">
-                Manage your account and organization settings. A default owner account has been created with email: <span className="font-bold text-primary">director@courtcommand.com</span> and password: <span className="font-bold text-primary">password</span>.
+                Manage your account and organization settings. The default owner account has username: <span className="font-bold text-primary">admin</span> and password: <span className="font-bold text-primary">admin123</span>.
             </p>
         </MotionDiv>
 

@@ -35,8 +35,9 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 // In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-const OWNER_EMAIL = "director@courtcommand.com";
-const OWNER_PASSWORD = "password";
+const OWNER_EMAIL = "director@courtcommand.com"; // Email remains for creation
+const OWNER_USERNAME = "admin";
+const OWNER_PASSWORD = "admin123";
 
 
 export default function LoginPage() {
@@ -99,6 +100,49 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       let email = await getEmailFromIdentifier(data.identifier);
+      
+      // Special case for first-time admin login
+      if (!email && data.identifier === OWNER_USERNAME) {
+         try {
+            // Try to sign in first, in case the account was already created
+            await signInWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
+            // This part won't be reached if signIn fails, it will go to catch.
+            // But if it succeeds, we need the user object.
+            if(auth.currentUser){
+                await handleSuccessfulLogin(auth.currentUser);
+            }
+            return;
+         } catch (e: any) {
+            // If sign-in fails, it might be the first time.
+             if (e.code === 'auth/invalid-credential' && data.password === OWNER_PASSWORD) {
+                // This is the first-time login for the default owner. Create the account.
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
+                    const user = userCredential.user;
+                    const userDocRef = doc(firestore, "users", user.uid);
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        email: OWNER_EMAIL,
+                        username: OWNER_USERNAME,
+                        fullName: "Academy Director",
+                        role: "owner",
+                        organizationId: MOCK_ORGANIZATION_ID,
+                        createdAt: serverTimestamp(),
+                    });
+                    await handleSuccessfulLogin(user);
+                } catch (creationError) {
+                    console.error("Failed to create default owner:", creationError);
+                    toast({
+                        variant: "destructive",
+                        title: "Setup Failed",
+                        description: "Could not initialize the owner account. Please try again.",
+                    });
+                }
+                return;
+             }
+         }
+      }
+
 
       if (!email) {
           throw new Error("Invalid credentials");
@@ -108,38 +152,12 @@ export default function LoginPage() {
       await handleSuccessfulLogin(userCredential.user);
 
     } catch (error: any) {
-        let emailForCreationCheck = data.identifier;
-        if(error.code === 'auth/invalid-credential' && emailForCreationCheck === OWNER_EMAIL && data.password === OWNER_PASSWORD) {
-             // This is the first-time login for the default owner. Create the account.
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
-                const user = userCredential.user;
-                const userDocRef = doc(firestore, "users", user.uid);
-                await setDoc(userDocRef, {
-                    uid: user.uid,
-                    email: OWNER_EMAIL,
-                    fullName: "Academy Director",
-                    role: "owner",
-                    organizationId: MOCK_ORGANIZATION_ID,
-                    createdAt: serverTimestamp(),
-                });
-                await handleSuccessfulLogin(user);
-            } catch (creationError) {
-                console.error("Failed to create default owner:", creationError);
-                toast({
-                    variant: "destructive",
-                    title: "Setup Failed",
-                    description: "Could not initialize the owner account. Please try again.",
-                });
-            }
-        } else {
-            console.error("Login failed:", error);
-            toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: "Invalid credentials. Please check your email/username and password.",
-            });
-        }
+        console.error("Login failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Invalid credentials. Please check your email/username and password.",
+        });
     } finally {
       setIsLoading(false);
     }
