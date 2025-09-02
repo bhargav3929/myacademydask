@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
 import {
   Table,
   TableBody,
@@ -37,14 +39,24 @@ type NewAdmissionsProps = {
 const MotionTableRow = motion(TableRow);
 
 export function NewAdmissions({ data }: NewAdmissionsProps) {
-    const [stadiums, setStadiums] = useState<Stadium[]>([]);
+    const [stadiumsMap, setStadiumsMap] = useState<Map<string, string>>(new Map());
     
-    // In a real app, you would fetch this data once, perhaps in a higher-level component.
-    // For simplicity here, we'll imagine it's passed or fetched.
-    // This is a placeholder for getting stadium names.
+    useEffect(() => {
+        const q = query(collection(firestore, "stadiums"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const newStadiumsMap = new Map<string, string>();
+            snapshot.forEach((doc) => {
+                const stadium = doc.data() as Stadium;
+                newStadiumsMap.set(doc.id, stadium.name);
+            });
+            setStadiumsMap(newStadiumsMap);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     const getStadiumName = (stadiumId: string) => {
-        // A more robust implementation would fetch and cache stadium data.
-        return `Stadium #${stadiumId.substring(0,4)}`;
+        return stadiumsMap.get(stadiumId) || `Stadium ID: ${stadiumId.substring(0, 4)}...`;
     }
 
 

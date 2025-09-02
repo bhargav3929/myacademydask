@@ -27,7 +27,7 @@ const badgeVariants: Record<Student['status'], string> = {
 };
 
 const InfoField = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | number | undefined }) => (
-    <div className="flex items-start gap-4">
+    <div className="flex items-start gap-3">
         <div className="mt-1 text-muted-foreground">
             <Icon className="size-5" />
         </div>
@@ -42,9 +42,9 @@ export function StudentProfileDialog({ student, children }: StudentProfileDialog
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-gradient-to-br from-card via-background to-secondary/30">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader className="items-center text-center pt-4">
-            <Avatar className="size-20 border-4 border-background shadow-md">
+            <Avatar className="size-20 border-4 border-background shadow-lg">
                 <AvatarFallback className="text-3xl">{student.fullName.charAt(0)}</AvatarFallback>
             </Avatar>
             <DialogTitle className="text-2xl pt-2">{student.fullName}</DialogTitle>
@@ -52,15 +52,14 @@ export function StudentProfileDialog({ student, children }: StudentProfileDialog
                  <Badge variant="outline" className={cn(badgeVariants[student.status || 'active'], "capitalize text-sm py-1 px-3")}>
                     {student.status || 'Active'}
                  </Badge>
-                 <Badge variant="secondary" className="text-sm py-1 px-3">
+                 <Badge variant="secondary" className="text-sm py-1 px-3 font-normal">
                     Joined {student.joinDate?.toDate ? format(student.joinDate.toDate(), "dd MMM, yyyy") : 'N/A'}
                  </Badge>
             </div>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-6 py-6 px-2">
-            <InfoField icon={Hash} label="Age" value={student.age} />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 py-6 px-2">
+            <InfoField icon={Hash} label="Age" value={`${student.age} years`} />
             <InfoField icon={Layers3} label="Batch" value={student.batch} />
-            <InfoField icon={MapPin} label="Stadium ID" value={student.stadiumId.substring(0, 8) + '...'} />
             <InfoField icon={CircleDollarSign} label="Fees" value={`$${student.fees || 0}`} />
             <InfoField icon={Phone} label="Contact" value={student.contact} />
         </div>
