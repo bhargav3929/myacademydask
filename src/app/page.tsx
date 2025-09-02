@@ -72,12 +72,12 @@ export default function Home() {
               Pricing
             </Link>
             <Button asChild variant="ghost">
-              <Link href="/dashboard">
+              <Link href="/login">
                 Login
               </Link>
             </Button>
             <Button asChild>
-              <Link href="/dashboard">
+              <Link href="/login">
                 Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -110,7 +110,7 @@ export default function Home() {
             </motion.p>
             <motion.div variants={itemVariants} className="mt-8 flex flex-wrap justify-center gap-4">
                 <Button size="lg" asChild>
-                <Link href="/dashboard">
+                <Link href="/login">
                     Claim Your Academy <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
                 </Button>
