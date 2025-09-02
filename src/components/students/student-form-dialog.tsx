@@ -36,16 +36,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
-import { Stadium } from "@/lib/types";
+import { Stadium, StudentBatches } from "@/lib/types";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 
+const studentBatches: StudentBatches[] = ["First Batch", "Second Batch", "Third Batch", "Fourth Batch"];
+
 const formSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
   stadiumId: z.string({ required_error: "Please select a stadium." }),
+  batch: z.string({ required_error: "Please select a batch." }),
   joinDate: z.date({ required_error: "A join date is required." }),
   status: z.enum(['active', 'trial', 'inactive']),
   age: z.coerce.number().min(3, "Age must be at least 3.").max(100),
@@ -77,7 +80,6 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     },
   });
   
-  // If there's only one stadium (coach view), set it as default
   useState(() => {
     if (stadiums.length === 1) {
         form.setValue("stadiumId", stadiums[0].id);
@@ -100,6 +102,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
       await addDoc(studentCollectionRef, {
         fullName: values.fullName,
         age: values.age,
+        batch: values.batch,
         parentContact: values.parentContact || "",
         parentEmail: values.parentEmail || "",
         stadiumId: values.stadiumId,
@@ -206,28 +209,53 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
             </div>
             <hr />
 
-            <FormField
-                control={form.control}
-                name="stadiumId"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Assign to Stadium</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger disabled={stadiums.length === 1}>
-                            <SelectValue placeholder="Select a stadium" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        {stadiums.map(stadium => (
-                            <SelectItem key={stadium.id} value={stadium.id}>{stadium.name}</SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="stadiumId"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Assign to Stadium</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger disabled={stadiums.length === 1}>
+                                <SelectValue placeholder="Select a stadium" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {stadiums.map(stadium => (
+                                <SelectItem key={stadium.id} value={stadium.id}>{stadium.name}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="batch"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Assign to Batch</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a batch" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {studentBatches.map(batch => (
+                                <SelectItem key={batch} value={batch}>{batch}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+
 
             <div className="grid grid-cols-2 gap-4">
                <FormField

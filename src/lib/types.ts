@@ -1,6 +1,8 @@
 
 import { Timestamp } from "firebase/firestore";
 
+export type StudentBatches = "First Batch" | "Second Batch" | "Third Batch" | "Fourth Batch";
+
 export interface UserProfile {
   id: string;
   uid: string;
@@ -48,6 +50,7 @@ export interface Student {
   id: string;
   fullName: string; 
   age: number;
+  batch: StudentBatches;
   parentContact: string;
   parentEmail: string;
   stadiumId: string;
@@ -63,6 +66,7 @@ export interface Attendance {
   id?: string;
   studentId: string;
   date: string; // YYYY-MM-DD
+  batch: StudentBatches;
   status: "present" | "absent";
   markedByCoachId: string;
   stadiumId: string;

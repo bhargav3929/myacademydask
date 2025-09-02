@@ -4,26 +4,20 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, onSnapshot, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
-import { Student } from "@/lib/types";
+import { Student, Stadium } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
 import { AddStudentDialog } from "../students/student-form-dialog";
+import { TakeAttendanceDialog } from "./take-attendance-dialog";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv } from "../motion";
+import { Users, CalendarCheck } from "lucide-react";
 
-type AttendanceStatus = {
-  [studentId: string]: 'present' | 'absent' | null;
-};
 
 export function AttendanceTracker() {
-  const { toast } = useToast();
-  const [stadiumId, setStadiumId] = useState<string | null>(null);
-  const [stadiumName, setStadiumName] = useState("Your Assigned Stadium");
+  const [stadium, setStadium] = useState<Stadium | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [attendance, setAttendance] = useState<AttendanceStatus>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +26,13 @@ export function AttendanceTracker() {
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists() && userDocSnap.data().assignedStadiums?.[0]) {
             const assignedStadiumId = userDocSnap.data().assignedStadiums[0];
-            setStadiumId(assignedStadiumId);
+            const stadiumDocRef = doc(firestore, "stadiums", assignedStadiumId);
+            const stadiumDocSnap = await getDoc(stadiumDocRef);
+            if (stadiumDocSnap.exists()) {
+                setStadium({ id: stadiumDocSnap.id, ...stadiumDocSnap.data() } as Stadium);
+            } else {
+                 setLoading(false);
+            }
         } else {
             setLoading(false);
         }
@@ -50,153 +50,68 @@ export function AttendanceTracker() {
   }, []);
 
   useEffect(() => {
-    if (!stadiumId) return;
+    if (!stadium) return;
 
-    // Fetch stadium details
-    const stadiumDocRef = doc(firestore, "stadiums", stadiumId);
-    const unsubscribeStadium = onSnapshot(stadiumDocRef, (stadiumDoc) => {
-        if (stadiumDoc.exists()) {
-            setStadiumName(stadiumDoc.data().name);
-        }
-    });
-
-    // Fetch students for the stadium
-    const q = query(collection(firestore, `stadiums/${stadiumId}/students`));
+    const q = query(collection(firestore, `stadiums/${stadium.id}/students`));
     const unsubscribeStudents = onSnapshot(q, (snapshot) => {
         const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
         setStudents(studentsData);
         setLoading(false);
     }, (error) => {
         console.error("Error fetching students: ", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not fetch student data." });
         setLoading(false);
     });
 
     return () => {
-        unsubscribeStadium();
         unsubscribeStudents();
     };
-  }, [stadiumId, toast]);
-
-  const handleMarkAttendance = async (studentId: string, status: 'present' | 'absent') => {
-    if (!stadiumId || !auth.currentUser) return;
-
-    const todayStr = format(new Date(), "yyyy-MM-dd");
-    const attendanceDocId = `${studentId}_${todayStr}`;
-    const attendanceRef = doc(firestore, `stadiums/${stadiumId}/attendance`, attendanceDocId);
-
-    const originalStatus = attendance[studentId];
-    setAttendance(prev => ({ ...prev, [studentId]: status }));
-
-    try {
-      await setDoc(attendanceRef, {
-        studentId,
-        date: todayStr,
-        status,
-        markedByCoachId: auth.currentUser.uid,
-        organizationId: (await getDoc(doc(firestore, "stadiums", stadiumId))).data()?.organizationId,
-        timestamp: serverTimestamp(),
-      }, { merge: true });
-      toast({
-        title: "Success",
-        description: `Marked ${students.find(s=>s.id===studentId)?.fullName} as ${status}.`,
-      });
-    } catch (error) {
-      setAttendance(prev => ({ ...prev, [studentId]: originalStatus }));
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not mark attendance.",
-      });
-    }
-  };
+  }, [stadium]);
   
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.05,
-        type: 'spring',
-        stiffness: 100,
-      },
-    }),
-  };
 
   if (loading) {
     return (
-        <Card>
-            <CardHeader>
-                <Skeleton className="h-6 w-1/2" />
-                <Skeleton className="h-4 w-3/4 mt-2" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-            </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+        </div>
     );
   }
 
+  if (!stadium) {
+      return (
+          <Card>
+              <CardHeader>
+                  <CardTitle>No Stadium Assigned</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <p className="text-muted-foreground">You have not been assigned to a stadium yet. Please contact your administrator.</p>
+              </CardContent>
+          </Card>
+      )
+  }
+
   return (
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-start">
-            <div>
-              <CardTitle>Mark Today's Attendance</CardTitle>
-              <CardDescription>
-                For {stadiumName} on {format(new Date(), 'PPP')}.
-              </CardDescription>
-            </div>
-             <AddStudentDialog stadiums={stadiumId ? [{id: stadiumId, name: stadiumName} as any] : []} />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <AnimatePresence>
-                {students.length > 0 ? students.map((student, i) => (
-                <motion.div 
-                    key={student.id} 
-                    layout
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    custom={i}
-                    className="flex items-center justify-between rounded-lg border bg-background p-3"
-                >
-                    <div className="flex items-center gap-4">
-                        <Avatar className="size-9">
-                            <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <p className="font-medium">{student.fullName}</p>
-                    </div>
-                    <div className="flex gap-2">
-                    <Button
-                        size="sm"
-                        variant={attendance[student.id] === 'present' ? 'default' : 'outline'}
-                        onClick={() => handleMarkAttendance(student.id, 'present')}
-                        className={attendance[student.id] === 'present' ? 'bg-green-600 hover:bg-green-700' : ''}
-                    >
-                        Present
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant={attendance[student.id] === 'absent' ? 'destructive' : 'outline'}
-                        onClick={() => handleMarkAttendance(student.id, 'absent')}
-                    >
-                        Absent
-                    </Button>
-                    </div>
-                </motion.div>
-                )) : 
-                <div className="text-center py-12 text-muted-foreground">
-                    <p>No students assigned to you in this stadium.</p>
-                    <p className="text-sm">Use the "New Student" button to add students.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <MotionDiv initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+            <Card className="h-full flex flex-col items-center justify-center text-center p-8 bg-gradient-to-br from-primary/5 via-background to-background border-primary/20 hover:border-primary/40 transition-all duration-300">
+                <div className="p-4 bg-primary/10 rounded-full mb-4 border border-primary/20">
+                    <Users className="size-8 text-primary" />
                 </div>
-                }
-            </AnimatePresence>
-          </div>
-        </CardContent>
-      </Card>
+                <CardTitle className="text-xl mb-2">Enroll a New Student</CardTitle>
+                <CardDescription className="mb-6 max-w-xs">Add a new participant to your stadium roster and assign them to a batch.</CardDescription>
+                <AddStudentDialog stadiums={stadium ? [stadium] : []} />
+            </Card>
+        </MotionDiv>
+        <MotionDiv initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+             <Card className="h-full flex flex-col items-center justify-center text-center p-8 bg-gradient-to-br from-secondary/20 via-background to-background border-border hover:border-foreground/20 transition-all duration-300">
+                <div className="p-4 bg-secondary rounded-full mb-4 border">
+                    <CalendarCheck className="size-8 text-secondary-foreground" />
+                </div>
+                <CardTitle className="text-xl mb-2">Track Daily Attendance</CardTitle>
+                <CardDescription className="mb-6 max-w-xs">Select a date and batch to mark attendance for your students.</CardDescription>
+                <TakeAttendanceDialog stadium={stadium} allStudents={students} />
+            </Card>
+        </MotionDiv>
+      </div>
   );
 }

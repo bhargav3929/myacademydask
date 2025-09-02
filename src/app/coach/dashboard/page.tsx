@@ -15,7 +15,7 @@ export default function CoachDashboardPage() {
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">Coach Dashboard</h2>
                     <p className="text-muted-foreground">
-                        Manage student attendance for your assigned stadium.
+                        Manage student attendance and enrollment for your assigned stadium.
                     </p>
                 </div>
             </div>
