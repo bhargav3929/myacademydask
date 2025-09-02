@@ -29,9 +29,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, AlertTriangle, Eye, EyeOff } from "lucide-react";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Checkbox } from "../ui/checkbox";
+import { PlusCircle } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 
 const formSchema = z.object({
@@ -40,9 +38,8 @@ const formSchema = z.object({
   coachFullName: z.string().min(2, "Coach's full name is required."),
   coachEmail: z.string().email("Please enter a valid email address."),
   coachPhone: z.string().min(10, "Please enter a valid phone number."),
-  credentialsConfirmed: z.boolean().default(false).refine(val => val === true, {
-    message: "You must confirm you have saved the credentials."
-  }),
+  coachUsername: z.string().min(3, "Username must be at least 3 characters.").regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers, and underscores."),
+  coachPassword: z.string().min(8, "Password must be at least 8 characters."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,22 +47,11 @@ type FormValues = z.infer<typeof formSchema>;
 // In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
-// Helper function to generate a random password
-const generatePassword = () => {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let password = "";
-  for (let i = 0; i < 10; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-};
 
 export function AddStadiumDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedCredentials, setGeneratedCredentials] = useState<{ username: string; password: string} | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,7 +61,8 @@ export function AddStadiumDialog() {
       coachFullName: "",
       coachEmail: "",
       coachPhone: "",
-      credentialsConfirmed: false,
+      coachUsername: "",
+      coachPassword: ""
     },
     mode: "onBlur",
   });
@@ -86,7 +73,6 @@ export function AddStadiumDialog() {
         const methods = await fetchSignInMethodsForEmail(auth, email);
         return methods.length > 0;
     } catch (error) {
-        // This can happen for invalid email formats etc. during typing.
         return false;
     }
   };
@@ -101,37 +87,21 @@ export function AddStadiumDialog() {
     const querySnapshot = await getDocs(q);
     return !querySnapshot.empty;
   }
-
-  const handleGenerateCredentials = () => {
-    const coachFullName = form.getValues("coachFullName");
-
-    if(!coachFullName) {
-        toast({ variant: "destructive", title: "Missing Info", description: "Please enter the Coach's Full Name first."});
-        return;
-    }
-
-    // A more robust username generation
-    const username = `${coachFullName.split(" ").join("_").toLowerCase()}_${Math.random().toString(36).substring(2, 6)}`;
-    const password = generatePassword();
-    setGeneratedCredentials({ username, password });
+   const checkUsernameExists = async (username: string) => {
+    if (!username) return false;
+    const q = query(collection(firestore, "users"), where("username", "==", username));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
   }
+
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
 
-    if (!generatedCredentials) {
-        toast({ variant: "destructive", title: "Credentials Not Generated", description: "Please generate credentials for the coach before submitting." });
-        setIsLoading(false);
-        return;
-    }
-
     try {
         // 1. Create Coach Auth User
-        const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, generatedCredentials.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, values.coachPassword);
         const coachUid = userCredential.user.uid;
-
-        // In a real app with backend functions, you would set custom claims here.
-        // For this client-side approach, the 'role' is stored in the user document.
         
         const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
@@ -146,7 +116,7 @@ export function AddStadiumDialog() {
             coachDetails: {
                 name: values.coachFullName,
                 email: values.coachEmail,
-                username: generatedCredentials.username,
+                username: values.coachUsername,
                 phone: values.coachPhone,
             },
             status: "active",
@@ -159,6 +129,7 @@ export function AddStadiumDialog() {
         batch.set(userDocRef, {
             uid: coachUid,
             email: values.coachEmail,
+            username: values.coachUsername,
             fullName: values.coachFullName,
             role: "coach",
             organizationId: MOCK_ORGANIZATION_ID,
@@ -166,7 +137,6 @@ export function AddStadiumDialog() {
             createdAt: timestamp,
         });
 
-        // Commit the batch
         await batch.commit();
 
         toast({
@@ -175,7 +145,6 @@ export function AddStadiumDialog() {
         });
 
         form.reset();
-        setGeneratedCredentials(null);
         setOpen(false);
 
     } catch (error: any) {
@@ -195,7 +164,7 @@ export function AddStadiumDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { form.reset(); setGeneratedCredentials(null); } setOpen(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { form.reset(); } setOpen(o); }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -258,6 +227,17 @@ export function AddStadiumDialog() {
                     </FormItem>
                 )}
                 />
+                 <FormField
+                control={form.control}
+                name="coachPhone"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Coach's Phone</FormLabel>
+                    <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
                 <FormField
                 control={form.control}
                 name="coachEmail"
@@ -282,65 +262,44 @@ export function AddStadiumDialog() {
                 )}
                 />
                 <FormField
-                control={form.control}
-                name="coachPhone"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Coach's Phone</FormLabel>
-                    <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
+                    control={form.control}
+                    name="coachUsername"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Coach's Username</FormLabel>
+                        <FormControl>
+                            <Input 
+                            placeholder="e.g., john_smith_1" 
+                            {...field}
+                            onBlur={async (e) => {
+                                field.onBlur();
+                                if(e.target.value && await checkUsernameExists(e.target.value)) {
+                                    form.setError("coachUsername", { type: "manual", message: "This username is already taken."});
+                                }
+                            }}
+                             />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="coachPassword"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Set Coach Password</FormLabel>
+                        <FormControl>
+                            <Input type="password" placeholder="Must be at least 8 characters" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                 />
                 
-                {!generatedCredentials && (
-                    <Button type="button" variant="outline" className="w-full" onClick={handleGenerateCredentials}>Generate Coach Credentials</Button>
-                )}
-
-                {generatedCredentials && (
-                    <Alert variant="default" className="bg-primary/5 border-primary/20">
-                        <AlertTriangle className="h-4 w-4 text-primary" />
-                        <AlertDescription className="space-y-3">
-                            <p className="font-semibold">Save these credentials securely!</p>
-                            <div className="text-sm">
-                                <span className="font-medium text-muted-foreground">Username:</span>
-                                <span className="ml-2 font-mono p-1 rounded bg-muted">{generatedCredentials.username}</span>
-                            </div>
-                            <div className="text-sm flex items-center">
-                                <span className="font-medium text-muted-foreground">Password:</span>
-                                <div className="flex items-center ml-2 font-mono p-1 rounded bg-muted">
-                                    <span>{showPassword ? generatedCredentials.password : '••••••••••'}</span>
-                                    <Button type="button" variant="ghost" size="icon" className="h-5 w-5 ml-2" onClick={() => setShowPassword(!showPassword)}>
-                                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                    </Button>
-                                </div>
-                            </div>
-                            <FormField
-                                control={form.control}
-                                name="credentialsConfirmed"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md pt-4">
-                                    <FormControl>
-                                        <Checkbox
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                        />
-                                    </FormControl>
-                                    <div className="space-y-1 leading-none">
-                                        <FormLabel>
-                                            I have noted down the coach credentials.
-                                        </FormLabel>
-                                        <FormMessage />
-                                    </div>
-                                    </FormItem>
-                                )}
-                            />
-                        </AlertDescription>
-                    </Alert>
-                )}
                 <DialogFooter className="pt-4 !justify-between">
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={isLoading || !generatedCredentials || !form.formState.isValid}>
+                    <Button type="submit" disabled={isLoading || !form.formState.isValid}>
                         {isLoading ? "Creating..." : "Create Stadium"}
                     </Button>
                 </DialogFooter>
@@ -351,3 +310,4 @@ export function AddStadiumDialog() {
     </Dialog>
   );
 }
+

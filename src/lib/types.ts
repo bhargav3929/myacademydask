@@ -5,6 +5,7 @@ export interface UserProfile {
   id: string;
   uid: string;
   email: string;
+  username: string;
   fullName: string;
   organizationId: string;
   role: "owner" | "coach";
@@ -45,19 +46,15 @@ export interface Stadium {
 
 export interface Student {
   id: string;
-  name: string;
+  fullName: string; 
   age: number;
   parentContact: string;
   parentEmail: string;
   stadiumId: string;
   coachId: string;
   organizationId: string;
-  admissionDate: Timestamp;
-  status: 'active' | 'trial' | 'inactive';
-  addedBy: string; // coach's UID
-  // Legacy fields for compatibility
-  fullName: string; 
   joinDate: Timestamp;
+  status: 'active' | 'trial' | 'inactive';
   createdAt: Timestamp;
 }
 

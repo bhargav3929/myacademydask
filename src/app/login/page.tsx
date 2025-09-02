@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { auth, firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,7 @@ import Link from "next/link";
 import { MotionDiv } from "@/components/motion";
 
 const loginFormSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
+  identifier: z.string().min(1, { message: "Please enter your email or username." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
@@ -40,17 +41,56 @@ export default function LoginPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
     },
   });
 
+  const getEmailFromIdentifier = async (identifier: string): Promise<string | null> => {
+    // Check if it's an email
+    if (z.string().email().safeParse(identifier).success) {
+        return identifier;
+    }
+    
+    // Assume it's a username and query Firestore
+    const usersRef = collection(firestore, "users");
+    const q = query(usersRef, where("username", "==", identifier));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return null; // Username not found
+    }
+
+    // Return the email from the found user document
+    return querySnapshot.docs[0].data().email;
+  }
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      const idTokenResult = await userCredential.user.getIdTokenResult();
-      const userRole = idTokenResult.claims.role;
+      const email = await getEmailFromIdentifier(data.identifier);
+
+      if (!email) {
+          toast({
+              variant: "destructive",
+              title: "Login Failed",
+              description: "Invalid credentials. Please try again.",
+          });
+          setIsLoading(false);
+          return;
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
+      
+      // Fetch user role from Firestore
+      const userDocRef = doc(firestore, "users", userCredential.user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+          throw new Error("User profile not found.");
+      }
+      
+      const userRole = userDocSnap.data().role;
 
       toast({
         title: "Login Successful",
@@ -69,7 +109,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        description: "Invalid credentials. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -90,19 +130,19 @@ export default function LoginPage() {
                   <span className="text-2xl font-bold">CourtCommand</span>
               </Link>
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
-              <CardDescription>Enter your credentials provided by your academy owner to sign in.</CardDescription>
+              <CardDescription>Enter your credentials to sign in to your account.</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="identifier"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Email or Username</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="name@example.com" {...field} />
+                          <Input placeholder="name@example.com or your_username" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
