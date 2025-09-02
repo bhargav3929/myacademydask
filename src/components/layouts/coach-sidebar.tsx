@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Gamepad2, LayoutDashboard, CalendarCheck } from "lucide-react";
+import { Gamepad2, LayoutDashboard, CalendarCheck, Users } from "lucide-react";
 import { Sidebar, SidebarHeader, SidebarNav, SidebarNavLink } from "@/components/ui/sidebar";
 
 export function CoachSidebar() {
@@ -12,6 +12,7 @@ export function CoachSidebar() {
 
     const navItems = [
         { href: "/coach/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+        { href: "/coach/students", icon: Users, label: "Students" },
         { href: "/coach/attendance", icon: CalendarCheck, label: "Attendance History" },
     ];
 
