@@ -6,7 +6,6 @@ import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, get
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { CoachAssignments } from "@/components/dashboard/coach-assignments";
 import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
 import { Student } from "@/lib/types";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
@@ -31,6 +30,7 @@ export default function DashboardPage() {
   const [directorName, setDirectorName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [activeStadiums, setActiveStadiums] = useState(0);
 
   const filterStudentsByDate = useCallback((students: Student[], filter: TimeFilter) => {
     const now = new Date();
@@ -72,7 +72,6 @@ export default function DashboardPage() {
       const filtered = filterStudentsByDate(studentsData, timeFilter);
       setFilteredStudents(filtered);
 
-      // Total students count should not be filtered by date
       setTotalStudents(studentsData.length);
       
       setIsLoading(false);
@@ -93,18 +92,24 @@ export default function DashboardPage() {
             setDirectorName("Academy Director");
         }
     };
+
+    const stadiumsQuery = query(collection(firestore, "stadiums"), where("status", "==", "active"));
+    const unsubscribeStadiums = onSnapshot(stadiumsQuery, (snapshot) => {
+        setActiveStadiums(snapshot.size);
+    });
     
     fetchDirectorName();
 
-    return () => unsubscribe();
+    return () => {
+        unsubscribe();
+        unsubscribeStadiums();
+    };
   }, [timeFilter, filterStudentsByDate]);
 
   useEffect(() => {
-    // Update stats when filtered students change
     const revenue = filteredStudents.reduce((acc, student) => acc + (student.fees || 0), 0);
     setTotalRevenue(revenue);
     
-    // Set recent registrations from the already filtered list
     setRecentRegistrations(
         [...filteredStudents]
         .sort((a,b) => b.joinDate.toMillis() - a.joinDate.toMillis())
@@ -199,7 +204,7 @@ export default function DashboardPage() {
       
       <MotionDiv
         variants={containerVariants}
-        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
       >
         <MotionDiv variants={itemVariants}>
           <StatCard
@@ -224,6 +229,14 @@ export default function DashboardPage() {
             value={formattedRevenue}
             icon="DollarSign"
             trendPeriod={getFilterPeriodText()}
+          />
+        </MotionDiv>
+         <MotionDiv variants={itemVariants}>
+          <StatCard
+            title="Active Stadiums"
+            value={activeStadiums.toString()}
+            icon="Building"
+            trendPeriod="Online now"
           />
         </MotionDiv>
       </MotionDiv>

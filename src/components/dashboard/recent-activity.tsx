@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collectionGroup, query, orderBy, limit, onSnapshot, doc, getDoc, getDocs, collection } from "firebase/firestore";
+import { collectionGroup, query, orderBy, limit, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck, CalendarX } from "lucide-react";
@@ -31,24 +31,24 @@ export function RecentActivity() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // This is a simplified fetch for demonstration. A real-world app might use a dedicated 'activities' collection
-    // or more optimized queries. For now, we combine two separate queries.
-    const fetchActivities = async () => {
-      setLoading(true);
+    setLoading(true);
 
-      // 1. Fetch recent student registrations
-      const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
-      
-      // 2. Fetch recent attendance records
-      const attendanceQuery = query(collectionGroup(firestore, "attendance"), orderBy("timestamp", "desc"), limit(5));
-      
-      const [studentsSnapshot, attendanceSnapshot] = await Promise.all([
-          getDocs(studentsQuery),
-          getDocs(attendanceQuery),
-      ]);
-      
-      // Map student registrations to activity format
-      const studentActivities = studentsSnapshot.docs.map(doc => {
+    const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
+    const attendanceQuery = query(collectionGroup(firestore, "attendance"), orderBy("timestamp", "desc"), limit(5));
+
+    const studentDocsCache = new Map<string, Student>();
+    let combinedActivities: Activity[] = [];
+
+    const mergeAndSortActivities = (newActivities: Activity[]) => {
+      combinedActivities = [...newActivities, ...combinedActivities]
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // Remove duplicates
+        .slice(0, 5);
+      setActivities(combinedActivities);
+    };
+
+    const unsubStudents = onSnapshot(studentsQuery, (snapshot) => {
+      const studentActivities = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -58,54 +58,50 @@ export function RecentActivity() {
           timestamp: data.createdAt.toDate(),
         };
       });
-
-      // Map attendance records to activity format
-      const studentDocsCache = new Map<string, Student>();
-      const attendanceActivitiesPromises = attendanceSnapshot.docs.map(async (attendanceDoc) => {
-        const data = attendanceDoc.data();
-        let studentName = "A student";
-
-        // To get the student's name, we need their document.
-        // The attendance record lives at `stadiums/{stadiumId}/attendance/{attendanceId}`
-        // The student record lives at `stadiums/{stadiumId}/students/{studentId}`
-        const studentRef = doc(attendanceDoc.ref.parent.parent!, "students", data.studentId);
-        
-        if (studentDocsCache.has(data.studentId)) {
-          studentName = studentDocsCache.get(data.studentId)!.fullName;
-        } else {
-          const studentDoc = await getDoc(studentRef);
-          if (studentDoc.exists()) {
-            const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
-            studentName = studentData.fullName;
-            studentDocsCache.set(data.studentId, studentData);
-          }
-        }
-        
-        return {
-          id: attendanceDoc.id,
-          person: studentName,
-          action: `was marked ${data.status}.`,
-          type: data.status as ActivityType,
-          timestamp: data.timestamp.toDate(),
-        };
-      });
-
-      const attendanceActivities = (await Promise.all(attendanceActivitiesPromises)).filter(Boolean) as Activity[];
-      
-      // Combine, sort, and slice to get the 5 most recent activities of any type
-      const combinedActivities = [...studentActivities, ...attendanceActivities]
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .slice(0, 5);
-
-      setActivities(combinedActivities);
+      mergeAndSortActivities(studentActivities);
       setLoading(false);
+    });
+
+    const unsubAttendance = onSnapshot(attendanceQuery, async (snapshot) => {
+        const attendancePromises = snapshot.docs.map(async (attendanceDoc) => {
+            const data = attendanceDoc.data();
+            let studentName = "A student";
+            const studentRef = doc(attendanceDoc.ref.parent.parent!, "students", data.studentId);
+
+            try {
+                 if (studentDocsCache.has(data.studentId)) {
+                    studentName = studentDocsCache.get(data.studentId)!.fullName;
+                } else {
+                    const studentDoc = await getDoc(studentRef);
+                    if (studentDoc.exists()) {
+                        const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
+                        studentName = studentData.fullName;
+                        studentDocsCache.set(data.studentId, studentData);
+                    }
+                }
+            } catch (e) {
+                // Stale reference, student might have been deleted.
+                // We can ignore this error for the activity feed.
+            }
+           
+            return {
+                id: attendanceDoc.id,
+                person: studentName,
+                action: `was marked ${data.status}.`,
+                type: data.status as ActivityType,
+                timestamp: data.timestamp.toDate(),
+            };
+        });
+
+        const attendanceActivities = await Promise.all(attendancePromises);
+        mergeAndSortActivities(attendanceActivities);
+        setLoading(false);
+    });
+
+    return () => {
+      unsubStudents();
+      unsubAttendance();
     };
-
-    fetchActivities();
-    
-    // Note: For real-time updates, you'd set up `onSnapshot` listeners for both queries
-    // and manage merging the results, which can be complex. Fetching on load is simpler.
-
   }, []);
 
   return (

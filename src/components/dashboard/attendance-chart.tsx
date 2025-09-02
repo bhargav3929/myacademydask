@@ -48,13 +48,11 @@ export function AttendanceChart() {
 
         for (let i = 6; i >= 0; i--) {
           const day = subDays(today, i);
-          const start = startOfDay(day);
-          const end = endOfDay(day);
+          const dateStr = format(day, "yyyy-MM-dd");
 
           const attendanceQuery = query(
             collectionGroup(firestore, "attendance"),
-            where("timestamp", ">=", Timestamp.fromDate(start)),
-            where("timestamp", "<=", Timestamp.fromDate(end))
+            where("date", "==", dateStr)
           );
           promises.push(getDocs(attendanceQuery));
         }
@@ -170,3 +168,4 @@ export function AttendanceChart() {
     </Card>
   );
 }
+

@@ -37,7 +37,7 @@ export function RecentRegistrations({ data }: { data: Student[] }) {
     <Card>
         <CardHeader>
             <CardTitle>Recent Registrations</CardTitle>
-            <CardDescription>A list of the newest students who have joined your academy.</CardDescription>
+            <CardDescription>The newest students who have joined your academy.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
@@ -86,7 +86,7 @@ export function RecentRegistrations({ data }: { data: Student[] }) {
                 )) : (
                     <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                            No recent registrations to display.
+                            No recent registrations to display based on the selected filter.
                         </TableCell>
                     </TableRow>
                 )}
