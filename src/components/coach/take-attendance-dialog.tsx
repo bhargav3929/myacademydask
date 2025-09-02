@@ -125,6 +125,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
 
     try {
       const dbBatch = writeBatch(firestore);
+      const submissionTimestamp = serverTimestamp();
 
       // 1. Save individual student attendance records
       studentsInBatch.forEach((student) => {
@@ -145,7 +146,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
               markedByCoachId: auth.currentUser!.uid,
               organizationId: stadium.organizationId,
               stadiumId: stadium.id,
-              timestamp: serverTimestamp(),
+              timestamp: submissionTimestamp,
             },
             { merge: true }
           );
@@ -159,7 +160,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
         batch: selectedBatch,
         date: dateStr,
         submittedByCoachId: auth.currentUser.uid,
-        timestamp: serverTimestamp(),
+        timestamp: submissionTimestamp,
       });
       
       await dbBatch.commit();
@@ -342,5 +343,3 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     </Dialog>
   );
 }
-
-    
