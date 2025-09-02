@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, limit, doc, getDoc, collectionGroup, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, getDoc, getDocs, collectionGroup } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck } from "lucide-react";
@@ -141,7 +141,7 @@ export function RecentActivity() {
                         {activity.title}
                     </p>
                     <p className="text-sm text-muted-foreground">{activity.description}</p>
-                    {isClient && (
+                    {isClient && activity.timestamp && (
                       <p className="text-xs text-muted-foreground pt-1">{formatDistanceToNow(activity.timestamp, { addSuffix: true })}</p>
                     )}
                 </div>
