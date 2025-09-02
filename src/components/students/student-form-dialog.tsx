@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -48,8 +49,8 @@ const formSchema = z.object({
   joinDate: z.date({ required_error: "A join date is required." }),
   status: z.enum(['active', 'trial', 'inactive']),
   age: z.coerce.number().min(3, "Age must be at least 3.").max(100),
-  parentContact: z.string().min(10, "Please enter a valid contact number."),
-  parentEmail: z.string().email("Please enter a valid parent email."),
+  parentContact: z.string().optional(),
+  parentEmail: z.string().email("Please enter a valid email or leave it empty.").optional().or(z.literal('')),
   fees: z.coerce.number().optional(),
 });
 
@@ -99,8 +100,8 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
       await addDoc(studentCollectionRef, {
         fullName: values.fullName,
         age: values.age,
-        parentContact: values.parentContact,
-        parentEmail: values.parentEmail,
+        parentContact: values.parentContact || "",
+        parentEmail: values.parentEmail || "",
         stadiumId: values.stadiumId,
         coachId: selectedStadium.assignedCoachId,
         organizationId: MOCK_ORGANIZATION_ID,
@@ -181,7 +182,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                   name="parentContact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Parent Contact</FormLabel>
+                      <FormLabel>Parent Contact (Optional)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., +15551234" {...field} />
                       </FormControl>
@@ -194,7 +195,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                   name="parentEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Parent Email</FormLabel>
+                      <FormLabel>Parent Email (Optional)</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="parent@example.com" {...field} />
                       </FormControl>
