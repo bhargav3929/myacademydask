@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp, endOfDay } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -11,7 +11,7 @@ import { Student } from "@/lib/types";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { AttendanceChart } from "@/components/dashboard/attendance-chart";
+import { StudentEnrollmentChart } from "@/components/dashboard/student-enrollment-chart";
 import { Button } from "@/components/ui/button";
 import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -291,7 +291,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <AttendanceChart />
+            <StudentEnrollmentChart />
         </MotionDiv>
          <MotionDiv variants={itemVariants} className="lg:col-span-2">
             <RecentActivity />
