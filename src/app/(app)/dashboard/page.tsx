@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, getCountFromServer, limit, orderBy } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getCountFromServer, limit, orderBy, doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -12,14 +12,19 @@ import { CoachAssignments } from "@/components/dashboard/coach-assignments";
 import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
 import { subDays } from "date-fns";
 import { Student } from "@/lib/types";
+import { AnimatedText } from "@/components/ui/animated-underline-text-one";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
+const MOCK_USER_ID = "mock-owner-id"; // For fetching director's name
 
 export default function DashboardPage() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [newStudents, setNewStudents] = useState(0);
   const [activeStadiums, setActiveStadiums] = useState(0);
   const [recentRegistrations, setRecentRegistrations] = useState<Student[]>([]);
+  const [directorName, setDirectorName] = useState("");
+  const [isLoadingName, setIsLoadingName] = useState(true);
   
   useEffect(() => {
     // Listener for total students
@@ -48,6 +53,27 @@ export default function DashboardPage() {
         const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
         setRecentRegistrations(registrations);
     });
+
+    // Fetch director's name
+    const fetchDirectorName = async () => {
+        setIsLoadingName(true);
+        try {
+            const userDocRef = doc(firestore, "users", MOCK_USER_ID);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+                setDirectorName(userDocSnap.data().fullName || "Academy Director");
+            } else {
+                setDirectorName("Academy Director");
+            }
+        } catch (error) {
+            console.error("Failed to fetch director's name:", error);
+            setDirectorName("Academy Director");
+        } finally {
+            setIsLoadingName(false);
+        }
+    };
+    
+    fetchDirectorName();
     
     // Cleanup listeners on unmount
     return () => {
@@ -92,9 +118,20 @@ export default function DashboardPage() {
     >
       <MotionDiv variants={itemVariants}>
         <div className="space-y-0.5">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Welcome Back, Academy Director! 👋
-          </h1>
+          <div className="flex items-center gap-3">
+             <h1 className="text-2xl font-bold tracking-tight">
+                Welcome Back,
+             </h1>
+             {isLoadingName ? (
+                <Skeleton className="h-8 w-48" />
+             ) : (
+                <AnimatedText 
+                    text={`${directorName}! 👋`} 
+                    textClassName="text-2xl font-bold tracking-tight text-primary"
+                    underlineClassName="text-primary/50"
+                />
+             )}
+          </div>
           <p className="text-muted-foreground">
             Here's a snapshot of your academy's performance and recent activities.
           </p>
