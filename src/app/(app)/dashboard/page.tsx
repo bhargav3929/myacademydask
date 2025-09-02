@@ -31,13 +31,14 @@ export default function DashboardPage() {
     const studentsQuery = query(collectionGroup(firestore, "students"));
     const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
 
-    // Listener for new students (joined in the last 30 days)
-    const thirtyDaysAgo = subDays(new Date(), 30);
-    const newStudentsQuery = query(
-      collectionGroup(firestore, "students"),
-      where("joinDate", ">=", thirtyDaysAgo)
-    );
-    const newStudentsUnsubscribe = onSnapshot(newStudentsQuery, snapshot => setNewStudents(snapshot.size));
+    // // Listener for new students (joined in the last 30 days) - THIS QUERY REQUIRES A CUSTOM INDEX
+    // const thirtyDaysAgo = subDays(new Date(), 30);
+    // const newStudentsQuery = query(
+    //   collectionGroup(firestore, "students"),
+    //   where("joinDate", ">=", thirtyDaysAgo)
+    // );
+    // const newStudentsUnsubscribe = onSnapshot(newStudentsQuery, snapshot => setNewStudents(snapshot.size));
+    const newStudentsUnsubscribe = () => {}; // No-op function for cleanup
 
     // Listener for active stadiums
     const stadiumsQuery = query(collection(firestore, "stadiums"));
