@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, BarChart, CalendarCheck, ShieldCheck, Users, Gamepad2 } from 'lucide-react';
+import { ArrowRight, BarChart, CalendarCheck, ShieldCheck, Users, Gamepad2, Shield } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,7 @@ export default function Home() {
             <Gamepad2 className="h-7 w-7 text-primary" />
             <span className="text-lg font-bold">CourtCommand</span>
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2">
              <Link href="/#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Features
             </Link>
@@ -78,7 +78,13 @@ export default function Home() {
             </Button>
             <Button asChild>
               <Link href="/login">
-                Coach Login <ArrowRight className="ml-2 h-4 w-4" />
+                Coach Login
+              </Link>
+            </Button>
+             <Button asChild variant="outline" size="sm">
+              <Link href="/super-admin/login">
+                <Shield className="mr-2 h-4 w-4" />
+                Super Admin
               </Link>
             </Button>
           </nav>
