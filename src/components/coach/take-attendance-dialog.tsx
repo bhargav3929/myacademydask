@@ -125,6 +125,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     const writeDbBatch = writeBatch(firestore);
     const dateStr = format(selectedDate, "yyyy-MM-dd");
 
+    // 1. Save individual student attendance records
     studentsInBatch.forEach((student) => {
       const status = attendance[student.id];
       if (status) { 
@@ -144,17 +145,15 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
       }
     });
 
-    // Add a record for the entire batch submission
+    // 2. Add a record for the entire batch submission for the recent activities feed
     const submissionCollectionRef = collection(firestore, 'attendance_submissions');
-    const submissionDoc = {
+    addDoc(submissionCollectionRef, {
         stadiumId: stadium.id,
         batch: selectedBatch,
         date: dateStr,
         submittedByCoachId: auth.currentUser.uid,
         timestamp: serverTimestamp(),
-    };
-    const newSubmissionRef = doc(submissionCollectionRef);
-    writeDbBatch.set(newSubmissionRef, submissionDoc);
+    });
 
     try {
       await writeDbBatch.commit();

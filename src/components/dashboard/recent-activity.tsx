@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, getDocs, collectionGroup } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, collectionGroup, getDocs } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck } from "lucide-react";
@@ -31,90 +31,88 @@ export function RecentActivity() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only once on the client after mounting
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    const fetchActivities = async () => {
-      setLoading(true);
-      try {
-        const stadiumsCache = new Map<string, Stadium>();
-        const getStadium = async (stadiumId: string): Promise<Stadium | null> => {
-          if (stadiumsCache.has(stadiumId)) {
-            return stadiumsCache.get(stadiumId)!;
-          }
-          const stadiumDocRef = doc(firestore, "stadiums", stadiumId);
-          const stadiumDoc = await getDoc(stadiumDocRef);
-          if (stadiumDoc.exists()) {
-            const stadiumData = { id: stadiumId, ...stadiumDoc.data() } as Stadium;
-            stadiumsCache.set(stadiumId, stadiumData);
-            return stadiumData;
-          }
-          return null;
-        };
+    setLoading(true);
 
-        // 1. Fetch recent student admissions
-        const studentsQuery = query(collectionGroup(firestore, "students"), limit(10));
-        const studentsSnapshot = await getDocs(studentsQuery);
-        let studentDocs = studentsSnapshot.docs;
-        // Sort manually on the client
-        studentDocs.sort((a, b) => b.data().createdAt.toMillis() - a.data().createdAt.toMillis());
-        studentDocs = studentDocs.slice(0, 5);
-        
-        const studentActivities: Activity[] = await Promise.all(
-          studentDocs.map(async (docSnap) => {
-            const data = docSnap.data() as Student;
-            const stadiumId = docSnap.ref.parent.parent!.id;
-            const stadium = await getStadium(stadiumId);
-            return {
-              id: docSnap.id,
-              title: data.fullName,
-              description: `Joined ${stadium?.name || "a stadium"}.`,
-              type: "new_student" as ActivityType,
-              timestamp: data.createdAt.toDate(),
-            };
-          })
-        );
-
-        // 2. Fetch recent attendance submissions
-        const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
-        const attendanceSnapshot = await getDocs(attendanceQuery);
-        const attendanceActivities: Activity[] = await Promise.all(
-            attendanceSnapshot.docs.map(async (docSnap) => {
-                const data = docSnap.data() as AttendanceSubmission;
-                const stadium = await getStadium(data.stadiumId);
-                return {
-                    id: docSnap.id,
-                    title: `${stadium?.name || "A stadium"}`,
-                    description: `${data.batch} attendance taken.`,
-                    type: 'attendance_submission' as ActivityType,
-                    timestamp: data.timestamp.toDate(),
-                };
-            })
-        );
-        
-        // 3. Combine, sort, and slice
-        const combinedActivities = [...studentActivities, ...attendanceActivities]
-          .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-          .slice(0, 5);
-
-        setActivities(combinedActivities);
-
-      } catch (error) {
-        console.error("Error fetching recent activities:", error);
-      } finally {
-        setLoading(false);
+    const stadiumsCache = new Map<string, Stadium>();
+    const getStadium = async (stadiumId: string): Promise<Stadium | null> => {
+      if (stadiumsCache.has(stadiumId)) {
+        return stadiumsCache.get(stadiumId)!;
       }
+      const stadiumDocRef = doc(firestore, "stadiums", stadiumId);
+      const stadiumDoc = await getDoc(stadiumDocRef);
+      if (stadiumDoc.exists()) {
+        const stadiumData = { id: stadiumId, ...stadiumDoc.data() } as Stadium;
+        stadiumsCache.set(stadiumId, stadiumData);
+        return stadiumData;
+      }
+      return null;
     };
     
-    // Set up listeners to refetch activities on changes
-    const attendanceUnsubscribe = onSnapshot(query(collection(firestore, "attendance_submissions")), fetchActivities);
+    // Fetch initial data
+    const fetchActivities = async () => {
+        try {
+            // 1. Fetch recent student admissions
+            const studentsQuery = query(collectionGroup(firestore, "students"), orderBy("createdAt", "desc"), limit(5));
+            const studentsSnapshot = await getDocs(studentsQuery);
+            const studentActivities: Activity[] = await Promise.all(
+              studentsSnapshot.docs.map(async (docSnap) => {
+                const data = docSnap.data() as Student;
+                const stadiumId = docSnap.ref.parent.parent!.id;
+                const stadium = await getStadium(stadiumId);
+                return {
+                  id: docSnap.id,
+                  title: data.fullName,
+                  description: `Joined ${stadium?.name || "a stadium"}.`,
+                  type: "new_student" as ActivityType,
+                  timestamp: data.createdAt.toDate(),
+                };
+              })
+            );
+    
+            // 2. Fetch recent attendance submissions
+            const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
+            const attendanceSnapshot = await getDocs(attendanceQuery);
+            const attendanceActivities: Activity[] = await Promise.all(
+                attendanceSnapshot.docs.map(async (docSnap) => {
+                    const data = docSnap.data() as AttendanceSubmission;
+                    const stadium = await getStadium(data.stadiumId);
+                    return {
+                        id: docSnap.id,
+                        title: `${stadium?.name || "A stadium"}`,
+                        description: `${data.batch} attendance taken.`,
+                        type: 'attendance_submission' as ActivityType,
+                        timestamp: data.timestamp.toDate(),
+                    };
+                })
+            );
+            
+            // 3. Combine, sort, and slice
+            const combinedActivities = [...studentActivities, ...attendanceActivities]
+              .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+              .slice(0, 5);
+    
+            setActivities(combinedActivities);
+    
+          } catch (error) {
+            console.error("Error fetching recent activities:", error);
+          } finally {
+            setLoading(false);
+          }
+    };
+    
+    fetchActivities(); // Fetch initial data
+
+    // Set up listeners for real-time updates
     const studentUnsubscribe = onSnapshot(query(collectionGroup(firestore, "students")), fetchActivities);
+    const attendanceUnsubscribe = onSnapshot(query(collection(firestore, "attendance_submissions")), fetchActivities);
 
     return () => {
-        attendanceUnsubscribe();
         studentUnsubscribe();
+        attendanceUnsubscribe();
     };
 
   }, []);
