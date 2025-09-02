@@ -1,9 +1,13 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,9 +20,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { MotionDiv } from "@/components/motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, {
@@ -36,38 +40,106 @@ const organizationFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type OrganizationFormValues = z.infer<typeof organizationFormSchema>;
 
+// In a real app, these would come from the authenticated user's session
+const MOCK_USER_ID = "mock-owner-id";
+const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
+
 
 export default function SettingsPage() {
     const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(true);
 
     const profileForm = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            fullName: "Academy Director",
-            email: "director@courtcommand.com",
+            fullName: "",
+            email: "",
         },
     });
 
     const organizationForm = useForm<OrganizationFormValues>({
         resolver: zodResolver(organizationFormSchema),
         defaultValues: {
-            organizationName: "CourtCommand Academy",
+            organizationName: "",
         },
     });
 
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoading(true);
+            try {
+                // Fetch Profile Data
+                const userDocRef = doc(firestore, "users", MOCK_USER_ID);
+                const userDocSnap = await getDoc(userDocRef);
 
-  function onProfileSubmit(data: ProfileFormValues) {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been successfully updated.",
-    })
+                if (userDocSnap.exists()) {
+                    profileForm.reset(userDocSnap.data() as ProfileFormValues);
+                } else {
+                    // Pre-populate with mock data if it doesn't exist for demonstration
+                    const mockProfileData = { fullName: "Academy Director", email: "director@courtcommand.com" };
+                    profileForm.reset(mockProfileData);
+                    await setDoc(userDocRef, mockProfileData); // Create the doc for future updates
+                }
+
+                // Fetch Organization Data
+                const orgDocRef = doc(firestore, "organizations", MOCK_ORGANIZATION_ID);
+                const orgDocSnap = await getDoc(orgDocRef);
+                if (orgDocSnap.exists()) {
+                    organizationForm.reset(orgDocSnap.data() as OrganizationFormValues);
+                } else {
+                    // Pre-populate with mock data if it doesn't exist for demonstration
+                    const mockOrgData = { organizationName: "CourtCommand Academy" };
+                    organizationForm.reset(mockOrgData);
+                    await setDoc(orgDocRef, mockOrgData); // Create the doc for future updates
+                }
+            } catch (error) {
+                console.error("Failed to fetch settings:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Could not load your settings.",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [profileForm, organizationForm, toast]);
+
+
+  async function onProfileSubmit(data: ProfileFormValues) {
+    try {
+        const userDocRef = doc(firestore, "users", MOCK_USER_ID);
+        await updateDoc(userDocRef, data);
+        toast({
+            title: "Profile Updated",
+            description: "Your profile information has been successfully updated.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update your profile. Please try again.",
+        });
+    }
   }
 
-  function onOrganizationSubmit(data: OrganizationFormValues) {
-    toast({
-      title: "Organization Updated",
-      description: "Your organization settings have been successfully saved.",
-    })
+  async function onOrganizationSubmit(data: OrganizationFormValues) {
+    try {
+        const orgDocRef = doc(firestore, "organizations", MOCK_ORGANIZATION_ID);
+        await updateDoc(orgDocRef, data);
+        toast({
+            title: "Organization Updated",
+            description: "Your organization settings have been successfully saved.",
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update your organization settings. Please try again.",
+        });
+    }
   }
   
   const containerVariants = {
@@ -86,6 +158,50 @@ export default function SettingsPage() {
     visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } },
   };
 
+  if (isLoading) {
+      return (
+          <div className="space-y-8">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-72" />
+              </div>
+               <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full max-w-sm" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full max-w-sm" />
+                    </div>
+                </CardContent>
+                <CardFooter className="border-t px-6 py-4">
+                     <Skeleton className="h-10 w-32" />
+                </CardFooter>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-4 w-72" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-10 w-full max-w-sm" />
+                    </div>
+                </CardContent>
+                <CardFooter className="border-t px-6 py-4">
+                     <Skeleton className="h-10 w-32" />
+                </CardFooter>
+            </Card>
+          </div>
+      )
+  }
 
   return (
     <MotionDiv 
@@ -110,7 +226,7 @@ export default function SettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <Form {...profileForm}>
-                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)}>
+                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
                         <CardContent className="space-y-4">
                             <FormField
                             control={profileForm.control}
@@ -132,10 +248,10 @@ export default function SettingsPage() {
                                 <FormItem>
                                 <FormLabel>Email</FormLabel>
                                 <FormControl>
-                                    <Input type="email" placeholder="your@email.com" {...field} className="max-w-sm" />
+                                    <Input type="email" placeholder="your@email.com" {...field} className="max-w-sm" readOnly />
                                 </FormControl>
                                 <FormDescription>
-                                    You can manage verified email addresses in your email settings.
+                                    Your email address is used for logging in and cannot be changed.
                                 </FormDescription>
                                 <FormMessage />
                                 </FormItem>
@@ -143,7 +259,9 @@ export default function SettingsPage() {
                             />
                         </CardContent>
                         <CardFooter className="border-t px-6 py-4">
-                             <Button type="submit">Update Profile</Button>
+                             <Button type="submit" disabled={profileForm.formState.isSubmitting}>
+                                {profileForm.formState.isSubmitting ? "Saving..." : "Update Profile"}
+                            </Button>
                         </CardFooter>
                     </form>
                 </Form>
@@ -159,7 +277,7 @@ export default function SettingsPage() {
                     </CardDescription>
                 </CardHeader>
                  <Form {...organizationForm}>
-                    <form onSubmit={organizationForm.handleSubmit(onOrganizationSubmit)}>
+                    <form onSubmit={organizationForm.handleSubmit(onOrganizationSubmit)} className="space-y-6">
                         <CardContent className="space-y-4">
                              <FormField
                                 control={organizationForm.control}
@@ -176,7 +294,9 @@ export default function SettingsPage() {
                             />
                         </CardContent>
                         <CardFooter className="border-t px-6 py-4">
-                            <Button type="submit">Save Changes</Button>
+                            <Button type="submit" disabled={organizationForm.formState.isSubmitting}>
+                                {organizationForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                            </Button>
                         </CardFooter>
                     </form>
                 </Form>
