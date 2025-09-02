@@ -31,6 +31,7 @@ export function RecentActivity() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // This effect runs only once on the client after mounting
     setIsClient(true);
   }, []);
 
