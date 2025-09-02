@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,12 @@ const loginFormSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
+
+// In a real app, this would come from the authenticated user's session
+const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
+const OWNER_EMAIL = "director@courtcommand.com";
+const OWNER_PASSWORD = "password";
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,45 +71,68 @@ export default function LoginPage() {
     return querySnapshot.docs[0].data().email;
   }
 
+  const handleSuccessfulLogin = async (user: any) => {
+    const userDocRef = doc(firestore, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (!userDocSnap.exists()) {
+        throw new Error("User profile not found.");
+    }
+    
+    const userRole = userDocSnap.data().role;
+
+    toast({
+      title: "Login Successful",
+      description: "Redirecting to your dashboard...",
+    });
+
+    if (userRole === 'coach') {
+      router.push('/coach/dashboard');
+    } else {
+      // Default to owner/admin dashboard
+      router.push('/dashboard');
+    }
+  }
+
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const email = await getEmailFromIdentifier(data.identifier);
+      let email = await getEmailFromIdentifier(data.identifier);
 
       if (!email) {
-          toast({
-              variant: "destructive",
-              title: "Login Failed",
-              description: "Invalid credentials. Please try again.",
-          });
-          setIsLoading(false);
-          return;
+          throw new Error("Invalid credentials");
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
-      
-      // Fetch user role from Firestore
-      const userDocRef = doc(firestore, "users", userCredential.user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
+        await handleSuccessfulLogin(userCredential.user);
+      } catch (error: any) {
+        // If login fails, check if it's the default owner and create them if they don't exist
+        if (error.code === 'auth/invalid-credential' && email === OWNER_EMAIL && data.password === OWNER_PASSWORD) {
+          try {
+            const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
+            const user = userCredential.user;
+            const userDocRef = doc(firestore, "users", user.uid);
+            await setDoc(userDocRef, {
+              uid: user.uid,
+              email: OWNER_EMAIL,
+              fullName: "Academy Director",
+              role: "owner",
+              organizationId: MOCK_ORGANIZATION_ID,
+              createdAt: serverTimestamp(),
+            });
+            await handleSuccessfulLogin(user);
 
-      if (!userDocSnap.exists()) {
-          throw new Error("User profile not found.");
+          } catch (creationError) {
+              console.error("Failed to create default owner:", creationError);
+              throw new Error("Failed to initialize owner account.");
+          }
+        } else {
+            // Re-throw other errors
+            throw error;
+        }
       }
-      
-      const userRole = userDocSnap.data().role;
-
-      toast({
-        title: "Login Successful",
-        description: "Redirecting to your dashboard...",
-      });
-
-      if (userRole === 'coach') {
-        router.push('/coach/dashboard');
-      } else {
-        // Default to owner/admin dashboard
-        router.push('/dashboard');
-      }
-
     } catch (error: any) {
       console.error("Login failed:", error);
       toast({

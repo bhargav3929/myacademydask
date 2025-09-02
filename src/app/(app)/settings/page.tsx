@@ -7,9 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-
 
 import { Button } from "@/components/ui/button";
 import {
@@ -43,8 +41,7 @@ const organizationFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type OrganizationFormValues = z.infer<typeof organizationFormSchema>;
 
-// In a real app, these would come from the authenticated user's session
-const MOCK_USER_ID = "mock-owner-id";
+// In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
 
@@ -71,24 +68,15 @@ export default function SettingsPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
+                // In a real app, you'd get this from auth.currentUser
+                const userId = auth.currentUser?.uid || "mock-owner-id";
+
                 // Fetch Profile Data
-                const userDocRef = doc(firestore, "users", MOCK_USER_ID);
+                const userDocRef = doc(firestore, "users", userId);
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
                     profileForm.reset(userDocSnap.data() as ProfileFormValues);
-                } else {
-                    // Pre-populate with mock data if it doesn't exist for demonstration
-                     const mockProfileData = { fullName: "Academy Director", email: "director@courtcommand.com", role: 'owner', organizationId: MOCK_ORGANIZATION_ID };
-                    profileForm.reset(mockProfileData);
-                    try {
-                        // Check if user exists in Auth, if not create one.
-                        await signInWithEmailAndPassword(auth, mockProfileData.email, 'password');
-                    } catch (error) {
-                        // User does not exist, so create them
-                        const userCredential = await createUserWithEmailAndPassword(auth, mockProfileData.email, 'password');
-                        await setDoc(doc(firestore, "users", userCredential.user.uid), { ...mockProfileData, uid: userCredential.user.uid });
-                    }
                 }
 
                 // Fetch Organization Data
@@ -114,14 +102,26 @@ export default function SettingsPage() {
             }
         };
 
-        fetchData();
+        // Wait for auth to be initialized
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            if (user) {
+                fetchData();
+            } else {
+                // Handle case where user is not logged in
+                setIsLoading(false);
+            }
+        });
+
+        return () => unsubscribe();
     }, [profileForm, organizationForm, toast]);
 
 
   async function onProfileSubmit(data: ProfileFormValues) {
     try {
-        const userDocRef = doc(firestore, "users", MOCK_USER_ID);
-        await updateDoc(userDocRef, data);
+        const userId = auth.currentUser?.uid;
+        if (!userId) throw new Error("User not authenticated");
+        const userDocRef = doc(firestore, "users", userId);
+        await updateDoc(userDocRef, { fullName: data.fullName });
         toast({
             title: "Profile Updated",
             description: "Your profile information has been successfully updated.",
@@ -315,5 +315,3 @@ export default function SettingsPage() {
     </MotionDiv>
   );
 }
-
-    
