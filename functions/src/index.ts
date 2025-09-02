@@ -17,11 +17,7 @@ interface CreateStadiumAndCoachData {
 
 export const createStadiumAndCoach = functions.https.onCall(
   async (data: CreateStadiumAndCoachData, context) => {
-    // Optional: Check if the caller is an authenticated owner
-    // if (!context.auth || context.auth.token.role !== 'owner') {
-    //   throw new functions.https.HttpsError('unauthenticated', 'Only owners can create stadiums.');
-    // }
-
+    
     functions.logger.info("Starting stadium and coach creation for org:", data.organizationId);
 
     try {
@@ -30,7 +26,7 @@ export const createStadiumAndCoach = functions.https.onCall(
         email: data.coachEmail,
         password: data.coachPassword,
         displayName: data.coachFullName,
-        emailVerified: true, // Or false, if you want them to verify
+        emailVerified: true,
         disabled: false,
       });
       functions.logger.info("Successfully created new auth user:", userRecord.uid);
@@ -84,7 +80,7 @@ export const createStadiumAndCoach = functions.https.onCall(
       // Throw a structured error for the client to handle
       throw new functions.https.HttpsError(
         "internal",
-        error.message || "An unknown error occurred.",
+        "An unexpected error occurred while creating the stadium and coach.",
         error
       );
     }
