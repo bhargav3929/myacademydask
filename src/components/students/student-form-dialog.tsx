@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         stadiumId: values.stadiumId,
         coachId: selectedStadium.assignedCoachId,
         organizationId: MOCK_ORGANIZATION_ID,
-        joinDate: values.joinDate,
+        joinDate: Timestamp.fromDate(values.joinDate),
         status: values.status,
         fees: values.fees,
         createdAt: serverTimestamp(),

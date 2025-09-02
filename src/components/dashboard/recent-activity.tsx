@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 import { collectionGroup, query, orderBy, limit, onSnapshot, doc, getDoc, collection } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, CalendarCheck, CalendarX } from "lucide-react";
+import { UserPlus, CalendarCheck } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
-import { Student, Attendance, Stadium, AttendanceSubmission } from "@/lib/types";
+import { Student, Stadium, AttendanceSubmission } from "@/lib/types";
 
 type ActivityType = 'attendance_submission' | 'new_student';
 
@@ -45,39 +45,35 @@ export function RecentActivity() {
     const mergeAndSortActivities = () => {
       const sorted = combinedActivities
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .slice(0, 5); // Limit to top 5 activities
+        .slice(0, 5); 
 
       setActivities(sorted);
+      setLoading(false);
     };
 
     const unsubStudents = onSnapshot(studentsQuery, async (snapshot) => {
       const studentDocs = snapshot.docs;
-       if (studentDocs.length === 0 && combinedActivities.length === 0) {
-          setLoading(false);
-          return;
-      };
-
-      const stadiumIds = new Set(studentDocs.map(doc => doc.ref.parent.parent!.id));
       const newStadiums = new Map(dataCache.stadiums);
-      
-      for (const id of stadiumIds) {
-          if (!newStadiums.has(id)) {
-              try {
-                const stadiumDoc = await getDoc(doc(firestore, "stadiums", id));
-                if (stadiumDoc.exists()) {
-                    newStadiums.set(id, { id, ...stadiumDoc.data()} as Stadium);
-                }
-              } catch(e) { console.error(e)}
-          }
+
+      for (const docSnap of studentDocs) {
+        const stadiumId = docSnap.ref.parent.parent!.id;
+        if (!newStadiums.has(stadiumId)) {
+          try {
+            const stadiumDoc = await getDoc(doc(firestore, "stadiums", stadiumId));
+            if (stadiumDoc.exists()) {
+              newStadiums.set(stadiumId, { id: stadiumId, ...stadiumDoc.data()} as Stadium);
+            }
+          } catch(e) { console.error(e) }
+        }
       }
       setDataCache(prev => ({...prev, stadiums: newStadiums}));
 
-      const studentActivities = studentDocs.map(doc => {
-        const data = doc.data() as Student;
-        const stadiumId = doc.ref.parent.parent!.id;
+      const studentActivities = studentDocs.map(docSnap => {
+        const data = docSnap.data() as Student;
+        const stadiumId = docSnap.ref.parent.parent!.id;
         const stadiumName = newStadiums.get(stadiumId)?.name || "a stadium";
         return {
-          id: doc.id,
+          id: docSnap.id,
           title: data.fullName,
           description: `Joined ${stadiumName}.`,
           type: "new_student" as ActivityType,
@@ -87,7 +83,6 @@ export function RecentActivity() {
       
       combinedActivities = [...combinedActivities.filter(a => a.type !== 'new_student'), ...studentActivities];
       mergeAndSortActivities();
-      setLoading(false);
     }, (error) => {
       console.warn("Could not fetch recent students for activity feed:", error.message);
       setLoading(false);
@@ -95,24 +90,18 @@ export function RecentActivity() {
 
     const unsubAttendance = onSnapshot(attendanceSubmissionQuery, async (snapshot) => {
       const attendanceDocs = snapshot.docs;
-
-      if (attendanceDocs.length === 0 && combinedActivities.length === 0) {
-          setLoading(false);
-          return;
-      };
-
-      const stadiumIds = new Set(attendanceDocs.map(doc => doc.data().stadiumId));
       const newStadiums = new Map(dataCache.stadiums);
       
-      for (const id of stadiumIds) {
-          if (!newStadiums.has(id)) {
-              try {
-                const stadiumDoc = await getDoc(doc(firestore, "stadiums", id));
-                if (stadiumDoc.exists()) {
-                    newStadiums.set(id, { id, ...stadiumDoc.data()} as Stadium);
-                }
-              } catch (e) {console.error(e)}
-          }
+      for (const docSnap of attendanceDocs) {
+        const stadiumId = docSnap.data().stadiumId;
+        if (!newStadiums.has(stadiumId)) {
+          try {
+            const stadiumDoc = await getDoc(doc(firestore, "stadiums", stadiumId));
+            if (stadiumDoc.exists()) {
+              newStadiums.set(stadiumId, { id: stadiumId, ...stadiumDoc.data()} as Stadium);
+            }
+          } catch (e) {console.error(e)}
+        }
       }
       setDataCache(prev => ({...prev, stadiums: newStadiums}));
 
@@ -130,7 +119,6 @@ export function RecentActivity() {
       
       combinedActivities = [...combinedActivities.filter(a => a.type !== 'attendance_submission'), ...attendanceActivities];
       mergeAndSortActivities();
-      setLoading(false);
     }, (error) => {
          console.error("Error fetching attendance activity:", error.message);
          setLoading(false);
@@ -148,7 +136,7 @@ export function RecentActivity() {
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow p-6 pt-0 space-y-4">
+      <CardContent className="flex-grow p-6 pt-0 space-y-2">
         {loading ? (
            Array.from({ length: 5 }).map((_, i) => (
              <div key={i} className="flex items-center gap-4 py-2">
@@ -161,7 +149,7 @@ export function RecentActivity() {
             ))
         ) : activities.length > 0 ? (
           <div>
-            {activities.map((activity, index) => (
+            {activities.map((activity) => (
              <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-4 py-2">
                 <div className="flex size-10 items-center justify-center rounded-full bg-secondary">
                     {activityIcons[activity.type]}
