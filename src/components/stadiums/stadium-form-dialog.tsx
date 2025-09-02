@@ -43,10 +43,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
-// This should point to your deployed Cloud Function endpoint
-const CLOUD_FUNCTION_URL = "http://127.0.0.1:5001/courtcommand/us-central1/createStadiumAndCoach";
-
-
 export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
