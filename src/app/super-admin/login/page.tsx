@@ -10,7 +10,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "fire
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -160,4 +160,3 @@ export default function SuperAdminLoginPage() {
     </div>
   );
 }
-
