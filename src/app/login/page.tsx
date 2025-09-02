@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
@@ -57,6 +57,11 @@ export default function LoginPage() {
     if (z.string().email().safeParse(identifier).success) {
         return identifier;
     }
+    // Handle owner username specifically
+    if (identifier.toLowerCase() === OWNER_USERNAME) {
+        return OWNER_EMAIL;
+    }
+    // Handle other usernames
     const usersRef = collection(firestore, "users");
     const q = query(usersRef, where("username", "==", identifier));
     const querySnapshot = await getDocs(q);
@@ -72,10 +77,25 @@ export default function LoginPage() {
     const userDocSnap = await getDoc(userDocRef);
 
     if (!userDocSnap.exists()) {
-        throw new Error("User profile not found.");
+        // This can happen if auth user exists but firestore doc doesn't.
+        // We can create it here if needed, or treat as an error.
+        // For owner, we definitely want to create it.
+        if (user.email === OWNER_EMAIL) {
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                email: OWNER_EMAIL,
+                username: OWNER_USERNAME,
+                fullName: "Academy Director",
+                role: "owner",
+                organizationId: MOCK_ORGANIZATION_ID,
+                createdAt: serverTimestamp(),
+            });
+        } else {
+             throw new Error("User profile not found in database.");
+        }
     }
     
-    const userRole = userDocSnap.data().role;
+    const userRole = userDocSnap.exists() ? userDocSnap.data().role : "owner";
 
     toast({
       title: "Login Successful",
@@ -93,55 +113,33 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      let emailToLogin: string | null = null;
-      let isOwnerFirstTime = false;
-
-      // Check for default owner login
-      if (data.identifier === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-          const signInMethods = await fetchSignInMethodsForEmail(auth, OWNER_EMAIL);
-          if (signInMethods.length === 0) {
-              // This is the first-time login, create the account.
-              const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
-              const user = userCredential.user;
-              const userDocRef = doc(firestore, "users", user.uid);
-              await setDoc(userDocRef, {
-                  uid: user.uid,
-                  email: OWNER_EMAIL,
-                  username: OWNER_USERNAME,
-                  fullName: "Academy Director",
-                  role: "owner",
-                  organizationId: MOCK_ORGANIZATION_ID,
-                  createdAt: serverTimestamp(),
-              });
-              await handleSuccessfulLogin(user);
-              return;
-          }
-      }
-      
-      // For all other cases (existing owner or other users)
-      emailToLogin = await getEmailFromIdentifier(data.identifier);
+      const emailToLogin = await getEmailFromIdentifier(data.identifier);
       if (!emailToLogin) {
-          // Special case for owner where the identifier is username but firestore doc might not exist yet
-          if (data.identifier === OWNER_USERNAME) {
-              emailToLogin = OWNER_EMAIL;
-          } else {
-              throw new Error("Invalid credentials");
-          }
+          throw new Error("Invalid credentials");
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
-      await handleSuccessfulLogin(userCredential.user);
+      await signInWithEmailAndPassword(auth, emailToLogin, data.password)
+        .then(async (userCredential) => {
+            await handleSuccessfulLogin(userCredential.user);
+        })
+        .catch(async (error) => {
+            // This is the special case for the very first login of the owner account.
+            if (error.code === 'auth/user-not-found' && data.identifier === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
+                const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
+                // The handleSuccessfulLogin will create the firestore doc.
+                await handleSuccessfulLogin(userCredential.user);
+            } else {
+                // For all other errors, show a generic message.
+                throw new Error("Invalid credentials");
+            }
+        });
 
     } catch (error: any) {
         console.error("Login failed:", error);
-        let errorMessage = "Invalid credentials. Please check your email/username and password.";
-        if (error.code === 'auth/invalid-credential' || error.message === "Invalid credentials") {
-             errorMessage = "Invalid credentials. Please check your email/username and password.";
-        }
         toast({
             variant: "destructive",
             title: "Login Failed",
-            description: errorMessage,
+            description: "Invalid credentials. Please check your username and password.",
         });
     } finally {
       setIsLoading(false);
