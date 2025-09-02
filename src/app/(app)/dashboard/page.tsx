@@ -46,7 +46,7 @@ export default function DashboardPage() {
      // Listener for recent registrations (last 5)
     const recentRegQuery = query(
         collectionGroup(firestore, "students"),
-        orderBy("createdAt", "desc"),
+        orderBy("fullName"),
         limit(5)
     );
     const recentRegUnsubscribe = onSnapshot(recentRegQuery, snapshot => {
