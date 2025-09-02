@@ -32,12 +32,6 @@ export default function DashboardPage() {
     const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
 
     // // Listener for new students (joined in the last 30 days) - THIS QUERY REQUIRES A CUSTOM INDEX
-    // const thirtyDaysAgo = subDays(new Date(), 30);
-    // const newStudentsQuery = query(
-    //   collectionGroup(firestore, "students"),
-    //   where("joinDate", ">=", thirtyDaysAgo)
-    // );
-    // const newStudentsUnsubscribe = onSnapshot(newStudentsQuery, snapshot => setNewStudents(snapshot.size));
     const newStudentsUnsubscribe = () => {}; // No-op function for cleanup
 
     // Listener for active stadiums
@@ -171,14 +165,14 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <AttendanceChart />
+             <CoachAssignments />
         </MotionDiv>
         <div className="lg:col-span-2 space-y-8">
             <MotionDiv variants={itemVariants}>
-                <RecentActivity />
+               
             </MotionDiv>
             <MotionDiv variants={itemVariants}>
-                <CoachAssignments />
+               
             </MotionDiv>
         </div>
       </div>
