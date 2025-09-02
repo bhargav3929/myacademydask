@@ -61,7 +61,7 @@ export function DailyAttendanceSummary() {
     const attendanceQuery = query(
       collection(firestore, `stadiums/${stadiumId}/attendance`),
       where("status", "==", "present"),
-      orderBy("date", "desc")
+      orderBy("timestamp", "desc")
     );
 
     const unsubscribeAttendance = onSnapshot(attendanceQuery, (snapshot) => {
@@ -82,8 +82,10 @@ export function DailyAttendanceSummary() {
         acc[curr.date].batchBreakdown[curr.batch]! += 1;
         return acc;
       }, {} as Record<string, DailySummary>);
-
-      setSummary(Object.values(dailyData));
+      
+      const sortedSummary = Object.values(dailyData).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setSummary(sortedSummary);
       setLoading(false);
     }, (error) => {
         console.error("Error fetching attendance summary: ", error);
