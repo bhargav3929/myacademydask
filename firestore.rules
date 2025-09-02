@@ -1,44 +1,99 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow owners to read/write stadiums they own
-    match /stadiums/{stadiumId} {
-      allow read, write: if request.auth != null && 
-        request.auth.token.role == "owner" && 
-        resource.data.organizationId == request.auth.token.organizationId;
+    
+    // Helper function to check if a user is a super admin
+    function isSuperAdmin() {
+      return exists(/databases/$(database)/documents/super_admin_users/$(request.auth.uid));
     }
     
-    // Allow coaches to read their assigned stadium
-    match /stadiums/{stadiumId} {
-      allow read: if request.auth != null && 
-        request.auth.token.role == "coach" && 
-        resource.data.assignedCoachId == request.auth.uid;
+    // Helper function to check if a user is an owner of a specific organization
+    function isOwner(organizationId) {
+      return request.auth.uid == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.uid
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == organizationId
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
     }
     
-    // Students collection access
-    match /students/{studentId} {
-      allow read, write: if request.auth != null && (
-        (request.auth.token.role == "owner" && request.auth.token.organizationId == resource.data.organizationId) ||
-        (request.auth.token.role == "coach" && request.auth.uid == resource.data.coachId)
-      );
+    // Helper function to check if a user is a coach assigned to a specific stadium
+    function isCoach(stadiumId) {
+      let user = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return user.role == 'coach' && stadiumId in user.assignedStadiums;
+    }
+    
+    // --- Super Admin Collections ---
+    
+    match /super_admin_users/{userId} {
+      allow read: if isSuperAdmin();
+      allow write: if isSuperAdmin() && request.auth.uid == userId;
+    }
+    
+    match /stadium_owners/{ownerId} {
+      allow read, write: if isSuperAdmin();
     }
 
-     // User profile access
+    match /system_metrics/{document=**} {
+      allow read: if isSuperAdmin();
+      allow write: if false; // Should only be written by backend functions
+    }
+    
+    // --- Application Collections ---
+
+    // USERS collection stores profiles for owners AND coaches
     match /users/{userId} {
-      // Owners can read all user profiles in their org, coaches can read their own
-      allow read: if request.auth != null &&
-        (
-          (request.auth.token.role == 'owner' && get(/databases/$(database)/documents/users/$(userId)).data.organizationId == request.auth.token.organizationId) ||
-          (request.auth.uid == userId)
-        );
+      // Any authenticated user can read their own profile
+      allow get: if request.auth.uid == userId;
+      // Owners can read profiles of coaches in their organization
+      allow list: if isOwner(request.auth.token.organizationId); 
+      // Super admins can read any user profile
+      allow read: if isSuperAdmin();
+      // Users can update their own profile (e.g., name)
+      allow update: if request.auth.uid == userId;
+      // Creation is handled by Super Admin (for owners) or Stadium creation (for coaches)
+      allow create: if isSuperAdmin();
+    }
+    
+    // ORGANIZATIONS collection (currently used for settings)
+    match /organizations/{orgId} {
+        // Only the owner of that organization can read/write
+        allow read, write: if isOwner(orgId);
+    }
+    
+    // STADIUMS collection
+    match /stadiums/{stadiumId} {
+        // An owner can read stadiums in their org
+        allow read: if isOwner(resource.data.organizationId);
+        // An owner can create stadiums for their org
+        allow create: if isOwner(request.resource.data.organizationId);
+        // An owner can update stadiums in their org
+        allow update: if isOwner(resource.data.organizationId);
+        // Coaches can read the details of the stadium they are assigned to
+        allow get: if isCoach(stadiumId);
+    }
+    
+    // STUDENTS subcollection
+    match /stadiums/{stadiumId}/students/{studentId} {
+        // The owner of the organization can R/W students in any of their stadiums
+        allow read, write: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
+        // The coach of that specific stadium can R/W students
+      allow read, write: if isCoach(stadiumId);
+    }
+    
+    // ATTENDANCE subcollection
+    match /stadiums/{stadiumId}/attendance/{attendanceId} {
+       // The owner of the organization can read attendance
+      allow read: if isOwner(get(/databases/$(database)/documents/stadiums/$(stadiumId)).data.organizationId);
+       // The coach of that specific stadium can R/W attendance
+      allow read, write: if isCoach(stadiumId);
+    }
 
-      // Only owners can create new users (as part of stadium creation)
-      // Users can update their own profile
-      allow write: if request.auth != null &&
-        (
-          (request.auth.token.role == 'owner') || // Owners can create
-          (request.auth.uid == userId) // Users can update their own
-        );
+    // ATTENDANCE_SUBMISSIONS collection for recent activity feed
+    match /attendance_submissions/{submissionId} {
+       // Owners can read submissions for their org's stadiums
+      allow read: if isOwner(get(/databases/$(database)/documents/stadiums/$(resource.data.stadiumId)).data.organizationId);
+      // Only authenticated coaches can create them
+      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.resource.data.submittedByCoachId)).data.role == 'coach';
     }
   }
 }
