@@ -18,13 +18,6 @@ interface CreateStadiumAndCoachData {
 export const createStadiumAndCoach = functions.https.onCall(
   async (data: CreateStadiumAndCoachData, context) => {
     
-    // Optional: Check if the user calling the function is authenticated
-    // if (!context.auth) {
-    //   throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
-    // }
-    // const callerUid = context.auth.uid;
-    // You could add logic here to verify the caller has 'owner' role if needed.
-
     functions.logger.info("Starting stadium and coach creation for org:", data.organizationId);
 
     try {
@@ -33,7 +26,7 @@ export const createStadiumAndCoach = functions.https.onCall(
         email: data.coachEmail,
         password: data.coachPassword,
         displayName: data.coachFullName,
-        emailVerified: true, // Assuming you want to auto-verify emails
+        emailVerified: true,
         disabled: false,
       });
       functions.logger.info("Successfully created new auth user:", userRecord.uid);
@@ -45,13 +38,11 @@ export const createStadiumAndCoach = functions.https.onCall(
       });
       functions.logger.info("Set custom claims for user:", userRecord.uid);
 
-      // Use a batch for atomic writes to Firestore
-      const batch = db.batch();
       const creationTime = new Date();
 
       // 3. Create the stadium document in Firestore
       const stadiumRef = db.collection("stadiums").doc(); // Auto-generate ID
-      batch.set(stadiumRef, {
+      await stadiumRef.set({
         name: data.stadiumName,
         location: data.location,
         organizationId: data.organizationId,
@@ -62,11 +53,11 @@ export const createStadiumAndCoach = functions.https.onCall(
         },
         createdAt: creationTime,
       });
-      functions.logger.info("Added stadium creation to batch:", stadiumRef.id);
+      functions.logger.info("Created stadium document:", stadiumRef.id);
 
       // 4. Create the coach's user profile in the 'users' collection
       const userProfileRef = db.collection("users").doc(userRecord.uid);
-      batch.set(userProfileRef, {
+      await userProfileRef.set({
         email: data.coachEmail,
         fullName: data.coachFullName,
         organizationId: data.organizationId,
@@ -74,12 +65,8 @@ export const createStadiumAndCoach = functions.https.onCall(
         assignedStadiums: [stadiumRef.id], // Link coach to the new stadium
         createdAt: creationTime,
       });
-      functions.logger.info("Added user profile creation to batch for user:", userRecord.uid);
-
-      // Commit the batch
-      await batch.commit();
-      functions.logger.info("Batch committed successfully.");
-
+      functions.logger.info("Created user profile for user:", userRecord.uid);
+      
       return { success: true, stadiumId: stadiumRef.id, coachId: userRecord.uid };
 
     } catch (error: any) {
