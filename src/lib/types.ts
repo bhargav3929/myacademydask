@@ -1,3 +1,4 @@
+
 import { Timestamp } from "firebase/firestore";
 
 export type StudentBatches = "First Batch" | "Second Batch" | "Third Batch" | "Fourth Batch";
@@ -71,6 +72,16 @@ export interface Attendance {
   organizationId: string;
   timestamp: Timestamp;
 }
+
+export interface AttendanceSubmission {
+  id?: string;
+  stadiumId: string;
+  batch: StudentBatches;
+  date: string; // YYYY-MM-DD
+  submittedByCoachId: string;
+  timestamp: Timestamp;
+}
+
 
 export interface Schedule {
     id?: string;

@@ -10,6 +10,7 @@ import {
   writeBatch,
   doc,
   serverTimestamp,
+  addDoc,
 } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Student, Stadium, StudentBatches, Attendance } from "@/lib/types";
@@ -121,17 +122,16 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     if (!selectedDate || !selectedBatch || !stadium || !auth.currentUser) return;
 
     setIsSubmitting(true);
-    const batch = writeBatch(firestore);
+    const writeDbBatch = writeBatch(firestore);
     const dateStr = format(selectedDate, "yyyy-MM-dd");
 
     studentsInBatch.forEach((student) => {
       const status = attendance[student.id];
-      if (status) { // Only write if a status is set
-        // Use a unique ID for each record to prevent overwrites on re-submission.
+      if (status) { 
         const attendanceCollectionRef = collection(firestore, `stadiums/${stadium.id}/attendance`);
         const attendanceRef = doc(attendanceCollectionRef, `${student.id}_${dateStr}`);
         
-        batch.set(attendanceRef, {
+        writeDbBatch.set(attendanceRef, {
           studentId: student.id,
           date: dateStr,
           status,
@@ -140,12 +140,23 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
           organizationId: stadium.organizationId,
           stadiumId: stadium.id,
           timestamp: serverTimestamp(),
-        }, { merge: true }); // Use merge to create/update the record for that student on that day.
+        }, { merge: true }); 
       }
     });
 
+    // Add a record for the entire batch submission
+    const submissionCollectionRef = collection(firestore, 'attendance_submissions');
+    const submissionDoc = {
+        stadiumId: stadium.id,
+        batch: selectedBatch,
+        date: dateStr,
+        submittedByCoachId: auth.currentUser.uid,
+        timestamp: serverTimestamp(),
+    };
+    writeDbBatch.set(doc(submissionCollectionRef), submissionDoc);
+
     try {
-      await batch.commit();
+      await writeDbBatch.commit();
       toast({
         title: "Success",
         description: `Attendance for ${selectedBatch} on ${format(selectedDate, "PPP")} has been saved.`,
@@ -324,5 +335,3 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     </Dialog>
   );
 }
-
-    
