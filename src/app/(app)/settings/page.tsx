@@ -7,6 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -76,9 +79,16 @@ export default function SettingsPage() {
                     profileForm.reset(userDocSnap.data() as ProfileFormValues);
                 } else {
                     // Pre-populate with mock data if it doesn't exist for demonstration
-                    const mockProfileData = { fullName: "Academy Director", email: "director@courtcommand.com" };
+                     const mockProfileData = { fullName: "Academy Director", email: "director@courtcommand.com", role: 'owner', organizationId: MOCK_ORGANIZATION_ID };
                     profileForm.reset(mockProfileData);
-                    await setDoc(userDocRef, mockProfileData); // Create the doc for future updates
+                    try {
+                        // Check if user exists in Auth, if not create one.
+                        await signInWithEmailAndPassword(auth, mockProfileData.email, 'password');
+                    } catch (error) {
+                        // User does not exist, so create them
+                        const userCredential = await createUserWithEmailAndPassword(auth, mockProfileData.email, 'password');
+                        await setDoc(doc(firestore, "users", userCredential.user.uid), { ...mockProfileData, uid: userCredential.user.uid });
+                    }
                 }
 
                 // Fetch Organization Data
@@ -213,7 +223,7 @@ export default function SettingsPage() {
         <MotionDiv variants={itemVariants}>
             <h2 className="text-3xl font-semibold tracking-tight">Settings</h2>
             <p className="text-muted-foreground">
-                Manage your account and organization settings.
+                Manage your account and organization settings. A default owner account has been created with email: <span className="font-bold text-primary">director@courtcommand.com</span> and password: <span className="font-bold text-primary">password</span>.
             </p>
         </MotionDiv>
 
@@ -305,3 +315,5 @@ export default function SettingsPage() {
     </MotionDiv>
   );
 }
+
+    
