@@ -1,19 +1,25 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { collectionGroup, query, where, onSnapshot, Timestamp } from "firebase/firestore";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { collectionGroup, query, onSnapshot, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { format, subDays, startOfDay, eachDayOfInterval, isAfter, isEqual } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval, parseISO } from 'date-fns';
 import { Attendance } from "@/lib/types";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "../ui/calendar";
+import { DateRange } from "react-day-picker";
 
 interface ChartData {
   name: string;
   Attendance: number;
 }
+type TimeFilter = "weekly" | "monthly" | "custom";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -34,64 +40,147 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function AttendanceGraph() {
+  const [allAttendance, setAllAttendance] = useState<Attendance[]>([]);
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("weekly");
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
+    from: startOfWeek(new Date()),
+    to: endOfWeek(new Date()),
+  });
 
   useEffect(() => {
     setLoading(true);
-    const today = new Date();
-    const tenDaysAgo = startOfDay(subDays(today, 9));
-
-    // Query without timestamp filter to avoid needing a composite index.
     const attendanceQuery = query(collectionGroup(firestore, "attendance"));
 
     const unsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
-      const attendanceRecords = snapshot.docs
-        .map(doc => doc.data() as Attendance)
-        .filter(record => {
-          // Client-side filtering
-          const recordDate = record.timestamp.toDate();
-          return (isAfter(recordDate, tenDaysAgo) || isEqual(recordDate, tenDaysAgo)) && record.status === 'present';
-        });
-
-      const attendanceCountsByDay: { [key: string]: number } = {};
-
-      attendanceRecords.forEach(record => {
-        const dateStr = record.date; // Uses the YYYY-MM-DD string
-        if (!attendanceCountsByDay[dateStr]) {
-          attendanceCountsByDay[dateStr] = 0;
-        }
-        attendanceCountsByDay[dateStr]++;
-      });
-
-      const last10Days = eachDayOfInterval({
-        start: tenDaysAgo,
-        end: today
-      });
-
-      const chartData = last10Days.map(day => {
-        const dateKey = format(day, 'yyyy-MM-dd');
-        return {
-          name: format(day, "MMM d"),
-          Attendance: attendanceCountsByDay[dateKey] || 0,
-        };
-      });
-
-      setData(chartData);
+      const attendanceRecords = snapshot.docs.map(doc => doc.data() as Attendance);
+      setAllAttendance(attendanceRecords);
       setLoading(false);
     }, (error) => {
-      console.error("Error fetching attendance data for chart:", error);
+      console.error("Error fetching attendance data:", error);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
+  const processChartData = useCallback((records: Attendance[], range: DateRange) => {
+    if (!range.from) return;
+
+    const presentRecords = records.filter(record => {
+      const recordDate = parseISO(record.date);
+      return isWithinInterval(recordDate, { start: range.from!, end: range.to || range.from! }) && record.status === 'present';
+    });
+    
+    const attendanceCountsByDay: { [key: string]: number } = {};
+    presentRecords.forEach(record => {
+      const dateStr = record.date;
+      if (!attendanceCountsByDay[dateStr]) {
+        attendanceCountsByDay[dateStr] = 0;
+      }
+      attendanceCountsByDay[dateStr]++;
+    });
+
+    const intervalDays = eachDayOfInterval({
+      start: range.from,
+      end: range.to || range.from
+    });
+
+    const chartData = intervalDays.map(day => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      return {
+        name: format(day, "MMM d"),
+        Attendance: attendanceCountsByDay[dateKey] || 0,
+      };
+    });
+
+    setData(chartData);
+  }, []);
+
+
+  useEffect(() => {
+    let range: DateRange | undefined;
+    const now = new Date();
+    switch (timeFilter) {
+      case "weekly":
+        range = { from: startOfWeek(now), to: endOfWeek(now) };
+        break;
+      case "monthly":
+        range = { from: startOfMonth(now), to: endOfMonth(now) };
+        break;
+      case "custom":
+        range = customDateRange;
+        break;
+    }
+    
+    if (range?.from) {
+      setCustomDateRange(range); // Sync state for calendar
+      processChartData(allAttendance, range);
+    }
+
+  }, [timeFilter, allAttendance, processChartData, customDateRange]);
+  
+  const getFilterPeriodText = () => {
+    switch (timeFilter) {
+      case 'weekly': return "for this week.";
+      case 'monthly': return "for this month.";
+      case 'custom': 
+        if (customDateRange?.from) {
+          if (customDateRange.to && format(customDateRange.from, 'PPP') !== format(customDateRange.to, 'PPP')) {
+            return `from ${format(customDateRange.from, "MMM d")} to ${format(customDateRange.to, "MMM d")}.`;
+          }
+          return `for ${format(customDateRange.from, "MMM d, yyyy")}.`;
+        }
+        return "for custom range.";
+      default: return "for this week."
+    }
+  }
+
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Attendance Graph</CardTitle>
-        <CardDescription>Total student attendance across all stadiums for the last 10 days.</CardDescription>
+        <div className="flex justify-between items-center">
+            <div>
+                <CardTitle>Attendance Graph</CardTitle>
+                <CardDescription>Total student attendance across all stadiums {getFilterPeriodText()}</CardDescription>
+            </div>
+            <div className="flex items-center gap-1 rounded-full border bg-card p-1">
+                {(["weekly", "monthly"] as TimeFilter[]).map(filter => (
+                    <Button 
+                        key={filter} 
+                        variant={timeFilter === filter ? 'secondary' : 'ghost'} 
+                        className="rounded-full capitalize text-sm h-8 px-3"
+                        onClick={() => setTimeFilter(filter)}
+                    >
+                        {filter === 'weekly' ? 'This Week' : 'This Month'}
+                    </Button>
+                ))}
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
+                            className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
+                            onClick={() => setTimeFilter('custom')}
+                        >
+                            Custom
+                            <CalendarIcon className="size-3.5 text-muted-foreground" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 mt-2" align="end">
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={customDateRange?.from}
+                            selected={customDateRange}
+                            onSelect={setCustomDateRange}
+                            numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow pb-4 -ml-4">
         {loading ? (
@@ -146,7 +235,7 @@ export function AttendanceGraph() {
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-2">
-            <p className="text-sm">No attendance data to display yet.</p>
+            <p className="text-sm">No attendance data to display for the selected period.</p>
              <p className="text-xs">Once a coach marks attendance, it will appear here.</p>
           </div>
         )}

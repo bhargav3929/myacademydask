@@ -229,7 +229,13 @@ export default function DashboardPage() {
                         <Button
                             variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
                             className="rounded-full capitalize text-sm h-8 px-4 flex items-center gap-1.5"
-                            onClick={() => setTimeFilter('custom')}
+                            onClick={() => {
+                                setTimeFilter('custom');
+                                // Reset custom date range if clicking the button again
+                                if (timeFilter !== 'custom') {
+                                    setCustomDateRange(undefined);
+                                }
+                            }}
                         >
                             Custom
                             <CalendarIcon className="size-3.5 text-muted-foreground" />
