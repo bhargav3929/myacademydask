@@ -53,29 +53,41 @@ export function RecentActivity() {
           return null;
         };
 
-        // 1. Fetch recent student admissions
-        const studentsQuery = query(
-          collectionGroup(firestore, "students"), 
-          orderBy("createdAt", "desc"),
-          limit(5)
-        );
-        const studentsSnapshot = await getDocs(studentsQuery);
-        const studentActivities: Activity[] = await Promise.all(
-          studentsSnapshot.docs.map(async (docSnap) => {
-            const data = docSnap.data() as Student;
-            const stadiumId = data.stadiumId;
-            if (!stadiumId || !data.createdAt) return null;
+        let studentActivities: Activity[] = [];
+        try {
+            // 1. Fetch recent student admissions
+            const studentsQuery = query(
+              collectionGroup(firestore, "students"), 
+              orderBy("createdAt", "desc"),
+              limit(5)
+            );
+            const studentsSnapshot = await getDocs(studentsQuery);
+            studentActivities = await Promise.all(
+              studentsSnapshot.docs.map(async (docSnap) => {
+                const data = docSnap.data() as Student;
+                const stadiumId = data.stadiumId;
+                if (!stadiumId || !data.createdAt) return null;
+    
+                const stadium = await getStadium(stadiumId);
+                return {
+                  id: docSnap.id,
+                  title: data.fullName,
+                  description: `Joined ${stadium?.name || "a stadium"}.`,
+                  type: "new_student" as ActivityType,
+                  timestamp: data.createdAt.toDate(),
+                };
+              })
+            ).then(res => res.filter(Boolean) as Activity[]);
+        } catch (error) {
+             if (error instanceof Error && error.message.includes("requires a COLLECTION_GROUP_DESC index")) {
+                console.error("Firestore index missing for students collection group. Please create it in the Firebase console to see new student activities.", error);
+                // Gracefully fail and continue without student activities.
+                studentActivities = [];
+            } else {
+                throw error; // Re-throw other errors
+            }
+        }
 
-            const stadium = await getStadium(stadiumId);
-            return {
-              id: docSnap.id,
-              title: data.fullName,
-              description: `Joined ${stadium?.name || "a stadium"}.`,
-              type: "new_student" as ActivityType,
-              timestamp: data.createdAt.toDate(),
-            };
-          })
-        ).then(res => res.filter(Boolean) as Activity[]);
 
         // 2. Fetch recent attendance submissions
         const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
@@ -102,32 +114,7 @@ export function RecentActivity() {
         setActivities(combinedActivities);
 
       } catch (error) {
-        if (error instanceof Error && error.message.includes("requires a COLLECTION_GROUP_DESC index")) {
-            console.error("Firestore index missing. Please create it in the Firebase console.", error);
-            // Gracefully degrade: only show attendance activities if students query fails
-            try {
-                const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
-                const attendanceSnapshot = await getDocs(attendanceQuery);
-                const attendanceActivities: Activity[] = await Promise.all(
-                  attendanceSnapshot.docs.map(async (docSnap) => {
-                    const data = docSnap.data() as AttendanceSubmission;
-                    const stadium = await getStadium(data.stadiumId); // getStadium is defined outside, so accessible
-                    return {
-                      id: docSnap.id,
-                      title: `${stadium?.name || "A stadium"}`,
-                      description: `${data.batch} attendance taken.`,
-                      type: 'attendance_submission' as ActivityType,
-                      timestamp: data.timestamp.toDate(),
-                    };
-                  })
-                );
-                setActivities(attendanceActivities);
-            } catch (e) {
-                console.error("Failed to fetch even attendance activities", e);
-            }
-        } else {
-            console.error("Error fetching recent activities:", error);
-        }
+        console.error("Error fetching recent activities:", error);
       } finally {
         setLoading(false);
       }
