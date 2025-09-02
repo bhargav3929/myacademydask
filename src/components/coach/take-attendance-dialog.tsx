@@ -10,7 +10,6 @@ import {
   writeBatch,
   doc,
   serverTimestamp,
-  addDoc,
 } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Student, Stadium, StudentBatches, Attendance } from "@/lib/types";
@@ -122,41 +121,49 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     if (!selectedDate || !selectedBatch || !stadium || !auth.currentUser) return;
 
     setIsSubmitting(true);
-    const writeDbBatch = writeBatch(firestore);
     const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-    // 1. Save individual student attendance records
-    studentsInBatch.forEach((student) => {
-      const status = attendance[student.id];
-      if (status) { 
-        const attendanceCollectionRef = collection(firestore, `stadiums/${stadium.id}/attendance`);
-        const attendanceRef = doc(attendanceCollectionRef, `${student.id}_${dateStr}`);
-        
-        writeDbBatch.set(attendanceRef, {
-          studentId: student.id,
-          date: dateStr,
-          status,
-          batch: selectedBatch,
-          markedByCoachId: auth.currentUser!.uid,
-          organizationId: stadium.organizationId,
-          stadiumId: stadium.id,
-          timestamp: serverTimestamp(),
-        }, { merge: true }); 
-      }
-    });
+    try {
+      const dbBatch = writeBatch(firestore);
 
-    // 2. Add a record for the entire batch submission for the recent activities feed
-    const submissionCollectionRef = collection(firestore, 'attendance_submissions');
-    addDoc(submissionCollectionRef, {
+      // 1. Save individual student attendance records
+      studentsInBatch.forEach((student) => {
+        const status = attendance[student.id];
+        if (status) {
+          const attendanceDocRef = doc(
+            firestore,
+            `stadiums/${stadium.id}/attendance`,
+            `${student.id}_${dateStr}`
+          );
+          dbBatch.set(
+            attendanceDocRef,
+            {
+              studentId: student.id,
+              date: dateStr,
+              status,
+              batch: selectedBatch,
+              markedByCoachId: auth.currentUser!.uid,
+              organizationId: stadium.organizationId,
+              stadiumId: stadium.id,
+              timestamp: serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
+      });
+
+      // 2. Add a record for the entire batch submission for the recent activities feed
+      const submissionDocRef = doc(collection(firestore, "attendance_submissions"));
+      dbBatch.set(submissionDocRef, {
         stadiumId: stadium.id,
         batch: selectedBatch,
         date: dateStr,
         submittedByCoachId: auth.currentUser.uid,
         timestamp: serverTimestamp(),
-    });
+      });
+      
+      await dbBatch.commit();
 
-    try {
-      await writeDbBatch.commit();
       toast({
         title: "Success",
         description: `Attendance for ${selectedBatch} on ${format(selectedDate, "PPP")} has been saved.`,
