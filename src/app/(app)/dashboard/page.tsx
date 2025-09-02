@@ -13,13 +13,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { AttendanceChart } from "@/components/dashboard/attendance-chart";
 import { Button } from "@/components/ui/button";
-import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths } from "date-fns";
+import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import type { DateRange } from "react-day-picker";
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
 const MOCK_USER_ID = "mock-owner-id"; // For fetching director's name
 
-type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all";
+type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all" | "custom";
 
 export default function DashboardPage() {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -31,10 +35,12 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [activeStadiums, setActiveStadiums] = useState(0);
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
 
-  const filterStudentsByDate = useCallback((students: Student[], filter: TimeFilter) => {
+  const filterStudentsByDate = useCallback((students: Student[], filter: TimeFilter, dateRange?: DateRange) => {
     const now = new Date();
-    let startTime: Date;
+    let startTime: Date | undefined;
+    let endTime: Date | undefined;
 
     switch (filter) {
         case "today":
@@ -42,23 +48,35 @@ export default function DashboardPage() {
             break;
         case "yesterday":
             startTime = startOfYesterday();
-            const endTime = endOfYesterday();
-            return students.filter(student => {
-                const joinDate = student.joinDate.toDate();
-                return joinDate >= startTime && joinDate <= endTime;
-            });
+            endTime = endOfYesterday();
+            break;
         case "weekly":
             startTime = startOfWeek(now);
             break;
         case "monthly":
             startTime = subMonths(now, 1);
             break;
+        case "custom":
+            if (dateRange?.from) {
+                startTime = dateRange.from;
+                endTime = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+            }
+            break;
         case "all":
             return students;
         default:
             return students;
     }
-     return students.filter(student => student.joinDate.toDate() >= startTime);
+     if (startTime) {
+         return students.filter(student => {
+            const joinDate = student.joinDate.toDate();
+            if (endTime) {
+                return joinDate >= startTime! && joinDate <= endTime;
+            }
+            return joinDate >= startTime!;
+         });
+     }
+     return students;
   }, []);
 
   useEffect(() => {
@@ -69,7 +87,7 @@ export default function DashboardPage() {
       const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setAllStudents(studentsData);
       
-      const filtered = filterStudentsByDate(studentsData, timeFilter);
+      const filtered = filterStudentsByDate(studentsData, timeFilter, customDateRange);
       setFilteredStudents(filtered);
 
       setTotalStudents(studentsData.length);
@@ -104,7 +122,7 @@ export default function DashboardPage() {
         unsubscribe();
         unsubscribeStadiums();
     };
-  }, [timeFilter, filterStudentsByDate]);
+  }, [timeFilter, filterStudentsByDate, customDateRange]);
 
   useEffect(() => {
     const revenue = filteredStudents.reduce((acc, student) => acc + (student.fees || 0), 0);
@@ -125,6 +143,14 @@ export default function DashboardPage() {
       case 'yesterday': return "Yesterday";
       case 'weekly': return "This week";
       case 'monthly': return "Last 30 days";
+      case 'custom': 
+        if (customDateRange?.from) {
+            if(customDateRange.to) {
+                 return `${format(customDateRange.from, "LLL dd, y")} - ${format(customDateRange.to, "LLL dd, y")}`;
+            }
+            return format(customDateRange.from, "LLL dd, y");
+        }
+        return "Custom Range";
       case 'all': return "All time";
     }
   }
@@ -198,6 +224,28 @@ export default function DashboardPage() {
                         {filter}
                     </Button>
                 ))}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
+                            className="rounded-full capitalize text-sm h-8 px-4 flex items-center gap-1.5"
+                            onClick={() => setTimeFilter('custom')}
+                        >
+                            Custom
+                            <CalendarIcon className="size-3.5 text-muted-foreground" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 mt-2" align="end">
+                        <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={customDateRange?.from}
+                        selected={customDateRange}
+                        onSelect={setCustomDateRange}
+                        numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
         </div>
       </MotionDiv>
