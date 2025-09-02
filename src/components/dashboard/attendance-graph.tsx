@@ -44,7 +44,7 @@ export function AttendanceGraph() {
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("weekly");
-  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfWeek(new Date()),
     to: endOfWeek(new Date()),
   });
@@ -100,37 +100,30 @@ export function AttendanceGraph() {
 
 
   useEffect(() => {
-    let range: DateRange | undefined;
     const now = new Date();
-    switch (timeFilter) {
-      case "weekly":
-        range = { from: startOfWeek(now), to: endOfWeek(now) };
-        break;
-      case "monthly":
-        range = { from: startOfMonth(now), to: endOfMonth(now) };
-        break;
-      case "custom":
-        range = customDateRange;
-        break;
+    if (timeFilter === 'weekly') {
+      setDateRange({ from: startOfWeek(now), to: endOfWeek(now) });
+    } else if (timeFilter === 'monthly') {
+      setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
     }
-    
-    if (range?.from) {
-      setCustomDateRange(range); // Sync state for calendar
-      processChartData(allAttendance, range);
-    }
+  }, [timeFilter]);
 
-  }, [timeFilter, allAttendance, processChartData, customDateRange]);
+  useEffect(() => {
+    if (dateRange?.from) {
+      processChartData(allAttendance, dateRange);
+    }
+  }, [dateRange, allAttendance, processChartData]);
   
   const getFilterPeriodText = () => {
     switch (timeFilter) {
       case 'weekly': return "for this week.";
       case 'monthly': return "for this month.";
       case 'custom': 
-        if (customDateRange?.from) {
-          if (customDateRange.to && format(customDateRange.from, 'PPP') !== format(customDateRange.to, 'PPP')) {
-            return `from ${format(customDateRange.from, "MMM d")} to ${format(customDateRange.to, "MMM d")}.`;
+        if (dateRange?.from) {
+          if (dateRange.to && format(dateRange.from, 'PPP') !== format(dateRange.to, 'PPP')) {
+            return `from ${format(dateRange.from, "MMM d")} to ${format(dateRange.to, "MMM d")}.`;
           }
-          return `for ${format(customDateRange.from, "MMM d, yyyy")}.`;
+          return `for ${format(dateRange.from, "MMM d, yyyy")}.`;
         }
         return "for custom range.";
       default: return "for this week."
@@ -172,9 +165,9 @@ export function AttendanceGraph() {
                         <Calendar
                             initialFocus
                             mode="range"
-                            defaultMonth={customDateRange?.from}
-                            selected={customDateRange}
-                            onSelect={setCustomDateRange}
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
                             numberOfMonths={2}
                         />
                     </PopoverContent>
