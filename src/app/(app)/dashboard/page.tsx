@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, getCountFromServer, limit, orderBy, doc, getDoc, collectionGroup } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -34,16 +34,22 @@ export default function DashboardPage() {
     const stadiumsQuery = query(collection(firestore, "stadiums"));
     const stadiumsUnsubscribe = onSnapshot(stadiumsQuery, snapshot => setActiveStadiums(snapshot.size));
     
-     // Listener for recent registrations (last 5)
-    const recentRegQuery = query(
-        collectionGroup(firestore, "students"),
-        orderBy("joinDate", "desc"),
-        limit(5)
-    );
-    const recentRegUnsubscribe = onSnapshot(recentRegQuery, snapshot => {
-        const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
-        setRecentRegistrations(registrations);
-    });
+     // Fetch recent registrations (last 5)
+    const fetchRecentRegistrations = async () => {
+        const recentRegQuery = query(
+            collectionGroup(firestore, "students"),
+            orderBy("joinDate", "desc"),
+            limit(5)
+        );
+        try {
+            const querySnapshot = await getDocs(recentRegQuery);
+            const registrations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+            setRecentRegistrations(registrations);
+        } catch (error) {
+            console.error("Error fetching recent registrations:", error);
+        }
+    };
+    
 
     // Fetch director's name
     const fetchDirectorName = async () => {
@@ -65,12 +71,12 @@ export default function DashboardPage() {
     };
     
     fetchDirectorName();
+    fetchRecentRegistrations();
     
     // Cleanup listeners on unmount
     return () => {
       studentsUnsubscribe();
       stadiumsUnsubscribe();
-      recentRegUnsubscribe();
     };
 
   }, []);
