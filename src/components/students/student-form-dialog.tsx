@@ -53,8 +53,7 @@ const formSchema = z.object({
   joinDate: z.date({ required_error: "A join date is required." }),
   status: z.enum(['active', 'trial', 'inactive']),
   age: z.coerce.number().min(3, "Age must be at least 3.").max(100),
-  parentContact: z.string().optional(),
-  parentEmail: z.string().email("Please enter a valid email or leave it empty.").optional().or(z.literal('')),
+  contact: z.string().optional(),
   fees: z.coerce.number().optional(),
 });
 
@@ -73,8 +72,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
       fullName: "",
       status: 'active',
       age: 0,
-      parentContact: "",
-      parentEmail: "",
+      contact: "",
       fees: 0,
       stadiumId: stadiums.length === 1 ? stadiums[0].id : undefined,
       batch: undefined,
@@ -105,8 +103,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         fullName: values.fullName,
         age: values.age,
         batch: values.batch,
-        parentContact: values.parentContact || "",
-        parentEmail: values.parentEmail || "",
+        contact: values.contact || "",
         stadiumId: values.stadiumId,
         coachId: selectedStadium.assignedCoachId,
         organizationId: MOCK_ORGANIZATION_ID,
@@ -181,34 +178,19 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-               <FormField
-                  control={form.control}
-                  name="parentContact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Parent Contact (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., +15551234" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-               <FormField
-                  control={form.control}
-                  name="parentEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Parent Email (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="parent@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-            </div>
+            <FormField
+                control={form.control}
+                name="contact"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Contact Number (Optional)</FormLabel>
+                    <FormControl>
+                    <Input placeholder="e.g., +15551234" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
             <hr />
 
             <div className="grid grid-cols-2 gap-4">

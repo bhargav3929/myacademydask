@@ -51,8 +51,7 @@ export interface Student {
   fullName: string; 
   age: number;
   batch: StudentBatches;
-  parentContact: string;
-  parentEmail: string;
+  contact?: string;
   stadiumId: string;
   coachId: string;
   organizationId: string;
