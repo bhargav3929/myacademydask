@@ -113,6 +113,13 @@ export function AddStadiumDialog() {
         if (!organizationId) {
             throw new Error("Organization ID is missing from owner profile.");
         }
+        
+        // --- Validation Moved to onSubmit ---
+        if (await checkStadiumNameExists(values.stadiumName, organizationId)) {
+            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
+            setIsLoading(false);
+            return;
+        }
 
         // 1. Create Coach Auth User
         const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, values.coachPassword);
@@ -206,20 +213,6 @@ export function AddStadiumDialog() {
                         <Input 
                         placeholder="e.g., Champions Arena" 
                         {...field} 
-                        onBlur={async (e) => {
-                            field.onBlur();
-                            const owner = auth.currentUser;
-                            if (owner) {
-                               const ownerUserDocRef = doc(firestore, "users", owner.uid);
-                               const ownerUserDocSnap = await getDoc(ownerUserDocRef);
-                               if (ownerUserDocSnap.exists()) {
-                                   const orgId = ownerUserDocSnap.data().organizationId;
-                                   if(await checkStadiumNameExists(e.target.value, orgId)) {
-                                       form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
-                                   }
-                               }
-                            }
-                        }}
                         />
                     </FormControl>
                     <FormMessage />
