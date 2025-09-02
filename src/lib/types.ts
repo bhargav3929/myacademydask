@@ -2,6 +2,7 @@
 import { Timestamp } from "firebase/firestore";
 
 export interface UserProfile {
+  id: string;
   uid: string;
   email: string;
   fullName: string;
@@ -13,7 +14,7 @@ export interface UserProfile {
 
 export interface Organization {
   id: string;
-  name: string;
+  organizationName: string;
   ownerId: string;
   createdAt: Timestamp;
 }
@@ -23,6 +24,7 @@ export interface Stadium {
   name: string;
   location: string;
   organizationId: string;
+  assignedCoachId?: string;
   createdAt: Timestamp;
 }
 
@@ -36,12 +38,12 @@ export interface Student {
 }
 
 export interface Attendance {
-  id: string;
+  id?: string; // Optional because it's auto-generated on write
   studentId: string;
   date: string; // YYYY-MM-DD
   status: "present" | "absent";
   markedByCoachId: string;
   stadiumId: string;
   organizationId: string;
-  createdAt: Timestamp;
+  timestamp: Timestamp;
 }

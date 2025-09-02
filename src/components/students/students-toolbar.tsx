@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AddStudentDialog } from "./student-form-dialog";
 import { Student, Stadium } from "@/lib/types";
 import {
   DropdownMenu,
@@ -134,8 +133,6 @@ export function StudentsToolbar({ students, stadiums, setFilteredStudents }: Stu
         </DropdownMenu>
 
       </div>
-      <AddStudentDialog stadiums={stadiums} />
     </div>
   );
 }
-

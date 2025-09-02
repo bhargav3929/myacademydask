@@ -2,14 +2,15 @@
 "use client";
 
 import React from 'react';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { CoachSidebar } from '@/components/layouts/coach-sidebar';
+import { CoachHeader } from '@/components/layouts/coach-header';
 
-export default function CoachLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <CoachSidebar />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <CoachHeader />
+      <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6 md:gap-8 md:p-8">
+        {children}
+      </main>
+    </div>
   );
 }

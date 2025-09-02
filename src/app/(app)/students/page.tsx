@@ -1,18 +1,24 @@
 
 import { StudentsClient } from "@/components/students/students-client";
+import { MotionDiv } from "@/components/motion";
 
 export default function StudentsPage() {
   return (
-    <div className="flex-1 space-y-8 p-4 md:p-8 pt-6">
-       <div className="flex items-center justify-between space-y-2">
+     <MotionDiv
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-4"
+    >
+       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-3xl font-semibold tracking-tight">Student Management</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Student Roster</h2>
           <p className="text-muted-foreground">
-            View, add, and manage all students in your organization.
+            A complete list of all students across all stadiums.
           </p>
         </div>
       </div>
       <StudentsClient />
-    </div>
+    </MotionDiv>
   );
 }

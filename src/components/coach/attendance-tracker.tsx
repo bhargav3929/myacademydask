@@ -11,13 +11,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { MotionDiv } from "../motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 type AttendanceStatus = {
   [studentId: string]: 'present' | 'absent' | null;
 };
 
-const MOCK_STADIUM_ID = "mock-stadium-id";
+// These should be replaced with the actual authenticated coach's details
+const MOCK_STADIUM_ID = "mock-stadium-id"; // This needs to be dynamically determined
 const MOCK_COACH_ID = "mock-coach-id";
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
@@ -29,15 +30,15 @@ export function AttendanceTracker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     // In a real app, you would get the logged-in coach's assigned stadium ID
+    // For now, we'll use a mock ID. This is a critical point for integration with auth.
     const q = query(collection(firestore, "students"), where("stadiumId", "==", MOCK_STADIUM_ID));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
         setStudents(studentsData);
 
-        if(studentsData.length > 0) {
+        if(studentsData.length > 0 && MOCK_STADIUM_ID) {
             getDoc(doc(firestore, "stadiums", MOCK_STADIUM_ID)).then(stadiumDoc => {
                 if(stadiumDoc.exists()) {
                     setStadiumName(stadiumDoc.data().name);
@@ -63,6 +64,7 @@ export function AttendanceTracker() {
     const attendanceId = `${studentId}_${todayStr}`;
     const attendanceRef = doc(firestore, "attendance", attendanceId);
 
+    const originalStatus = attendance[studentId];
     setAttendance(prev => ({ ...prev, [studentId]: status }));
 
     try {
@@ -73,14 +75,14 @@ export function AttendanceTracker() {
         markedByCoachId: MOCK_COACH_ID,
         stadiumId: MOCK_STADIUM_ID,
         organizationId: MOCK_ORGANIZATION_ID,
-        createdAt: serverTimestamp(),
-      });
+        timestamp: serverTimestamp(),
+      }, { merge: true }); // Use merge to update if entry for today already exists
       toast({
         title: "Success",
-        description: `Attendance marked as ${status}.`,
+        description: `Marked ${students.find(s=>s.id===studentId)?.fullName} as ${status}.`,
       });
     } catch (error) {
-      setAttendance(prev => ({ ...prev, [studentId]: null }));
+      setAttendance(prev => ({ ...prev, [studentId]: originalStatus }));
       toast({
         variant: "destructive",
         title: "Error",
@@ -88,57 +90,90 @@ export function AttendanceTracker() {
       });
     }
   };
+  
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.05,
+        type: 'spring',
+        stiffness: 100,
+      },
+    }),
+  };
 
   if (loading) {
-    return <Skeleton className="h-96 w-full" />;
+    return (
+        <Card>
+            <CardHeader>
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-4 w-3/4 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+            </CardContent>
+        </Card>
+    );
   }
 
   return (
-    <MotionDiv
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
       <Card>
         <CardHeader>
-          <CardTitle>Student List</CardTitle>
+          <CardTitle>Mark Today's Attendance</CardTitle>
           <CardDescription>
-            Mark attendance for today, {format(new Date(), 'PPP')}, at {stadiumName}.
+            For {stadiumName} on {format(new Date(), 'PPP')}.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {students.length > 0 ? students.map(student => (
-              <div key={student.id} className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-4">
-                    <Avatar>
-                        <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <p className="font-medium">{student.fullName}</p>
+          <div className="space-y-3">
+            <AnimatePresence>
+                {students.length > 0 ? students.map((student, i) => (
+                <motion.div 
+                    key={student.id} 
+                    layout
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={i}
+                    className="flex items-center justify-between rounded-lg border bg-background p-3"
+                >
+                    <div className="flex items-center gap-4">
+                        <Avatar className="size-9">
+                            <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <p className="font-medium">{student.fullName}</p>
+                    </div>
+                    <div className="flex gap-2">
+                    <Button
+                        size="sm"
+                        variant={attendance[student.id] === 'present' ? 'default' : 'outline'}
+                        onClick={() => handleMarkAttendance(student.id, 'present')}
+                        className={attendance[student.id] === 'present' ? 'bg-green-600 hover:bg-green-700' : ''}
+                    >
+                        Present
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant={attendance[student.id] === 'absent' ? 'destructive' : 'outline'}
+                        onClick={() => handleMarkAttendance(student.id, 'absent')}
+                    >
+                        Absent
+                    </Button>
+                    </div>
+                </motion.div>
+                )) : 
+                <div className="text-center py-12 text-muted-foreground">
+                    <p>No students assigned to you in this stadium.</p>
+                    <p className="text-sm">Use the "New Student" button to add students.</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={attendance[student.id] === 'present' ? 'default' : 'outline'}
-                    onClick={() => handleMarkAttendance(student.id, 'present')}
-                    disabled={attendance[student.id] === 'present'}
-                  >
-                    Present
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={attendance[student.id] === 'absent' ? 'destructive' : 'outline'}
-                    onClick={() => handleMarkAttendance(student.id, 'absent')}
-                    disabled={attendance[student.id] === 'absent'}
-                  >
-                    Absent
-                  </Button>
-                </div>
-              </div>
-            )) : <p className="text-muted-foreground text-center py-10">No students assigned to you in this stadium.</p>}
+                }
+            </AnimatePresence>
           </div>
         </CardContent>
       </Card>
-    </MotionDiv>
   );
 }

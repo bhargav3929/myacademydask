@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "@/lib/firebase"; // Assuming you have a functions export
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,19 +32,21 @@ import { PlusCircle } from "lucide-react";
 import { Stadium } from "@/lib/types";
 
 const formSchema = z.object({
-  stadiumName: z.string().min(2, "Stadium name must be at least 2 characters."),
-  location: z.string().min(2, "Location must be at least 2 characters."),
+  stadiumName: z.string().min(3, "Stadium name must be at least 3 characters."),
+  location: z.string().min(3, "Location must be at least 3 characters."),
   coachEmail: z.string().email("Please enter a valid email for the coach."),
   coachPassword: z.string().min(6, "Password must be at least 6 characters."),
+  coachFullName: z.string().min(2, "Please enter the coach's full name."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
-// This should be replaced with your actual Cloud Function URL
+// Note: Ensure your firebase.ts exports 'functions' from 'firebase/functions'
+// const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
+// Using fetch as a fallback if the above isn't set up
 const CLOUD_FUNCTION_URL = "https://us-central1-courtcommand.cloudfunctions.net/createStadiumAndCoach";
-
 
 export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
   const { toast } = useToast();
@@ -52,10 +56,11 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      stadiumName: "",
-      location: "",
+      stadiumName: stadium?.name || "",
+      location: stadium?.location || "",
       coachEmail: "",
       coachPassword: "",
+      coachFullName: "",
     },
   });
 
@@ -65,16 +70,14 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
     try {
       const response = await fetch(CLOUD_FUNCTION_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           organizationId: MOCK_ORGANIZATION_ID,
           stadiumName: values.stadiumName,
           location: values.location,
           coachEmail: values.coachEmail,
           coachPassword: values.coachPassword,
-          coachFullName: "Coach " + values.stadiumName, // Generating a placeholder name
+          coachFullName: values.coachFullName,
         }),
       });
 
@@ -83,7 +86,7 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
       if (response.ok && result.success) {
         toast({
           title: "Success!",
-          description: `Stadium "${values.stadiumName}" and a new coach account have been created.`,
+          description: `Stadium "${values.stadiumName}" and coach account created.`,
         });
         form.reset();
         setOpen(false);
@@ -95,7 +98,7 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
       console.error("Error creating stadium and coach:", error);
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Creation Failed",
         description: error.message || "Could not create stadium. Please try again.",
       });
     } finally {
@@ -111,7 +114,7 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
           New Stadium
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add New Stadium & Coach</DialogTitle>
           <DialogDescription>
@@ -146,36 +149,52 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="coachEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coach's Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="coach@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
              <FormField
               control={form.control}
-              name="coachPassword"
+              name="coachFullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Coach's Password</FormLabel>
+                  <FormLabel>Coach's Full Name</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input placeholder="e.g., Jane Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <div className="grid grid-cols-2 gap-4">
+                 <FormField
+                  control={form.control}
+                  name="coachEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Coach's Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="coach@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="coachPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Set Initial Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+           
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Stadium"}
+                {isLoading ? "Saving..." : "Create Stadium & Coach"}
               </Button>
             </DialogFooter>
           </form>

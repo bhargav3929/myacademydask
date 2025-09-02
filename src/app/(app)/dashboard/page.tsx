@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, getCountFromServer } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getCountFromServer, limit, orderBy } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -11,6 +11,7 @@ import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { CoachAssignments } from "@/components/dashboard/coach-assignments";
 import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
 import { subDays } from "date-fns";
+import { Student } from "@/lib/types";
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
 
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [newStudents, setNewStudents] = useState(0);
   const [activeStadiums, setActiveStadiums] = useState(0);
+  const [recentRegistrations, setRecentRegistrations] = useState<Student[]>([]);
   
   useEffect(() => {
     // Listener for total students
@@ -36,11 +38,23 @@ export default function DashboardPage() {
     const stadiumsQuery = query(collection(firestore, "stadiums"));
     const stadiumsUnsubscribe = onSnapshot(stadiumsQuery, snapshot => setActiveStadiums(snapshot.size));
     
+     // Listener for recent registrations (last 5)
+    const recentRegQuery = query(
+        collection(firestore, "students"),
+        orderBy("joinDate", "desc"),
+        limit(5)
+    );
+    const recentRegUnsubscribe = onSnapshot(recentRegQuery, snapshot => {
+        const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+        setRecentRegistrations(registrations);
+    });
+    
     // Cleanup listeners on unmount
     return () => {
       studentsUnsubscribe();
       newStudentsUnsubscribe();
       stadiumsUnsubscribe();
+      recentRegUnsubscribe();
     };
 
   }, []);
@@ -96,7 +110,6 @@ export default function DashboardPage() {
             title="Total Students"
             value={totalStudents.toString()}
             icon="Users"
-            trendValue=""
             trendPeriod="Across all stadiums"
             primary
           />
@@ -106,7 +119,6 @@ export default function DashboardPage() {
             title="New Students Joined"
             value={newStudents.toString()}
             icon="UserPlus"
-            trendValue=""
             trendPeriod="Last 30 days"
           />
         </MotionDiv>
@@ -115,7 +127,6 @@ export default function DashboardPage() {
             title="Active Stadiums"
             value={activeStadiums.toString()}
             icon="Building"
-            trendValue=""
             trendPeriod="Ready for action"
           />
         </MotionDiv>
@@ -136,7 +147,7 @@ export default function DashboardPage() {
       </div>
 
        <MotionDiv variants={itemVariants}>
-          <RecentRegistrations />
+          <RecentRegistrations data={recentRegistrations} />
         </MotionDiv>
     </MotionDiv>
   );
