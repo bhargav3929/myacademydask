@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal } from "lucide-react";
 import { Stadium } from "@/lib/types";
 import { format } from 'date-fns';
@@ -34,6 +33,7 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Location</TableHead>
+            <TableHead>Assigned Coach</TableHead>
             <TableHead>Date Added</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
@@ -45,6 +45,7 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
             <TableRow key={stadium.id}>
               <TableCell className="font-medium">{stadium.name}</TableCell>
               <TableCell>{stadium.location}</TableCell>
+              <TableCell>{stadium.coachDetails?.name || 'N/A'}</TableCell>
               <TableCell>
                 {stadium.createdAt ? format(stadium.createdAt.toDate(), 'PPP') : 'N/A'}
               </TableCell>
@@ -66,7 +67,7 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
             </TableRow>
           )) : (
             <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                     No stadiums created yet. Click "New Stadium" to get started.
                 </TableCell>
             </TableRow>

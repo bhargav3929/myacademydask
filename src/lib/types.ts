@@ -19,12 +19,19 @@ export interface Organization {
   createdAt: Timestamp;
 }
 
+export interface CoachDetails {
+    name: string;
+    email: string;
+    phone?: string;
+}
+
 export interface Stadium {
   id: string;
   name: string;
   location: string;
   organizationId: string;
   assignedCoachId?: string;
+  coachDetails?: CoachDetails;
   createdAt: Timestamp;
 }
 
@@ -46,4 +53,21 @@ export interface Attendance {
   stadiumId: string;
   organizationId: string;
   timestamp: Timestamp;
+}
+
+export interface Schedule {
+    id?: string;
+    stadiumId: string;
+    weekStartDate: string; // YYYY-MM-DD
+    schedule: {
+        monday: "active" | "holiday";
+        tuesday: "active" | "holiday";
+        wednesday: "active" | "holiday";
+        thursday: "active" | "holiday";
+        friday: "active" | "holiday";
+        saturday: "active" | "holiday";
+        sunday: "active" | "holiday";
+    }
+    createdByCoachId: string;
+    createdAt: Timestamp;
 }
