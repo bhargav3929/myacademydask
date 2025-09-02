@@ -1,5 +1,4 @@
 
-
 "use client";
 import { AttendanceTracker } from "@/components/coach/attendance-tracker";
 import { AddStudentDialog } from "@/components/students/student-form-dialog";
