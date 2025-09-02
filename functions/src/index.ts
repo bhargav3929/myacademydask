@@ -1,9 +1,6 @@
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as cors from "cors";
-
-const corsHandler = cors({ origin: true });
 
 admin.initializeApp();
 
@@ -21,6 +18,13 @@ interface CreateStadiumAndCoachData {
 export const createStadiumAndCoach = functions.https.onCall(
   async (data: CreateStadiumAndCoachData, context) => {
     
+    // Optional: Check if the user calling the function is authenticated
+    // if (!context.auth) {
+    //   throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+    // }
+    // const callerUid = context.auth.uid;
+    // You could add logic here to verify the caller has 'owner' role if needed.
+
     functions.logger.info("Starting stadium and coach creation for org:", data.organizationId);
 
     try {
@@ -29,7 +33,7 @@ export const createStadiumAndCoach = functions.https.onCall(
         email: data.coachEmail,
         password: data.coachPassword,
         displayName: data.coachFullName,
-        emailVerified: true,
+        emailVerified: true, // Assuming you want to auto-verify emails
         disabled: false,
       });
       functions.logger.info("Successfully created new auth user:", userRecord.uid);
@@ -83,7 +87,7 @@ export const createStadiumAndCoach = functions.https.onCall(
       // Throw a structured error for the client to handle
       throw new functions.https.HttpsError(
         "internal",
-        "An unexpected error occurred while creating the stadium and coach.",
+        error.message || "An unexpected error occurred.",
         error
       );
     }
