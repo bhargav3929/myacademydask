@@ -69,7 +69,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message || "Invalid email or password. Please try again.",
+        description: "Invalid email or password. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -90,7 +90,7 @@ export default function LoginPage() {
                   <span className="text-2xl font-bold">CourtCommand</span>
               </Link>
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
-              <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
+              <CardDescription>Enter your credentials provided by your academy owner to sign in.</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>

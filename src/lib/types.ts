@@ -41,6 +41,7 @@ export interface Student {
   joinDate: Timestamp;
   stadiumId: string;
   organizationId: string;
+  status: 'active' | 'trial' | 'inactive';
   createdAt: Timestamp;
 }
 

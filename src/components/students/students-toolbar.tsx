@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
+import { AddStudentDialog } from "./student-form-dialog";
 
 type StudentsToolbarProps = {
   students: Student[];
@@ -133,6 +134,7 @@ export function StudentsToolbar({ students, stadiums, setFilteredStudents }: Stu
         </DropdownMenu>
 
       </div>
+       <AddStudentDialog stadiums={stadiums} />
     </div>
   );
 }

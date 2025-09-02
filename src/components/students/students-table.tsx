@@ -22,8 +22,8 @@ import { MoreHorizontal } from "lucide-react";
 import { Student, Stadium } from "@/lib/types";
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { MotionDiv } from "../motion";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type StudentsTableProps = {
   data: Student[];
@@ -36,7 +36,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
     return stadiums.find(s => s.id === stadiumId)?.name || "Unassigned";
   }
 
-  const badgeVariants = {
+  const badgeVariants: Record<Student['status'], string> = {
     active: "bg-green-100 text-green-800 border-green-200",
     trial: "bg-yellow-100 text-yellow-800 border-yellow-200",
     inactive: "bg-red-100 text-red-800 border-red-200",
@@ -96,7 +96,9 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
               <TableCell>{getStadiumName(student.stadiumId)}</TableCell>
               <TableCell>Pro Tier</TableCell>
               <TableCell>
-                <Badge variant="outline" className={badgeVariants['active']}>Active</Badge>
+                 <Badge variant="outline" className={cn(badgeVariants[student.status || 'active'], "capitalize")}>
+                    {student.status || 'Active'}
+                 </Badge>
               </TableCell>
               <TableCell>
                 <DropdownMenu>
