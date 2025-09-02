@@ -68,6 +68,14 @@ export function AddStadiumDialog() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      stadiumName: "",
+      location: "",
+      coachFullName: "",
+      coachEmail: "",
+      coachPhone: "",
+      credentialsConfirmed: false,
+    },
     mode: "onBlur",
   });
 
@@ -341,5 +349,3 @@ export function AddStadiumDialog() {
     </Dialog>
   );
 }
-
-    
