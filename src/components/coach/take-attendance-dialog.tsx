@@ -153,7 +153,8 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
         submittedByCoachId: auth.currentUser.uid,
         timestamp: serverTimestamp(),
     };
-    writeDbBatch.set(doc(submissionCollectionRef), submissionDoc);
+    const newSubmissionRef = doc(submissionCollectionRef);
+    writeDbBatch.set(newSubmissionRef, submissionDoc);
 
     try {
       await writeDbBatch.commit();

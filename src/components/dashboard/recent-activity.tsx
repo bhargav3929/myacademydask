@@ -127,11 +127,12 @@ export function RecentActivity() {
          console.error("Error fetching attendance activity:", error.message);
     });
 
-    setLoading(false);
+    
     return () => {
       unsubStudents();
       unsubAttendance();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
