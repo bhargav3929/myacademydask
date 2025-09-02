@@ -102,7 +102,32 @@ export function RecentActivity() {
         setActivities(combinedActivities);
 
       } catch (error) {
-        console.error("Error fetching recent activities:", error);
+        if (error instanceof Error && error.message.includes("requires a COLLECTION_GROUP_DESC index")) {
+            console.error("Firestore index missing. Please create it in the Firebase console.", error);
+            // Gracefully degrade: only show attendance activities if students query fails
+            try {
+                const attendanceQuery = query(collection(firestore, "attendance_submissions"), orderBy("timestamp", "desc"), limit(5));
+                const attendanceSnapshot = await getDocs(attendanceQuery);
+                const attendanceActivities: Activity[] = await Promise.all(
+                  attendanceSnapshot.docs.map(async (docSnap) => {
+                    const data = docSnap.data() as AttendanceSubmission;
+                    const stadium = await getStadium(data.stadiumId); // getStadium is defined outside, so accessible
+                    return {
+                      id: docSnap.id,
+                      title: `${stadium?.name || "A stadium"}`,
+                      description: `${data.batch} attendance taken.`,
+                      type: 'attendance_submission' as ActivityType,
+                      timestamp: data.timestamp.toDate(),
+                    };
+                  })
+                );
+                setActivities(attendanceActivities);
+            } catch (e) {
+                console.error("Failed to fetch even attendance activities", e);
+            }
+        } else {
+            console.error("Error fetching recent activities:", error);
+        }
       } finally {
         setLoading(false);
       }
