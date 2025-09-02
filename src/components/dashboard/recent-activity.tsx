@@ -21,9 +21,9 @@ type Activity = {
 };
 
 const activityIcons: Record<ActivityType, React.ReactNode> = {
-  present: <CalendarCheck className="size-4 text-green-500" />,
-  absent: <CalendarX className="size-4 text-red-500" />,
-  new_student: <UserPlus className="size-4 text-primary" />,
+  present: <CalendarCheck className="size-5 text-green-500" />,
+  absent: <CalendarX className="size-5 text-red-500" />,
+  new_student: <UserPlus className="size-5 text-primary" />,
 };
 
 export function RecentActivity() {
@@ -37,8 +37,6 @@ export function RecentActivity() {
   useEffect(() => {
     setLoading(true);
 
-    // This query is causing issues because it requires a composite index on (createdAt, __name__)
-    // For now, we'll fetch students and sort client-side. This might not be optimal for very large datasets.
     const studentsQuery = query(collectionGroup(firestore, "students"), limit(10));
     const attendanceQuery = query(collectionGroup(firestore, "attendance"), limit(10));
     
@@ -46,7 +44,6 @@ export function RecentActivity() {
 
     const mergeAndSortActivities = (newActivities: Activity[]) => {
       const activityMap = new Map<string, Activity>();
-      // Use a combined key to handle potential ID conflicts between students and attendance
       [...combinedActivities, ...newActivities].forEach(act => {
         const activityKey = `${act.type}-${act.id}`;
         if (!activityMap.has(activityKey)) {
@@ -56,7 +53,7 @@ export function RecentActivity() {
       
       const sorted = Array.from(activityMap.values())
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .slice(0, 7);
+        .slice(0, 5); // Limit to top 5 activities
 
       combinedActivities = sorted;
       setActivities(sorted);
@@ -70,7 +67,6 @@ export function RecentActivity() {
           return;
       };
 
-      // Pre-fetch stadium data if needed
       const stadiumIds = new Set(studentDocs.map(doc => doc.ref.parent.parent!.id));
       const newStadiums = new Map(dataCache.stadiums);
       let fetchRequired = false;
@@ -162,18 +158,18 @@ export function RecentActivity() {
       unsubStudents();
       unsubAttendance();
     };
-  }, []); // Empty dependency array is correct here, we only want to set up listeners once.
+  }, []);
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow p-6 pt-0 space-y-1">
+      <CardContent className="flex-grow p-6 pt-0 space-y-4">
         {loading ? (
            Array.from({ length: 5 }).map((_, i) => (
-             <div key={i} className="flex items-start gap-4 py-3">
-                <Skeleton className="size-9 rounded-full" />
+             <div key={i} className="flex items-center gap-4 py-2">
+                <Skeleton className="size-10 rounded-full" />
                 <div className="flex-grow space-y-1.5">
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-3 w-1/4" />
@@ -181,13 +177,11 @@ export function RecentActivity() {
              </div>
             ))
         ) : activities.length > 0 ? (
-          <div className="relative pl-4">
-            {/* Timeline line */}
-            <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-border rounded-full" />
-            {activities.map((activity) => (
-             <div key={`${activity.type}-${activity.id}`} className="flex items-start gap-4 py-3 relative">
-                <div className="z-10 mt-1 size-5 rounded-full bg-background flex items-center justify-center border-2 border-primary">
-                    <div className="size-2.5 rounded-full bg-primary" />
+          <div>
+            {activities.map((activity, index) => (
+             <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-4 py-2">
+                <div className="flex size-10 items-center justify-center rounded-full bg-secondary">
+                    {activityIcons[activity.type]}
                 </div>
                 <div className="flex-grow">
                     <p className="font-semibold text-sm leading-tight">
@@ -196,7 +190,6 @@ export function RecentActivity() {
                     <p className="text-sm text-muted-foreground">{activity.description}</p>
                     <p className="text-xs text-muted-foreground pt-1">{formatDistanceToNow(activity.timestamp, { addSuffix: true })}</p>
                 </div>
-                <div className="absolute top-5 right-2">{activityIcons[activity.type]}</div>
              </div>
             ))}
           </div>
