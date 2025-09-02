@@ -68,10 +68,12 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     defaultValues: {
       fullName: "",
       status: 'active',
-      age: undefined,
+      age: 0,
       parentContact: "",
       parentEmail: "",
-      fees: undefined,
+      fees: 0,
+      stadiumId: "",
+      joinDate: new Date(),
     },
   });
 
@@ -269,7 +271,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
+                            </Trigger>
                             </FormControl>
                             <SelectContent>
                                 <SelectItem value="active">Active</SelectItem>
