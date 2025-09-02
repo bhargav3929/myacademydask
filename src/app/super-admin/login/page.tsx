@@ -80,24 +80,26 @@ export default function SuperAdminLoginPage() {
     }
     
     try {
-      try {
         const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
         await handleSuccessfulLogin(userCredential.user);
-      } catch (error: any) {
+    } catch (error: any) {
         if (error.code === 'auth/user-not-found' && data.password === SUPER_ADMIN_PASSWORD) {
+           // This is the special case for the very first login of the Super Admin account.
            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
            await handleSuccessfulLogin(userCredential.user);
+        } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+            toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: "Invalid credentials. Please check your email and password.",
+            });
         } else {
-            throw new Error("Invalid credentials");
+             toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: error.message || "An unexpected error occurred.",
+            });
         }
-      }
-
-    } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "Invalid credentials. Please check your email and password.",
-        });
     } finally {
       setIsLoading(false);
     }
