@@ -342,3 +342,5 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
     </Dialog>
   );
 }
+
+    
