@@ -9,7 +9,6 @@ import {
   Settings,
   Users,
   Search,
-  ClipboardCheck,
   LayoutDashboard,
   Gamepad2,
 } from "lucide-react";
@@ -33,8 +32,7 @@ export function AppHeader() {
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/stadiums", icon: Building, label: "Stadiums" },
     { href: "/students", icon: Users, label: "Students" },
-    { href: "/attendance", icon: ClipboardCheck, label: "Attendance" },
-    { href: "/security-rules", icon: Settings, label: "Settings" },
+    { href: "/settings", icon: Settings, label: "Settings" },
   ];
 
   return (
