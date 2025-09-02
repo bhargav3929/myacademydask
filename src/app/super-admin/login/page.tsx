@@ -85,8 +85,16 @@ export default function SuperAdminLoginPage() {
     } catch (error: any) {
         if (error.code === 'auth/user-not-found' && data.password === SUPER_ADMIN_PASSWORD) {
            // This is the special case for the very first login of the Super Admin account.
-           const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-           await handleSuccessfulLogin(userCredential.user);
+           try {
+               const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+               await handleSuccessfulLogin(userCredential.user);
+           } catch (creationError: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Setup Failed",
+                    description: creationError.message || "Could not create super admin account.",
+                });
+           }
         } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
             toast({
                 variant: "destructive",
