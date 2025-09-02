@@ -22,17 +22,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { NavBar } from "../ui/tubelight-navbar";
 
 export function AppHeader() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/stadiums", icon: Building, label: "Stadiums" },
-    { href: "/students", icon: Users, label: "Students" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { name: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { name: "Stadiums", url: "/stadiums", icon: Building },
+    { name: "Students", url: "/students", icon: Users },
+    { name: "Settings", url: "/settings", icon: Settings },
   ];
 
   return (
@@ -44,26 +44,8 @@ export function AppHeader() {
         </Link>
       </div>
 
-      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 ml-6">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 transition-all font-medium",
-                  pathname === item.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="size-4" />
-              {item.label}
-            </Link>
-          )
-        })}
-      </nav>
+      <NavBar items={navItems} />
+      
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <div className="ml-auto flex-1 sm:flex-initial">
           {/* Mobile menu could go here */}
