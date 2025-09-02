@@ -6,7 +6,7 @@ import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, get
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { RecentRegistrations } from "@/components/dashboard/recent-registrations";
+import { NewAdmissions } from "@/components/dashboard/new-admissions";
 import { Student } from "@/lib/types";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +30,7 @@ export default function DashboardPage() {
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [recentRegistrations, setRecentRegistrations] = useState<Student[]>([]);
+  const [recentAdmissions, setRecentAdmissions] = useState<Student[]>([]);
   const [directorName, setDirectorName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
@@ -84,7 +84,11 @@ export default function DashboardPage() {
     const studentsQuery = query(collectionGroup(firestore, "students"));
 
     const unsubscribe = onSnapshot(studentsQuery, snapshot => {
-      const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      const studentsData = snapshot.docs.map(doc => {
+          const path = doc.ref.path.split('/');
+          const stadiumId = path[1];
+          return { id: doc.id, stadiumId, ...doc.data() } as Student;
+      });
       setAllStudents(studentsData);
       
       const filtered = filterStudentsByDate(studentsData, timeFilter, customDateRange);
@@ -128,7 +132,7 @@ export default function DashboardPage() {
     const revenue = filteredStudents.reduce((acc, student) => acc + (student.fees || 0), 0);
     setTotalRevenue(revenue);
     
-    setRecentRegistrations(
+    setRecentAdmissions(
         [...filteredStudents]
         .sort((a,b) => b.joinDate.toMillis() - a.joinDate.toMillis())
         .slice(0, 5)
@@ -305,7 +309,7 @@ export default function DashboardPage() {
       </div>
 
        <MotionDiv variants={itemVariants}>
-          <RecentRegistrations data={recentRegistrations} />
+          <NewAdmissions data={recentAdmissions} />
         </MotionDiv>
     </MotionDiv>
   );
