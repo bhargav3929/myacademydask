@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
@@ -35,7 +35,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 // In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-const OWNER_EMAIL = "director@courtcommand.com"; // Email remains for creation
+const OWNER_EMAIL = "director@courtcommand.com";
 const OWNER_USERNAME = "admin";
 const OWNER_PASSWORD = "admin123";
 
@@ -54,21 +54,16 @@ export default function LoginPage() {
   });
 
   const getEmailFromIdentifier = async (identifier: string): Promise<string | null> => {
-    // Check if it's an email
     if (z.string().email().safeParse(identifier).success) {
         return identifier;
     }
-    
-    // Assume it's a username and query Firestore
     const usersRef = collection(firestore, "users");
     const q = query(usersRef, where("username", "==", identifier));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-        return null; // Username not found
+        return null; 
     }
-
-    // Return the email from the found user document
     return querySnapshot.docs[0].data().email;
   }
 
@@ -90,7 +85,6 @@ export default function LoginPage() {
     if (userRole === 'coach') {
       router.push('/coach/dashboard');
     } else {
-      // Default to owner/admin dashboard
       router.push('/dashboard');
     }
   }
@@ -99,64 +93,55 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      let email = await getEmailFromIdentifier(data.identifier);
+      let emailToLogin: string | null = null;
+      let isOwnerFirstTime = false;
+
+      // Check for default owner login
+      if (data.identifier === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
+          const signInMethods = await fetchSignInMethodsForEmail(auth, OWNER_EMAIL);
+          if (signInMethods.length === 0) {
+              // This is the first-time login, create the account.
+              const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
+              const user = userCredential.user;
+              const userDocRef = doc(firestore, "users", user.uid);
+              await setDoc(userDocRef, {
+                  uid: user.uid,
+                  email: OWNER_EMAIL,
+                  username: OWNER_USERNAME,
+                  fullName: "Academy Director",
+                  role: "owner",
+                  organizationId: MOCK_ORGANIZATION_ID,
+                  createdAt: serverTimestamp(),
+              });
+              await handleSuccessfulLogin(user);
+              return;
+          }
+      }
       
-      // Special case for first-time admin login
-      if (!email && data.identifier === OWNER_USERNAME) {
-         try {
-            // Try to sign in first, in case the account was already created
-            await signInWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-            // This part won't be reached if signIn fails, it will go to catch.
-            // But if it succeeds, we need the user object.
-            if(auth.currentUser){
-                await handleSuccessfulLogin(auth.currentUser);
-            }
-            return;
-         } catch (e: any) {
-            // If sign-in fails, it might be the first time.
-             if (e.code === 'auth/invalid-credential' && data.password === OWNER_PASSWORD) {
-                // This is the first-time login for the default owner. Create the account.
-                try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
-                    const user = userCredential.user;
-                    const userDocRef = doc(firestore, "users", user.uid);
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        email: OWNER_EMAIL,
-                        username: OWNER_USERNAME,
-                        fullName: "Academy Director",
-                        role: "owner",
-                        organizationId: MOCK_ORGANIZATION_ID,
-                        createdAt: serverTimestamp(),
-                    });
-                    await handleSuccessfulLogin(user);
-                } catch (creationError) {
-                    console.error("Failed to create default owner:", creationError);
-                    toast({
-                        variant: "destructive",
-                        title: "Setup Failed",
-                        description: "Could not initialize the owner account. Please try again.",
-                    });
-                }
-                return;
-             }
-         }
+      // For all other cases (existing owner or other users)
+      emailToLogin = await getEmailFromIdentifier(data.identifier);
+      if (!emailToLogin) {
+          // Special case for owner where the identifier is username but firestore doc might not exist yet
+          if (data.identifier === OWNER_USERNAME) {
+              emailToLogin = OWNER_EMAIL;
+          } else {
+              throw new Error("Invalid credentials");
+          }
       }
 
-
-      if (!email) {
-          throw new Error("Invalid credentials");
-      }
-
-      const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
+      const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
       await handleSuccessfulLogin(userCredential.user);
 
     } catch (error: any) {
         console.error("Login failed:", error);
+        let errorMessage = "Invalid credentials. Please check your email/username and password.";
+        if (error.code === 'auth/invalid-credential' || error.message === "Invalid credentials") {
+             errorMessage = "Invalid credentials. Please check your email/username and password.";
+        }
         toast({
             variant: "destructive",
             title: "Login Failed",
-            description: "Invalid credentials. Please check your email/username and password.",
+            description: errorMessage,
         });
     } finally {
       setIsLoading(false);
