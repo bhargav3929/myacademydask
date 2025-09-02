@@ -60,7 +60,6 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
 
         let studentActivities: Activity[] = [];
         try {
-            // 1. Fetch recent student admissions
             const studentsQuery = query(
               collectionGroup(firestore, "students"), 
               where("organizationId", "==", organizationId),
@@ -85,39 +84,46 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
               })
             ).then(res => res.filter(Boolean) as Activity[]);
         } catch (error) {
-             if (error instanceof Error && error.message.includes("requires an index")) {
-                console.error("Firestore index missing for students collection group. Please create it in the Firebase console to see new student activities.", error);
-                // Gracefully fail and continue without student activities.
+             if (error instanceof Error && (error.message.includes("requires an index") || error.message.includes("requires a COLLECTION_GROUP_DESC index"))) {
+                console.warn("Firestore index for recent students is missing or building. Please create it in the Firebase console to see new student activities.", error);
                 studentActivities = [];
             } else {
-                throw error; // Re-throw other errors
+                throw error;
             }
         }
 
-
-        // 2. Fetch recent attendance submissions
-        const attendanceQuery = query(
-            collection(firestore, "attendance_submissions"), 
-            where("organizationId", "==", organizationId),
-            orderBy("timestamp", "desc"), 
-            limit(5)
-        );
-        const attendanceSnapshot = await getDocs(attendanceQuery);
-        const attendanceActivities: Activity[] = await Promise.all(
-          attendanceSnapshot.docs.map(async (docSnap) => {
-            const data = docSnap.data() as AttendanceSubmission;
-            const stadium = await getStadium(data.stadiumId);
-            return {
-              id: docSnap.id,
-              title: `${stadium?.name || "A stadium"}`,
-              description: `${data.batch} attendance taken.`,
-              type: 'attendance_submission' as ActivityType,
-              timestamp: (data.timestamp as Timestamp).toDate(),
-            };
-          })
-        );
+        let attendanceActivities: Activity[] = [];
+        try {
+            const attendanceQuery = query(
+                collection(firestore, "attendance_submissions"), 
+                where("organizationId", "==", organizationId),
+                orderBy("timestamp", "desc"), 
+                limit(5)
+            );
+            const attendanceSnapshot = await getDocs(attendanceQuery);
+            attendanceActivities = await Promise.all(
+              attendanceSnapshot.docs.map(async (docSnap) => {
+                const data = docSnap.data() as AttendanceSubmission;
+                if (!data.timestamp) return null;
+                const stadium = await getStadium(data.stadiumId);
+                return {
+                  id: docSnap.id,
+                  title: `${stadium?.name || "A stadium"}`,
+                  description: `${data.batch} attendance taken.`,
+                  type: 'attendance_submission' as ActivityType,
+                  timestamp: (data.timestamp as Timestamp).toDate(),
+                };
+              })
+            ).then(res => res.filter(Boolean) as Activity[]);
+        } catch (error) {
+            if (error instanceof Error && (error.message.includes("requires an index") || error.message.includes("requires a COLLECTION_GROUP_DESC index"))) {
+                console.warn("Firestore index for recent attendance is missing or building. Please create it in the Firebase console to see attendance activities.", error);
+                attendanceActivities = [];
+            } else {
+                throw error;
+            }
+        }
         
-        // 3. Combine, sort, and slice
         const combinedActivities = [...studentActivities, ...attendanceActivities]
           .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
           .slice(0, 5);
@@ -180,5 +186,3 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
     </Card>
   );
 }
-
-    
