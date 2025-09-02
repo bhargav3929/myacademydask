@@ -1,6 +1,7 @@
 
 "use client";
 import { AttendanceTracker } from "@/components/coach/attendance-tracker";
+import { DailyAttendanceSummary } from "@/components/coach/daily-attendance-summary";
 import { MotionDiv } from "@/components/motion";
 
 export default function CoachDashboardPage() {
@@ -9,7 +10,7 @@ export default function CoachDashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="space-y-6"
+            className="space-y-8"
         >
             <div className="flex items-start justify-between">
                 <div>
@@ -20,6 +21,7 @@ export default function CoachDashboardPage() {
                 </div>
             </div>
             <AttendanceTracker />
+            <DailyAttendanceSummary />
         </MotionDiv>
     )
 }
