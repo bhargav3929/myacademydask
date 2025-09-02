@@ -44,12 +44,13 @@ export function AttendanceGraph() {
 
     const attendanceQuery = query(
       collectionGroup(firestore, "attendance"),
-      where("timestamp", ">=", Timestamp.fromDate(tenDaysAgo)),
-      where("status", "==", "present")
+      where("timestamp", ">=", Timestamp.fromDate(tenDaysAgo))
     );
 
     const unsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
-      const attendanceRecords = snapshot.docs.map(doc => doc.data() as Attendance);
+      const attendanceRecords = snapshot.docs
+        .map(doc => doc.data() as Attendance)
+        .filter(record => record.status === 'present');
 
       const attendanceCountsByDay: { [key: string]: number } = {};
 
