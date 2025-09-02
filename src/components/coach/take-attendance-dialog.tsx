@@ -27,7 +27,6 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -39,6 +38,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MiniCalendar } from "../ui/mini-calendar";
 
 type AttendanceStatus = "present" | "absent";
 type AttendanceRecord = { [studentId: string]: AttendanceStatus };
@@ -173,12 +173,9 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
                         Select a date and batch to track attendance.
                     </DialogDescription>
                 </DialogHeader>
-                 <Calendar
-                    mode="single"
+                <MiniCalendar 
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    className="rounded-md"
-                    disabled={(date) => date > new Date()}
                 />
                  <div className="space-y-2">
                     <label className="text-sm font-medium">Batch</label>
