@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collectionGroup, query, orderBy, limit, onSnapshot, doc, getDoc, collection } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, collectionGroup } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, CalendarCheck } from "lucide-react";
@@ -28,11 +28,16 @@ const activityIcons: Record<ActivityType, React.ReactNode> = {
 export function RecentActivity() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const [dataCache, setDataCache] = useState<{
       stadiums: Map<string, Stadium>
     }>({
       stadiums: new Map()
   });
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -85,7 +90,6 @@ export function RecentActivity() {
       mergeAndSortActivities();
     }, (error) => {
       console.warn("Could not fetch recent students for activity feed:", error.message);
-      setLoading(false);
     });
 
     const unsubAttendance = onSnapshot(attendanceSubmissionQuery, async (snapshot) => {
@@ -121,10 +125,9 @@ export function RecentActivity() {
       mergeAndSortActivities();
     }, (error) => {
          console.error("Error fetching attendance activity:", error.message);
-         setLoading(false);
     });
 
-
+    setLoading(false);
     return () => {
       unsubStudents();
       unsubAttendance();
@@ -159,7 +162,9 @@ export function RecentActivity() {
                         {activity.title}
                     </p>
                     <p className="text-sm text-muted-foreground">{activity.description}</p>
-                    <p className="text-xs text-muted-foreground pt-1">{formatDistanceToNow(activity.timestamp, { addSuffix: true })}</p>
+                    {isClient && (
+                      <p className="text-xs text-muted-foreground pt-1">{formatDistanceToNow(activity.timestamp, { addSuffix: true })}</p>
+                    )}
                 </div>
              </div>
             ))}
