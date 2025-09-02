@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, FirebaseError } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
@@ -107,8 +107,8 @@ export default function LoginPage() {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
         await handleSuccessfulLogin(userCredential.user);
-      } catch (error) {
-        if (error instanceof FirebaseError && error.code === 'auth/invalid-credential' && email === OWNER_EMAIL && data.password === OWNER_PASSWORD) {
+      } catch (error: any) {
+        if (error.code === 'auth/invalid-credential' && email === OWNER_EMAIL && data.password === OWNER_PASSWORD) {
           // This is the first-time login for the default owner. Create the account.
           try {
             const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
