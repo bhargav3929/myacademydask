@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -54,7 +53,7 @@ const formSchema = z.object({
   status: z.enum(['active', 'trial', 'inactive']),
   age: z.coerce.number().min(3, "Age must be at least 3.").max(100),
   contact: z.string().optional(),
-  fees: z.coerce.number().optional(),
+  fees: z.coerce.number().positive("Fees must be a positive number."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -109,7 +108,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         organizationId: MOCK_ORGANIZATION_ID,
         joinDate: values.joinDate,
         status: values.status,
-        fees: values.fees || 0,
+        fees: values.fees,
         createdAt: serverTimestamp(),
       });
 
@@ -178,19 +177,34 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
               />
             </div>
             
-            <FormField
-                control={form.control}
-                name="contact"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Contact Number (Optional)</FormLabel>
-                    <FormControl>
-                    <Input placeholder="e.g., +15551234" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
+             <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="contact"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Contact Number (Optional)</FormLabel>
+                        <FormControl>
+                        <Input placeholder="e.g., +15551234" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="fees"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Enrollment Fee</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="e.g., 3000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
             <hr />
 
             <div className="grid grid-cols-2 gap-4">
@@ -307,19 +321,6 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                     )}
                 />
             </div>
-             <FormField
-                control={form.control}
-                name="fees"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fees (Optional)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g., 100" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

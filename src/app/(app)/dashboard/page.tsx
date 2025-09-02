@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup } from "firebase/firestore";
+import { useEffect, useState, useCallback } from "react";
+import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -13,73 +13,117 @@ import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { AttendanceChart } from "@/components/dashboard/attendance-chart";
+import { Button } from "@/components/ui/button";
+import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing"; // Replace with actual org ID from auth
 const MOCK_USER_ID = "mock-owner-id"; // For fetching director's name
 
+type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all";
+
 export default function DashboardPage() {
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [totalStudents, setTotalStudents] = useState(0);
-  const [newStudents, setNewStudents] = useState(0);
-  const [activeStadiums, setActiveStadiums] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [recentRegistrations, setRecentRegistrations] = useState<Student[]>([]);
   const [directorName, setDirectorName] = useState("");
-  const [isLoadingName, setIsLoadingName] = useState(true);
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+
+  const filterStudentsByDate = useCallback((students: Student[], filter: TimeFilter) => {
+    const now = new Date();
+    let startTime: Date;
+
+    switch (filter) {
+        case "today":
+            startTime = startOfToday();
+            break;
+        case "yesterday":
+            startTime = startOfYesterday();
+            const endTime = endOfYesterday();
+            return students.filter(student => {
+                const joinDate = student.joinDate.toDate();
+                return joinDate >= startTime && joinDate <= endTime;
+            });
+        case "weekly":
+            startTime = startOfWeek(now);
+            break;
+        case "monthly":
+            startTime = subMonths(now, 1);
+            break;
+        case "all":
+            return students;
+        default:
+            return students;
+    }
+     return students.filter(student => student.joinDate.toDate() >= startTime);
+  }, []);
+
   useEffect(() => {
-    // Listener for total students across all stadiums
+    setIsLoading(true);
     const studentsQuery = query(collectionGroup(firestore, "students"));
-    const studentsUnsubscribe = onSnapshot(studentsQuery, snapshot => setTotalStudents(snapshot.size));
 
-    // Listener for active stadiums
-    const stadiumsQuery = query(collection(firestore, "stadiums"));
-    const stadiumsUnsubscribe = onSnapshot(stadiumsQuery, snapshot => setActiveStadiums(snapshot.size));
-    
-     // Fetch recent registrations (last 5)
-    const fetchRecentRegistrations = async () => {
-        const recentRegQuery = query(
-            collectionGroup(firestore, "students"),
-            orderBy("joinDate", "desc"),
-            limit(5)
-        );
-        try {
-            const querySnapshot = await getDocs(recentRegQuery);
-            const registrations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
-            setRecentRegistrations(registrations);
-        } catch (error) {
-            console.error("Error fetching recent registrations:", error);
-        }
-    };
-    
+    const unsubscribe = onSnapshot(studentsQuery, snapshot => {
+      const studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      setAllStudents(studentsData);
+      
+      const filtered = filterStudentsByDate(studentsData, timeFilter);
+      setFilteredStudents(filtered);
 
-    // Fetch director's name
+      // Total students count should not be filtered by date
+      setTotalStudents(studentsData.length);
+      
+      setIsLoading(false);
+    }, error => {
+      console.error("Error fetching students:", error);
+      setIsLoading(false);
+    });
+
     const fetchDirectorName = async () => {
-        setIsLoadingName(true);
         try {
             const userDocRef = doc(firestore, "users", MOCK_USER_ID);
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
                 setDirectorName(userDocSnap.data().fullName || "Academy Director");
-            } else {
-                setDirectorName("Academy Director");
             }
         } catch (error) {
             console.error("Failed to fetch director's name:", error);
             setDirectorName("Academy Director");
-        } finally {
-            setIsLoadingName(false);
         }
     };
     
     fetchDirectorName();
-    fetchRecentRegistrations();
-    
-    // Cleanup listeners on unmount
-    return () => {
-      studentsUnsubscribe();
-      stadiumsUnsubscribe();
-    };
 
-  }, []);
+    return () => unsubscribe();
+  }, [timeFilter, filterStudentsByDate]);
+
+  useEffect(() => {
+    // Update stats when filtered students change
+    const revenue = filteredStudents.reduce((acc, student) => acc + (student.fees || 0), 0);
+    setTotalRevenue(revenue);
+    
+    // Set recent registrations from the already filtered list
+    setRecentRegistrations(
+        [...filteredStudents]
+        .sort((a,b) => b.joinDate.toMillis() - a.joinDate.toMillis())
+        .slice(0, 5)
+    );
+
+  }, [filteredStudents]);
+
+
+  const getFilterPeriodText = () => {
+    switch (timeFilter) {
+      case 'today': return "Today";
+      case 'yesterday': return "Yesterday";
+      case 'weekly': return "This week";
+      case 'monthly': return "Last 30 days";
+      case 'all': return "All time";
+    }
+  }
+
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -105,6 +149,11 @@ export default function DashboardPage() {
     },
   };
 
+  const formattedRevenue = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(totalRevenue);
+
   return (
     <MotionDiv
       variants={containerVariants}
@@ -113,24 +162,38 @@ export default function DashboardPage() {
       className="flex flex-col gap-8"
     >
       <MotionDiv variants={itemVariants}>
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-3">
-             <h1 className="text-2xl font-bold tracking-tight">
-                Welcome Back,
-             </h1>
-             {isLoadingName ? (
-                <Skeleton className="h-8 w-48" />
-             ) : (
-                <AnimatedText 
-                    text={`${directorName}! 👋`} 
-                    textClassName="text-2xl font-bold tracking-tight text-primary"
-                    underlineClassName="text-primary/50"
-                />
-             )}
-          </div>
-          <p className="text-muted-foreground">
-            Here's a snapshot of your academy's performance and recent activities.
-          </p>
+        <div className="flex justify-between items-center">
+            <div className="space-y-0.5">
+            <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight">
+                    Welcome Back,
+                </h1>
+                {isLoading ? (
+                    <Skeleton className="h-8 w-48" />
+                ) : (
+                    <AnimatedText 
+                        text={`${directorName}! 👋`} 
+                        textClassName="text-2xl font-bold tracking-tight text-primary"
+                        underlineClassName="text-primary/50"
+                    />
+                )}
+            </div>
+            <p className="text-muted-foreground">
+                Here's a snapshot of your academy's performance.
+            </p>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border bg-card p-1">
+                {(["today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+                    <Button 
+                        key={filter} 
+                        variant={timeFilter === filter ? 'secondary' : 'ghost'} 
+                        className="rounded-full capitalize text-sm h-8 px-4"
+                        onClick={() => setTimeFilter(filter)}
+                    >
+                        {filter}
+                    </Button>
+                ))}
+            </div>
         </div>
       </MotionDiv>
       
@@ -150,17 +213,17 @@ export default function DashboardPage() {
         <MotionDiv variants={itemVariants}>
           <StatCard
             title="New Students Joined"
-            value={newStudents.toString()}
+            value={filteredStudents.length.toString()}
             icon="UserPlus"
-            trendPeriod="Last 30 days"
+            trendPeriod={getFilterPeriodText()}
           />
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
           <StatCard
-            title="Active Stadiums"
-            value={activeStadiums.toString()}
-            icon="Building"
-            trendPeriod="Ready for action"
+            title="Total Revenue"
+            value={formattedRevenue}
+            icon="DollarSign"
+            trendPeriod={getFilterPeriodText()}
           />
         </MotionDiv>
       </MotionDiv>

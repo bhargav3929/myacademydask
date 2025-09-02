@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "@/components/motion";
-import { Users, TrendingUp, TrendingDown, ClipboardList, Building, UserPlus } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, ClipboardList, Building, UserPlus, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
@@ -18,6 +17,7 @@ const iconMap = {
     ClipboardList: ClipboardList,
     Building: Building,
     UserPlus: UserPlus,
+    DollarSign: DollarSign,
 };
 
 type StatCardProps = {
@@ -44,7 +44,7 @@ export function StatCard({
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [value]); // Re-trigger loading animation when value changes
 
   const TrendIcon = trendValue && trendValue.startsWith('+') ? TrendingUp : TrendingDown;
   const IconComponent = iconMap[icon];

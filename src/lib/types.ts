@@ -1,4 +1,3 @@
-
 import { Timestamp } from "firebase/firestore";
 
 export type StudentBatches = "First Batch" | "Second Batch" | "Third Batch" | "Fourth Batch";
