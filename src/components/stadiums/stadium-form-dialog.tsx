@@ -64,7 +64,9 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
 
     try {
       const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
-      const result = await createStadiumAndCoach({
+      
+      // Make sure we're passing the data in the correct format
+      const result: any = await createStadiumAndCoach({
         organizationId: MOCK_ORGANIZATION_ID,
         stadiumName: values.stadiumName,
         location: values.location,
@@ -73,23 +75,40 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
         coachFullName: values.coachFullName,
       });
 
-      if (result.data) {
+      console.log("Function result:", result); // Add this for debugging
+
+      // Check if the result has data and success flag
+      if (result.data && result.data.success) {
         toast({
           title: "Success!",
-          description: `Stadium "${values.stadiumName}" and coach account created.`,
+          description: `Stadium "${values.stadiumName}" and coach account created successfully!`,
         });
         form.reset();
         setOpen(false);
       } else {
-        throw new Error("An unknown error occurred.");
+        throw new Error("Stadium creation failed - no success response received");
       }
 
     } catch (error: any) {
-      console.error("Error creating stadium and coach:", error);
+      console.error("Complete error object:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+      console.error("Error details:", error.details);
+      
+      let errorMessage = "Could not create stadium. Please try again.";
+      
+      if (error.code === 'functions/unauthenticated') {
+        errorMessage = "You need to be logged in to create a stadium.";
+      } else if (error.code === 'functions/permission-denied') {
+        errorMessage = "You don't have permission to create stadiums.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         variant: "destructive",
         title: "Creation Failed",
-        description: error.message || "Could not create stadium. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
