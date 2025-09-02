@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, FirebaseError } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 
@@ -91,7 +91,15 @@ export default function LoginPage() {
                 createdAt: serverTimestamp(),
             });
         } else {
-             throw new Error("User profile not found in database.");
+             // This case should ideally not be reached if sign-up is controlled.
+             // For robustness, we can show an error or create a default profile.
+             console.error("User profile not found in Firestore for:", user.uid);
+             toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: "User profile is missing. Please contact support.",
+            });
+            return;
         }
     }
     
@@ -114,28 +122,35 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const emailToLogin = await getEmailFromIdentifier(data.identifier);
+      
       if (!emailToLogin) {
+          // If identifier doesn't match any email or username, it's invalid credentials
+          // unless it's the very first login for the admin.
+          if(data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
+              // This handles the case where even the owner's email doesn't exist yet.
+              const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
+              await handleSuccessfulLogin(userCredential.user);
+              return;
+          }
           throw new Error("Invalid credentials");
       }
 
-      await signInWithEmailAndPassword(auth, emailToLogin, data.password)
-        .then(async (userCredential) => {
-            await handleSuccessfulLogin(userCredential.user);
-        })
-        .catch(async (error) => {
-            // This is the special case for the very first login of the owner account.
-            if (error.code === 'auth/user-not-found' && data.identifier === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-                const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, OWNER_PASSWORD);
-                // The handleSuccessfulLogin will create the firestore doc.
-                await handleSuccessfulLogin(userCredential.user);
-            } else {
-                // For all other errors, show a generic message.
-                throw new Error("Invalid credentials");
-            }
-        });
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
+        await handleSuccessfulLogin(userCredential.user);
+      } catch (error) {
+        if (error instanceof FirebaseError && error.code === 'auth/user-not-found' && data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
+           // This is the special case for the very first login of the owner account.
+           const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
+           await handleSuccessfulLogin(userCredential.user);
+        } else {
+            // For all other errors, including wrong password, show a generic message.
+            throw new Error("Invalid credentials");
+        }
+      }
 
     } catch (error: any) {
-        console.error("Login failed:", error);
+        console.error("Login failed:", error.message);
         toast({
             variant: "destructive",
             title: "Login Failed",
@@ -202,3 +217,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
