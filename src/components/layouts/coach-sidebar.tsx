@@ -4,15 +4,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Gamepad2, LayoutDashboard, CalendarCheck, Users } from "lucide-react";
-import { Sidebar, SidebarHeader, SidebarNav, SidebarNavLink } from "@/components/ui/sidebar";
+import { Gamepad2, LayoutDashboard, CalendarCheck, Users, Menu } from "lucide-react";
+import { Sidebar, SidebarHeader, SidebarNav, SidebarNavLink, SidebarProvider as RootSidebarProvider, useSidebar, MobileNav as RootMobileNav, SidebarInset as RootSidebarInset } from "@/components/ui/sidebar";
+
+
+export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <RootSidebarProvider>
+            {children}
+        </RootSidebarProvider>
+    )
+}
+
+export const SidebarInset = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <RootSidebarInset>
+             {children}
+        </RootSidebarInset>
+    )
+}
 
 export function CoachSidebar() {
     const pathname = usePathname();
 
     const navItems = [
         { href: "/coach/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { href: "/coach/attendance", icon: CalendarCheck, label: "Attendance History" },
     ];
 
     return (
@@ -36,5 +52,21 @@ export function CoachSidebar() {
                 ))}
             </SidebarNav>
         </Sidebar>
+    )
+}
+
+export const MobileNav = () => {
+    const { isOpen, setIsOpen, isMobile } = useSidebar();
+    if(!isMobile) return null;
+
+    return (
+        <div className="flex items-center justify-between mb-4">
+            <button
+                onClick={() => setIsOpen(!isOpen)} 
+                className="p-2 -m-2 rounded-md hover:bg-muted"
+            >
+                <Menu />
+            </button>
+        </div>
     )
 }
