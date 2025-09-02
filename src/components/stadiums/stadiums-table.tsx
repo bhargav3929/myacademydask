@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { Stadium } from "@/lib/types";
 import { format } from 'date-fns';
+import { Badge } from "../ui/badge";
+import { cn } from "@/lib/utils";
 
 type StadiumsTableProps = {
   data: Stadium[];
@@ -35,6 +37,7 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
             <TableHead>Location</TableHead>
             <TableHead>Assigned Coach</TableHead>
             <TableHead>Date Added</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -49,6 +52,11 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
               <TableCell>
                 {stadium.createdAt ? format(stadium.createdAt.toDate(), 'PPP') : 'N/A'}
               </TableCell>
+               <TableCell>
+                <Badge variant={stadium.status === 'active' ? 'default' : 'destructive'} className={cn(stadium.status === 'active' ? 'bg-green-500/80' : 'bg-red-500/80')}>
+                  {stadium.status}
+                </Badge>
+              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -60,14 +68,15 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem>Delete</DropdownMenuItem>
+                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">Deactivate</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
             </TableRow>
           )) : (
             <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                     No stadiums created yet. Click "New Stadium" to get started.
                 </TableCell>
             </TableRow>

@@ -5,8 +5,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
+import { doc, setDoc, serverTimestamp, getDocs, collection, query, where } from "firebase/firestore";
+import { auth, firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,110 +29,176 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle } from "lucide-react";
-import { Stadium } from "@/lib/types";
+import { PlusCircle, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Checkbox } from "../ui/checkbox";
 
 const formSchema = z.object({
   stadiumName: z.string().min(3, "Stadium name must be at least 3 characters."),
   location: z.string().min(3, "Location must be at least 3 characters."),
-  coachEmail: z.string().email("Please enter a valid email for the coach."),
-  coachPassword: z.string().min(6, "Password must be at least 6 characters."),
-  coachFullName: z.string().min(2, "Please enter the coach's full name."),
+  coachFullName: z.string().min(2, "Coach's full name is required."),
+  coachEmail: z.string().email("Please enter a valid email address."),
+  coachPhone: z.string().min(10, "Please enter a valid phone number."),
+  credentialsConfirmed: z.boolean().default(false).refine(val => val === true, {
+    message: "You must confirm you have saved the credentials."
+  }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
+// In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
-export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
+// Helper function to generate a random password
+const generatePassword = () => {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let password = "";
+  for (let i = 0; i < 10; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
+
+export function AddStadiumDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [generatedCredentials, setGeneratedCredentials] = useState<{ username: string; password: string} | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      stadiumName: stadium?.name || "",
-      location: stadium?.location || "",
-      coachEmail: "",
-      coachPassword: "",
-      coachFullName: "",
-    },
+    mode: "onBlur", // Validate on blur
   });
 
-  async function onSubmit(values: FormValues) {
-    setIsLoading(true);
-
+  const checkEmailExists = async (email: string) => {
     try {
-      const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
-      
-      // Make sure we're passing the data in the correct format
-      const result: any = await createStadiumAndCoach({
-        organizationId: MOCK_ORGANIZATION_ID,
-        stadiumName: values.stadiumName,
-        location: values.location,
-        coachEmail: values.coachEmail,
-        coachPassword: values.coachPassword,
-        coachFullName: values.coachFullName,
-      });
-
-      console.log("Function result:", result); // Add this for debugging
-
-      // Check if the result has data and success flag
-      if (result.data && result.data.success) {
-        toast({
-          title: "Success!",
-          description: `Stadium "${values.stadiumName}" and coach account created successfully!`,
-        });
-        form.reset();
-        setOpen(false);
-      } else {
-        throw new Error("Stadium creation failed - no success response received");
-      }
-
-    } catch (error: any) {
-      console.error("Complete error object:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-      console.error("Error details:", error.details);
-      
-      let errorMessage = "Could not create stadium. Please try again.";
-      
-      if (error.code === 'functions/unauthenticated') {
-        errorMessage = "You need to be logged in to create a stadium.";
-      } else if (error.code === 'functions/permission-denied') {
-        errorMessage = "You don't have permission to create stadiums.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Creation Failed",
-        description: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        return methods.length > 0;
+    } catch (error) {
+        return false; // Email does not exist
     }
+  };
+
+  const checkStadiumNameExists = async (name: string) => {
+    const q = query(
+        collection(firestore, "stadiums"), 
+        where("name", "==", name), 
+        where("organizationId", "==", MOCK_ORGANIZATION_ID)
+    );
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
   }
 
+  const handleGenerateCredentials = async () => {
+    const stadiumName = form.getValues("stadiumName");
+    const coachFullName = form.getValues("coachFullName");
+
+    if(!stadiumName || !coachFullName) {
+        toast({ variant: "destructive", title: "Missing Info", description: "Please enter Stadium Name and Coach's Full Name first."});
+        return;
+    }
+
+    const username = `${coachFullName.split(" ")[0].toLowerCase()}_${stadiumName.split(" ")[0].toLowerCase()}`.replace(/[^a-z0-9_]/g, "");
+    const password = generatePassword();
+    setGeneratedCredentials({ username, password });
+  }
+
+  const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
+
+    if (!generatedCredentials) {
+        toast({ variant: "destructive", title: "Credentials Not Generated", description: "Please generate credentials for the coach before submitting." });
+        setIsLoading(false);
+        return;
+    }
+
+    try {
+        // 1. Create Coach Auth User
+        const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, generatedCredentials.password);
+        const coachUid = userCredential.user.uid;
+
+        const timestamp = serverTimestamp();
+
+        // 2. Create User Profile in 'users' collection
+        const userDocRef = doc(firestore, "users", coachUid);
+        await setDoc(userDocRef, {
+            email: values.coachEmail,
+            fullName: values.coachFullName,
+            role: "coach",
+            organizationId: MOCK_ORGANIZATION_ID,
+            assignedStadiums: [], // Will be updated after stadium creation
+            createdAt: timestamp,
+            lastLoginAt: null
+        });
+
+        // 3. Create Stadium Document
+        const stadiumDocRef = doc(collection(firestore, "stadiums"));
+        await setDoc(stadiumDocRef, {
+            name: values.stadiumName,
+            location: values.location,
+            organizationId: MOCK_ORGANIZATION_ID,
+            assignedCoachId: coachUid,
+            coachDetails: {
+                name: values.coachFullName,
+                email: values.coachEmail,
+                username: generatedCredentials.username,
+                phone: values.coachPhone,
+            },
+            status: "active",
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            settings: {
+                operatingDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+                defaultSchedule: "monday_to_friday"
+            }
+        });
+
+        // 4. Update coach's profile with assigned stadium
+        await setDoc(userDocRef, { assignedStadiums: [stadiumDocRef.id] }, { merge: true });
+
+        toast({
+            title: "Success!",
+            description: `Stadium "${values.stadiumName}" created and assigned to ${values.coachFullName}.`,
+        });
+
+        form.reset();
+        setGeneratedCredentials(null);
+        setOpen(false);
+
+    } catch (error: any) {
+        console.error("Stadium creation failed:", error);
+        let errorMessage = "An unexpected error occurred. Please check the console.";
+        if (error.code === "auth/email-already-in-use") {
+            errorMessage = "This email is already registered to another coach.";
+        }
+        toast({
+            variant: "destructive",
+            title: "Creation Failed",
+            description: errorMessage,
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { form.reset(); setGeneratedCredentials(null); } setOpen(o); }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           New Stadium
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Stadium & Coach</DialogTitle>
+          <DialogTitle>Create New Stadium</DialogTitle>
           <DialogDescription>
-            Fill in the details to create a new stadium and a dedicated coach account.
+            This will create a new stadium and a dedicated coach account.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="stadiumName"
@@ -139,20 +206,16 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
                 <FormItem>
                   <FormLabel>Stadium Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., North City Arena" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Downtown Metro Area" {...field} />
+                    <Input 
+                      placeholder="e.g., Champions Arena" 
+                      {...field} 
+                      onBlur={async (e) => {
+                        field.onBlur();
+                        if(await checkStadiumNameExists(e.target.value)) {
+                            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -160,50 +223,113 @@ export function AddStadiumDialog({ stadium }: { stadium?: Stadium }) {
             />
              <FormField
               control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl><Input placeholder="e.g., North Downtown" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <hr/>
+             <h3 className="font-semibold text-sm">Coach Details</h3>
+              <FormField
+              control={form.control}
               name="coachFullName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Coach's Full Name</FormLabel>
+                  <FormControl><Input placeholder="e.g., John Smith" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="coachEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Coach's Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Jane Doe" {...field} />
+                    <Input 
+                      type="email" 
+                      placeholder="coach@example.com" 
+                      {...field}
+                      onBlur={async (e) => {
+                          field.onBlur();
+                          if(await checkEmailExists(e.target.value)) {
+                              form.setError("coachEmail", { type: "manual", message: "This email is already in use."});
+                          }
+                      }}
+                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-                 <FormField
-                  control={form.control}
-                  name="coachEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Coach's Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="coach@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="coachPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Set Initial Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-            </div>
-           
+            <FormField
+              control={form.control}
+              name="coachPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Coach's Phone</FormLabel>
+                  <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {!generatedCredentials && (
+                 <Button type="button" variant="outline" className="w-full" onClick={handleGenerateCredentials}>Generate Coach Credentials</Button>
+            )}
+
+            {generatedCredentials && (
+                <Alert variant="default" className="bg-primary/5 border-primary/20">
+                    <AlertTriangle className="h-4 w-4 text-primary" />
+                    <AlertDescription className="space-y-3">
+                        <p className="font-semibold">Save these credentials securely!</p>
+                        <div className="text-sm">
+                            <span className="font-medium text-muted-foreground">Username:</span>
+                            <span className="ml-2 font-mono p-1 rounded bg-muted">{generatedCredentials.username}</span>
+                        </div>
+                        <div className="text-sm flex items-center">
+                            <span className="font-medium text-muted-foreground">Password:</span>
+                             <div className="flex items-center ml-2 font-mono p-1 rounded bg-muted">
+                                <span>{showPassword ? generatedCredentials.password : '••••••••••'}</span>
+                                <Button type="button" variant="ghost" size="icon" className="h-5 w-5 ml-2" onClick={() => setShowPassword(!showPassword)}>
+                                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                </Button>
+                             </div>
+                        </div>
+                         <FormField
+                            control={form.control}
+                            name="credentialsConfirmed"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md pt-4">
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                        I have noted down the coach credentials.
+                                    </FormLabel>
+                                    <FormMessage />
+                                </div>
+                                </FormItem>
+                            )}
+                        />
+                    </AlertDescription>
+                </Alert>
+            )}
+
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Create Stadium & Coach"}
+              <Button type="submit" disabled={isLoading || !generatedCredentials}>
+                {isLoading ? "Creating..." : "Create Stadium"}
               </Button>
             </DialogFooter>
           </form>

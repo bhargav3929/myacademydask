@@ -15,8 +15,7 @@ export function StadiumsClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Note: The query is now simplified to fetch all stadiums.
-    // We will add organization-specific queries back when user authentication is implemented.
+    // In a real app, this query should be filtered by organizationId based on the authenticated user.
     const q = query(
       collection(firestore, "stadiums"),
       orderBy("createdAt", "desc")

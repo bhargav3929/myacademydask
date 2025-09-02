@@ -8,8 +8,9 @@ export interface UserProfile {
   fullName: string;
   organizationId: string;
   role: "owner" | "coach";
-  assignedStadiums?: string[];
+  assignedStadiums: string[]; 
   createdAt: Timestamp;
+  lastLoginAt?: Timestamp;
 }
 
 export interface Organization {
@@ -22,7 +23,8 @@ export interface Organization {
 export interface CoachDetails {
     name: string;
     email: string;
-    phone?: string;
+    username: string;
+    phone: string;
 }
 
 export interface Stadium {
@@ -30,23 +32,37 @@ export interface Stadium {
   name: string;
   location: string;
   organizationId: string;
-  assignedCoachId?: string;
-  coachDetails?: CoachDetails;
+  assignedCoachId: string;
+  coachDetails: CoachDetails;
+  status: "active" | "inactive";
   createdAt: Timestamp;
+  updatedAt: Timestamp;
+  settings: {
+    operatingDays: string[];
+    defaultSchedule: string;
+  }
 }
 
 export interface Student {
   id: string;
-  fullName: string;
-  joinDate: Timestamp;
+  name: string;
+  age: number;
+  parentContact: string;
+  parentEmail: string;
   stadiumId: string;
+  coachId: string;
   organizationId: string;
+  admissionDate: Timestamp;
   status: 'active' | 'trial' | 'inactive';
+  addedBy: string; // coach's UID
+  // Legacy fields for compatibility
+  fullName: string; 
+  joinDate: Timestamp;
   createdAt: Timestamp;
 }
 
 export interface Attendance {
-  id?: string; // Optional because it's auto-generated on write
+  id?: string;
   studentId: string;
   date: string; // YYYY-MM-DD
   status: "present" | "absent";
@@ -61,13 +77,7 @@ export interface Schedule {
     stadiumId: string;
     weekStartDate: string; // YYYY-MM-DD
     schedule: {
-        monday: "active" | "holiday";
-        tuesday: "active" | "holiday";
-        wednesday: "active" | "holiday";
-        thursday: "active" | "holiday";
-        friday: "active" | "holiday";
-        saturday: "active" | "holiday";
-        sunday: "active" | "holiday";
+        [day: string]: "active" | "holiday";
     }
     createdByCoachId: string;
     createdAt: Timestamp;
