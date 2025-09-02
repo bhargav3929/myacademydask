@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,6 @@ import Link from "next/link";
 import { MotionDiv } from "@/components/motion";
 
 const SUPER_ADMIN_EMAIL = "superadmin@courtcommand.com";
-const SUPER_ADMIN_PASSWORD = "superadmin123";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -42,20 +41,20 @@ export default function SuperAdminLoginPage() {
   });
 
   const handleSuccessfulLogin = async (user: any) => {
+    // We will create the Firestore document if it doesn't exist,
+    // which is safe because this code only runs after a successful login.
     const userDocRef = doc(firestore, "super_admin_users", user.uid);
-    let userDocSnap = await getDoc(userDocRef);
+    const userDocSnap = await getDoc(userDocRef);
 
     if (!userDocSnap.exists()) {
-        if (user.email === SUPER_ADMIN_EMAIL) {
-            await setDoc(userDocRef, {
-                uid: user.uid,
-                email: SUPER_ADMIN_EMAIL,
-                fullName: "Super Admin",
-                role: "super_admin",
-                permissions: ["create_organizations", "view_analytics", "manage_billing"],
-                createdAt: serverTimestamp(),
-            });
-        }
+        await setDoc(userDocRef, {
+            uid: user.uid,
+            email: SUPER_ADMIN_EMAIL,
+            fullName: "Super Admin",
+            role: "super_admin", // This role is informational, not for security rules.
+            permissions: ["create_organizations", "view_analytics", "manage_billing"],
+            createdAt: serverTimestamp(),
+        });
     }
     
     toast({
@@ -83,31 +82,12 @@ export default function SuperAdminLoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
         await handleSuccessfulLogin(userCredential.user);
     } catch (error: any) {
-        if (error.code === 'auth/user-not-found' && data.password === SUPER_ADMIN_PASSWORD) {
-           // This is the special case for the very first login of the Super Admin account.
-           try {
-               const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-               await handleSuccessfulLogin(userCredential.user);
-           } catch (creationError: any) {
-                toast({
-                    variant: "destructive",
-                    title: "Setup Failed",
-                    description: creationError.message || "Could not create super admin account.",
-                });
-           }
-        } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-            toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: "Invalid credentials. Please check your email and password.",
-            });
-        } else {
-             toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: error.message || "An unexpected error occurred.",
-            });
-        }
+        console.error("Super Admin Login Failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Invalid credentials. Please check your email and password.",
+        });
     } finally {
       setIsLoading(false);
     }
