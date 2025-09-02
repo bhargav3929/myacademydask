@@ -48,6 +48,9 @@ const formSchema = z.object({
   stadiumId: z.string({ required_error: "Please select a stadium." }),
   joinDate: z.date({ required_error: "A join date is required." }),
   status: z.enum(['active', 'trial', 'inactive']),
+  age: z.coerce.number().min(3, "Age must be at least 3.").max(100),
+  parentContact: z.string().min(10, "Please enter a valid contact number."),
+  parentEmail: z.string().email("Please enter a valid parent email."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -70,12 +73,22 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
+      const selectedStadium = stadiums.find(s => s.id === values.stadiumId);
+      if (!selectedStadium) {
+        throw new Error("Selected stadium not found.");
+      }
+      
       const studentCollectionRef = collection(firestore, `stadiums/${values.stadiumId}/students`);
       await addDoc(studentCollectionRef, {
         fullName: values.fullName,
+        age: values.age,
+        parentContact: values.parentContact,
+        parentEmail: values.parentEmail,
+        stadiumId: values.stadiumId,
+        coachId: selectedStadium.assignedCoachId, // Correctly add the coachId
+        organizationId: MOCK_ORGANIZATION_ID,
         joinDate: values.joinDate,
         status: values.status,
-        organizationId: MOCK_ORGANIZATION_ID,
         createdAt: serverTimestamp(),
       });
 
@@ -106,7 +119,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
           New Student
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add New Student</DialogTitle>
           <DialogDescription>
@@ -115,20 +128,65 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Jane Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Jane Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 12" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
+            <div className="grid grid-cols-2 gap-4">
+               <FormField
+                  control={form.control}
+                  name="parentContact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parent Contact</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., +15551234" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+               <FormField
+                  control={form.control}
+                  name="parentEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parent Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="parent@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+            <hr />
+
             <FormField
                 control={form.control}
                 name="stadiumId"
@@ -231,3 +289,5 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     </Dialog>
   );
 }
+
+    

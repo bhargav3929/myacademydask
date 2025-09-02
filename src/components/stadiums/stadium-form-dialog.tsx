@@ -72,15 +72,18 @@ export function AddStadiumDialog() {
   });
 
   const checkEmailExists = async (email: string) => {
+    if (!email) return false;
     try {
         const methods = await fetchSignInMethodsForEmail(auth, email);
         return methods.length > 0;
     } catch (error) {
+        // This can happen for invalid email formats etc. during typing.
         return false;
     }
   };
 
   const checkStadiumNameExists = async (name: string) => {
+    if (!name) return false;
     const q = query(
         collection(firestore, "stadiums"), 
         where("name", "==", name), 
@@ -90,16 +93,16 @@ export function AddStadiumDialog() {
     return !querySnapshot.empty;
   }
 
-  const handleGenerateCredentials = async () => {
-    const stadiumName = form.getValues("stadiumName");
+  const handleGenerateCredentials = () => {
     const coachFullName = form.getValues("coachFullName");
 
-    if(!stadiumName || !coachFullName) {
-        toast({ variant: "destructive", title: "Missing Info", description: "Please enter Stadium Name and Coach's Full Name first."});
+    if(!coachFullName) {
+        toast({ variant: "destructive", title: "Missing Info", description: "Please enter the Coach's Full Name first."});
         return;
     }
 
-    const username = `${coachFullName.split(" ")[0].toLowerCase()}_${stadiumName.split(" ")[0].toLowerCase()}`.replace(/[^a-z0-9_]/g, "");
+    // A more robust username generation
+    const username = `${coachFullName.split(" ").join("_").toLowerCase()}_${Math.random().toString(36).substring(2, 6)}`;
     const password = generatePassword();
     setGeneratedCredentials({ username, password });
   }
@@ -119,13 +122,12 @@ export function AddStadiumDialog() {
         const coachUid = userCredential.user.uid;
 
         // In a real app with backend functions, you would set custom claims here.
-        // admin.auth().setCustomUserClaims(coachUid, { role: "coach", organizationId: MOCK_ORGANIZATION_ID });
+        // For this client-side approach, the 'role' is stored in the user document.
         
-        // 2. Use a batch for atomic writes to Firestore
         const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
 
-        // 3. Create Stadium Document
+        // 2. Create Stadium Document
         const stadiumDocRef = doc(collection(firestore, "stadiums"));
         batch.set(stadiumDocRef, {
             name: values.stadiumName,
@@ -141,22 +143,18 @@ export function AddStadiumDialog() {
             status: "active",
             createdAt: timestamp,
             updatedAt: timestamp,
-            settings: {
-                operatingDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
-                defaultSchedule: "monday_to_friday"
-            }
         });
 
-        // 4. Create User Profile in 'users' collection
+        // 3. Create User Profile in 'users' collection
         const userDocRef = doc(firestore, "users", coachUid);
         batch.set(userDocRef, {
+            uid: coachUid,
             email: values.coachEmail,
             fullName: values.coachFullName,
             role: "coach",
             organizationId: MOCK_ORGANIZATION_ID,
             assignedStadiums: [stadiumDocRef.id],
             createdAt: timestamp,
-            lastLoginAt: null
         });
 
         // Commit the batch
@@ -217,7 +215,7 @@ export function AddStadiumDialog() {
                       onBlur={async (e) => {
                         field.onBlur();
                         if(await checkStadiumNameExists(e.target.value)) {
-                            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
+                            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists."});
                         }
                       }}
                     />
@@ -295,8 +293,8 @@ export function AddStadiumDialog() {
                     <AlertDescription className="space-y-3">
                         <p className="font-semibold">Save these credentials securely!</p>
                         <div className="text-sm">
-                            <span className="font-medium text-muted-foreground">Email:</span>
-                            <span className="ml-2 font-mono p-1 rounded bg-muted">{form.getValues("coachEmail")}</span>
+                            <span className="font-medium text-muted-foreground">Username:</span>
+                            <span className="ml-2 font-mono p-1 rounded bg-muted">{generatedCredentials.username}</span>
                         </div>
                         <div className="text-sm flex items-center">
                             <span className="font-medium text-muted-foreground">Password:</span>
@@ -343,3 +341,5 @@ export function AddStadiumDialog() {
     </Dialog>
   );
 }
+
+    
