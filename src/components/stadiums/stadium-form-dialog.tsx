@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
+import { RainbowButton } from "../ui/rainbow-button";
 
 const formSchema = z.object({
   stadiumName: z.string().min(3, "Stadium name must be at least 3 characters."),
@@ -188,10 +189,10 @@ export function AddStadiumDialog() {
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { form.reset(); } setOpen(o); }}>
       <DialogTrigger asChild>
-        <Button>
+        <RainbowButton>
           <PlusCircle className="mr-2 h-4 w-4" />
           New Stadium
-        </Button>
+        </RainbowButton>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

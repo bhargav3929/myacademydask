@@ -21,6 +21,7 @@ import { AttendanceReportTable } from "./attendance-report-table";
 import { ReportSummary } from "./report-summary";
 import { NewJoiners } from "./new-joiners";
 import { generatePdf } from "@/lib/pdf-generator";
+import { RainbowButton } from "../ui/rainbow-button";
 
 export function ReportsClient() {
   const { toast } = useToast();
@@ -338,10 +339,10 @@ export function ReportsClient() {
       {processedReport && (
         <div className="space-y-6">
             <div className="flex justify-end">
-                <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                <RainbowButton onClick={handleDownloadPdf} disabled={isDownloading}>
                     <Download className="mr-2 h-4 w-4" />
                     {isDownloading ? 'Downloading...' : 'Download PDF'}
-                </Button>
+                </RainbowButton>
             </div>
             <AttendanceReportTable reportData={processedReport} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
