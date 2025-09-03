@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, orderBy, onSnapshot } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Stadium, Attendance, Student } from "@/lib/types";
 import { Button } from "@/components/ui/button";
