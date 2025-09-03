@@ -11,15 +11,15 @@ interface ReportSummaryProps {
 }
 
 const StatCard = ({ title, value }: { title: string; value: string | number }) => (
-    <div className="flex flex-col space-y-1 rounded-lg border p-3">
-      <p className="text-sm text-muted-foreground">{title}</p>
+    <div className="flex flex-col space-y-1 rounded-lg border p-3 text-center">
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
       <p className="text-2xl font-bold">{value}</p>
     </div>
 );
 
 export function ReportSummary({ summary }: ReportSummaryProps) {
   return (
-    <Card>
+    <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <ListChecks className="size-5" />
@@ -28,9 +28,10 @@ export function ReportSummary({ summary }: ReportSummaryProps) {
         <CardDescription>An overview of the attendance report.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
             <StatCard title="Total Students" value={summary.totalStudents} />
-            <StatCard title="Average Attendance" value={`${summary.averageAttendance}%`} />
+            <StatCard title="Avg. Attendance" value={`${summary.averageAttendance}%`} />
+            <StatCard title="Total Revenue" value={`$${summary.totalRevenue.toLocaleString()}`} />
         </div>
         <div>
             <h4 className="font-medium text-sm mb-2">Perfect Attendance (100%)</h4>
@@ -56,5 +57,3 @@ export function ReportSummary({ summary }: ReportSummaryProps) {
     </Card>
   );
 }
-
-    

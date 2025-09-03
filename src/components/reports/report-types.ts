@@ -1,5 +1,5 @@
 
-import type { Attendance } from "@/lib/types";
+import type { Attendance, Student } from "@/lib/types";
 
 export type ReportData = Attendance & { studentName: string };
 
@@ -15,6 +15,7 @@ export interface StudentReportData {
 export interface ReportSummaryData {
     totalStudents: number;
     averageAttendance: number;
+    totalRevenue: number;
     alwaysPresent: string[];
     alwaysAbsent: string[];
 }
@@ -28,6 +29,5 @@ export interface ProcessedReport {
 export interface NewJoiner {
     name: string;
     joinDate: Date;
+    fees: number;
 }
-
-    

@@ -99,20 +99,23 @@ export function ReportsClient() {
     const totalAttendance = studentRows.reduce((acc, row) => acc + row.percentage, 0);
     const avgAttendance = studentRows.length > 0 ? Math.round(totalAttendance / studentRows.length) : 0;
     
+    const joiners = students
+        .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
+        .map(s => ({ name: s.fullName, joinDate: s.joinDate.toDate(), fees: s.fees || 0 }));
+    
+    const totalRevenue = joiners.reduce((acc, joiner) => acc + joiner.fees, 0);
+
     const report: ProcessedReport = {
         dates,
         studentData: studentRows,
         summary: {
             totalStudents: students.length,
             averageAttendance: avgAttendance,
+            totalRevenue: totalRevenue,
             alwaysPresent: studentRows.filter(s => s.percentage === 100).map(s => s.name),
             alwaysAbsent: studentRows.filter(s => s.presents === 0 && s.absents > 0).map(s => s.name),
         }
     };
-    
-    const joiners = students
-        .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
-        .map(s => ({ name: s.fullName, joinDate: s.joinDate.toDate() }));
 
     return { report, joiners };
   }
@@ -269,7 +272,7 @@ export function ReportsClient() {
                 </Button>
             </div>
             <AttendanceReportTable reportData={processedReport} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <ReportSummary summary={processedReport.summary} />
               <NewJoiners joiners={newJoiners} />
             </div>

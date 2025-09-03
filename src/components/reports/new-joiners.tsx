@@ -13,14 +13,24 @@ interface NewJoinersProps {
 }
 
 export function NewJoiners({ joiners }: NewJoinersProps) {
+  const totalRevenue = joiners.reduce((acc, joiner) => acc + joiner.fees, 0);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <UserPlus className="size-5" />
-            New Joiners
-        </CardTitle>
-        <CardDescription>Students who registered within the selected period.</CardDescription>
+        <div className="flex justify-between items-start">
+            <div>
+                <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="size-5" />
+                    New Joiners
+                </CardTitle>
+                <CardDescription>Students who registered within the selected period.</CardDescription>
+            </div>
+            <div className="text-right">
+                <p className="text-sm text-muted-foreground">Revenue</p>
+                <p className="text-xl font-bold text-green-600">${totalRevenue.toLocaleString()}</p>
+            </div>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-48">
@@ -35,6 +45,10 @@ export function NewJoiners({ joiners }: NewJoinersProps) {
                                 <p className="text-sm font-medium leading-none">{joiner.name}</p>
                                 <p className="text-sm text-muted-foreground">Joined on {format(joiner.joinDate, "PPP")}</p>
                             </div>
+                             <div className="ml-auto text-right">
+                                <p className="text-sm font-semibold text-foreground">${joiner.fees.toLocaleString()}</p>
+                                <p className="text-xs text-muted-foreground">Fee Paid</p>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -48,5 +62,3 @@ export function NewJoiners({ joiners }: NewJoinersProps) {
     </Card>
   );
 }
-
-    
