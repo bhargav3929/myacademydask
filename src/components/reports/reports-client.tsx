@@ -215,6 +215,14 @@ export function ReportsClient() {
       const attendanceSnapshot = await getDocs(attendanceQuery);
       const attendanceData = attendanceSnapshot.docs.map(doc => doc.data() as ReportData);
       
+      const allStudentsInOrgQuery = query(
+        collectionGroup(firestore, "students"), 
+        where("organizationId", "==", organizationId)
+      );
+      const allStudentsSnapshot = await getDocs(allStudentsInOrgQuery);
+      const allStudentsData = allStudentsSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Student));
+
+
       if (studentsData.length === 0) {
         toast({ title: "No Students Found", description: "There are no students enrolled in this stadium to generate a report for." });
         setProcessedReport({ dates: [], studentData: [], summary: { totalStudents: 0, averageAttendance: 0, alwaysPresent: [], below60Attendance: [], zeroAttendance: [] } });
@@ -224,7 +232,7 @@ export function ReportsClient() {
         return;
       }
 
-      const { report, joiners, revenue } = await processDataForReport(studentsData, attendanceData, dateRange);
+      const { report, joiners, revenue } = await processDataForReport(allStudentsData.filter(s => s.stadiumId === selectedStadium), attendanceData, dateRange);
       
       setProcessedReport(report);
       setNewJoiners(joiners);
@@ -313,9 +321,9 @@ export function ReportsClient() {
             </Popover>
           </div>
           <div className="flex items-end">
-            <Button onClick={handleGenerateReport} disabled={isGenerating || loading} className="w-full">
+            <RainbowButton onClick={handleGenerateReport} disabled={isGenerating || loading} className="w-full">
               {isGenerating ? "Generating..." : "Generate Report"}
-            </Button>
+            </RainbowButton>
           </div>
         </CardContent>
       </Card>
