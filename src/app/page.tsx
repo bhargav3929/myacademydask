@@ -107,8 +107,8 @@ export default function Home() {
             },
           ]}
           image={{
-            light: "https://picsum.photos/seed/light-dashboard/1248/765",
-            dark: "https://picsum.photos/seed/dark-dashboard/1248/765",
+            light: "https://i.imgur.com/nJAgB9j.png",
+            dark: "https://i.imgur.com/nJAgB9j.png",
             alt: "CourtCommand Dashboard Preview",
           }}
         />
