@@ -86,27 +86,22 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
-      if (user) {
+      if (user && !directorName) { // Only set if directorName is not already set
         const userDocRef = doc(firestore, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
-          // Ensure we only set data for the owner on the owner dashboard
           if (userData.role === 'owner') {
             const orgId = userData.organizationId;
             setOrganizationId(orgId);
             setDirectorName(userData.fullName || "Academy Director");
           }
-        } else {
-            setIsLoading(false);
-            setDirectorName("Academy Director");
         }
-      } else {
-        setIsLoading(false);
       }
+      // No 'else' block to prevent clearing state on auth changes
     });
     return () => unsubscribeAuth();
-  }, []);
+  }, [directorName]); // Dependency on directorName to prevent re-running after it's set
 
 
   useEffect(() => {
@@ -234,7 +229,7 @@ export default function DashboardPage() {
                     <h1 className="text-xl md:text-2xl font-bold tracking-tight flex-shrink-0">
                         Welcome Back,
                     </h1>
-                    {isLoading ? (
+                    {isLoading || !directorName ? (
                         <Skeleton className="h-8 w-48" />
                     ) : (
                         <AnimatedText 
@@ -438,5 +433,3 @@ export default function DashboardPage() {
     </MotionDiv>
   );
 }
-
-    
