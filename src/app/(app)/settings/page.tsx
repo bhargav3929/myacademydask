@@ -24,6 +24,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { MotionDiv } from "@/components/motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, {
@@ -223,7 +224,7 @@ export default function SettingsPage() {
         <MotionDiv variants={itemVariants}>
             <h2 className="text-3xl font-semibold tracking-tight">Settings</h2>
             <p className="text-muted-foreground">
-                Manage your account and organization settings. The default owner account has username: <span className="font-bold text-primary">admin</span> and password: <span className="font-bold text-primary">admin123</span>.
+                Manage your account and organization settings.
             </p>
         </MotionDiv>
 
@@ -269,9 +270,9 @@ export default function SettingsPage() {
                             />
                         </CardContent>
                         <CardFooter className="border-t px-6 py-4">
-                             <Button type="submit" disabled={profileForm.formState.isSubmitting}>
+                             <RainbowButton type="submit" disabled={profileForm.formState.isSubmitting}>
                                 {profileForm.formState.isSubmitting ? "Saving..." : "Update Profile"}
-                            </Button>
+                            </RainbowButton>
                         </CardFooter>
                     </form>
                 </Form>
@@ -304,9 +305,9 @@ export default function SettingsPage() {
                             />
                         </CardContent>
                         <CardFooter className="border-t px-6 py-4">
-                            <Button type="submit" disabled={organizationForm.formState.isSubmitting}>
+                            <RainbowButton type="submit" disabled={organizationForm.formState.isSubmitting}>
                                 {organizationForm.formState.isSubmitting ? "Saving..." : "Save Changes"}
-                            </Button>
+                            </RainbowButton>
                         </CardFooter>
                     </form>
                 </Form>
