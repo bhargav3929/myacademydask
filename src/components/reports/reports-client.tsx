@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarIcon, FileText, Download } from "lucide-react";
-import { format, startOfMonth, eachDayOfInterval, subMonths } from "date-fns";
+import { format, startOfMonth, eachDayOfInterval, subMonths, endOfMonth } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +30,7 @@ export function ReportsClient() {
   const [selectedStadium, setSelectedStadium] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
-    to: new Date(),
+    to: endOfMonth(new Date()),
   });
   const [processedReport, setProcessedReport] = useState<ProcessedReport | null>(null);
   const [newJoiners, setNewJoiners] = useState<NewJoiner[]>([]);
