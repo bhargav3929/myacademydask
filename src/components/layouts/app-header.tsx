@@ -11,6 +11,7 @@ import {
   Search,
   LayoutDashboard,
   Gamepad2,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +33,7 @@ export function AppHeader() {
     { name: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { name: "Stadiums", url: "/stadiums", icon: Building },
     { name: "Students", url: "/students", icon: Users },
+    { name: "Reports", url: "/reports", icon: FileText },
     { name: "Settings", url: "/settings", icon: Settings },
   ];
 
