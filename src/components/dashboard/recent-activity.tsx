@@ -164,9 +164,9 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
                 ))}
            </div>
         ) : activities.length > 0 ? (
-          <div>
+          <div className="space-y-1">
             {activities.map((activity) => (
-             <div key={`${activity.type}-${activity.id}`} className="flex items-start gap-4 py-3">
+             <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-4 py-3">
                 <div className="flex size-10 items-center justify-center rounded-full bg-secondary border">
                     {activityIcons[activity.type]}
                 </div>
@@ -174,10 +174,14 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
                     <p className="font-semibold text-sm leading-tight">
                         {activity.title}
                     </p>
-                    <p className="text-sm text-muted-foreground">{activity.description}</p>
-                    {isClient && activity.timestamp && (
-                      <p className="text-xs text-muted-foreground pt-1">{formatDistanceToNow(activity.timestamp, { addSuffix: true })}</p>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                        {activity.description}
+                        {isClient && activity.timestamp && (
+                            <span className="ml-2 text-xs">
+                                {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                            </span>
+                        )}
+                    </p>
                 </div>
              </div>
             ))}
