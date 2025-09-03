@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User, Edit, Calendar, Map as MapIcon, BadgeDollarSign } from "lucide-react";
+import { MoreHorizontal, User, Edit, Calendar, MapPin as MapIcon, BadgeDollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
