@@ -226,8 +226,8 @@ export default function DashboardPage() {
       <MotionDiv variants={itemVariants}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-0.5 self-start">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold tracking-tight">
+                <div className="flex items-center gap-2">
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight flex-shrink-0">
                         Welcome Back,
                     </h1>
                     {isLoading ? (
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                     ) : (
                         <AnimatedText 
                             text={`${directorName}! 👋`} 
-                            textClassName="text-2xl font-bold tracking-tight text-primary"
+                            textClassName="text-xl md:text-2xl font-bold tracking-tight text-primary"
                             underlineClassName="text-primary/50"
                         />
                     )}
