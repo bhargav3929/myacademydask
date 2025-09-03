@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
 import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { auth, firestore, functions } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,14 +65,11 @@ export function AddStadiumDialog() {
     mode: "onBlur",
   });
 
-  const checkEmailExists = async (email: string) => {
+  const checkEmailExistsOnClient = async (email: string) => {
     if (!email) return false;
-    try {
-        const methods = await fetchSignInMethodsForEmail(auth, email);
-        return methods.length > 0;
-    } catch (error) {
-        return false;
-    }
+    const q = query(collection(firestore, "users"), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
   };
 
   const checkStadiumNameExists = async (name: string, organizationId: string) => {
@@ -120,8 +117,20 @@ export function AddStadiumDialog() {
             return;
         }
 
-        const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, values.coachPassword);
-        const coachUid = userCredential.user.uid;
+        // Call the Cloud Function to create the user
+        const createCoachUser = httpsCallable(functions, 'createCoachUser');
+        const result = await createCoachUser({
+            email: values.coachEmail,
+            password: values.coachPassword,
+            displayName: values.coachFullName,
+            organizationId: organizationId,
+        });
+
+        const { uid: coachUid } = (result.data as { uid: string });
+
+        if (!coachUid) {
+            throw new Error("Failed to create coach user account.");
+        }
         
         const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
@@ -167,10 +176,13 @@ export function AddStadiumDialog() {
 
     } catch (error: any) {
         console.error("Stadium creation failed:", error);
-        let errorMessage = "An unexpected error occurred. Please check the console.";
-        if (error.code === "auth/email-already-in-use") {
-            errorMessage = "This email is already registered to another coach.";
+        let errorMessage = error.message || "An unexpected error occurred. Please try again.";
+        if (error.code === "functions/already-exists") {
+             errorMessage = "This email is already registered to another coach.";
+        } else if (error.code === 'auth/email-already-in-use') {
+             errorMessage = "This email is already registered to another coach.";
         }
+        
         toast({
             variant: "destructive",
             title: "Creation Failed",
@@ -265,7 +277,7 @@ export function AddStadiumDialog() {
                         onFocus={(e) => e.target.removeAttribute('readonly')}
                         onBlur={async (e) => {
                             field.onBlur();
-                            if(e.target.value && await checkEmailExists(e.target.value)) {
+                            if(e.target.value && await checkEmailExistsOnClient(e.target.value)) {
                                 form.setError("coachEmail", { type: "manual", message: "This email is already in use."});
                             }
                         }}
