@@ -4,14 +4,16 @@
 import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GradientBackground } from '@/components/ui/gradient-background';
+import { Particles } from '@/components/ui/particles';
+import { useTheme } from 'next-themes';
+import { useState, useEffect } from 'react';
 
 const HeroContent = () => (
-    <div className="relative z-10 flex flex-col items-center text-white">
-        <span className="mb-1.5 inline-block rounded-full bg-gray-600/50 px-3 py-1.5 text-sm">
+    <div className="relative z-10 flex flex-col items-center text-center">
+        <span className="mb-1.5 inline-block rounded-full bg-gray-600/50 px-3 py-1.5 text-sm text-white">
           The Ultimate Command Center
         </span>
-        <h1 className="max-w-4xl bg-gradient-to-br from-white to-gray-400 bg-clip-text text-center text-4xl font-bold leading-tight text-transparent sm:text-6xl sm:leading-tight md:text-7xl md:leading-tight">
+        <h1 className="max-w-4xl bg-gradient-to-br from-white to-gray-400 bg-clip-text text-4xl font-bold leading-tight text-transparent sm:text-6xl sm:leading-tight md:text-7xl md:leading-tight">
           Manage Your Sports Academy with Precision
         </h1>
         <p className="my-6 max-w-xl text-center text-base leading-relaxed md:text-lg md:leading-relaxed text-gray-200">
@@ -29,12 +31,18 @@ const HeroContent = () => (
 )
 
 const Footer = () => {
+    const [year, setYear] = useState(new Date().getFullYear());
+
+    useEffect(() => {
+        setYear(new Date().getFullYear());
+    }, []);
+
     return (
         <footer className="w-full absolute bottom-0 bg-transparent text-gray-400 border-t border-gray-800/50">
             <div className="container flex flex-col md:flex-row items-center justify-between py-6 text-sm gap-4 mx-auto max-w-screen-2xl">
                 <div className="flex items-center gap-2.5">
                     <Gamepad2 className="h-6 w-6" />
-                    <span className="font-semibold">&copy; {new Date().getFullYear()} CourtCommand. All rights reserved.</span>
+                    <span className="font-semibold">&copy; {year} CourtCommand. All rights reserved.</span>
                 </div>
                 <div className="flex items-center gap-6">
                     <Link href="#" className="transition-colors hover:text-white">Privacy Policy</Link>
@@ -48,9 +56,15 @@ const Footer = () => {
 
 
 export default function Home() {
+  const { theme } = useTheme()
+  const [color, setColor] = useState("#ffffff")
+
+  useEffect(() => {
+    setColor(theme === "dark" ? "#ffffff" : "#000000")
+  }, [theme])
 
   return (
-    <div className="flex min-h-screen flex-col text-foreground">
+    <div className="flex min-h-screen flex-col text-foreground bg-[#020617]">
        <header className="fixed top-0 z-50 w-full bg-transparent">
         <div className="container flex h-20 max-w-screen-2xl items-center justify-between mx-auto">
           <Link href="/" className="flex items-center gap-2.5">
@@ -73,10 +87,15 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1">
-        <GradientBackground>
-            <HeroContent />
-        </GradientBackground>
+      <main className="flex-1 flex items-center justify-center">
+        <Particles
+            className="absolute inset-0"
+            quantity={100}
+            ease={80}
+            color={color}
+            refresh
+        />
+        <HeroContent />
       </main>
 
       <Footer />
