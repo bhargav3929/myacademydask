@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarIcon, FileText } from "lucide-react";
+import { CalendarIcon, FileText, Download } from "lucide-react";
 import { format, startOfMonth, eachDayOfInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ import type { ReportData, ProcessedReport, NewJoiner } from "./report-types";
 import { AttendanceReportTable } from "./attendance-report-table";
 import { ReportSummary } from "./report-summary";
 import { NewJoiners } from "./new-joiners";
+import { generatePdf } from "@/lib/pdf-generator";
 
 export function ReportsClient() {
   const { toast } = useToast();
@@ -34,6 +35,7 @@ export function ReportsClient() {
   const [newJoiners, setNewJoiners] = useState<NewJoiner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
@@ -169,6 +171,21 @@ export function ReportsClient() {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!processedReport || !stadiums.length || !dateRange?.from) return;
+    setIsDownloading(true);
+    try {
+      const stadiumName = stadiums.find(s => s.id === selectedStadium)?.name || "Unknown Stadium";
+      await generatePdf({ reportData: processedReport, newJoiners, stadiumName, dateRange });
+      toast({ title: "PDF Download Started", description: "Your report is being downloaded." });
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+        toast({ variant: "destructive", title: "PDF Generation Failed", description: "There was an error creating the PDF." });
+    } finally {
+        setIsDownloading(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -245,6 +262,12 @@ export function ReportsClient() {
 
       {processedReport && (
         <div className="space-y-6">
+            <div className="flex justify-end">
+                <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                    <Download className="mr-2 h-4 w-4" />
+                    {isDownloading ? 'Downloading...' : 'Download PDF'}
+                </Button>
+            </div>
             <AttendanceReportTable reportData={processedReport} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ReportSummary summary={processedReport.summary} />
@@ -256,5 +279,3 @@ export function ReportsClient() {
     </div>
   );
 }
-
-    
