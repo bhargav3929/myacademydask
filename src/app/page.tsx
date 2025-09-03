@@ -3,12 +3,12 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, BarChart, CalendarCheck, ShieldCheck, Users, Gamepad2, Shield } from 'lucide-react';
-import Image from 'next/image';
-
+import { ArrowRight, BarChart, CalendarCheck, Shield, Users, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HeroSection } from '@/components/ui/hero-section';
+import { Icons } from '@/components/icons';
+
 
 export default function Home() {
   const containerVariants = {
@@ -50,7 +50,7 @@ export default function Home() {
       description: "Visualize your organization's growth and performance with beautiful, real-time charts.",
     },
     {
-      icon: <ShieldCheck className="h-8 w-8 text-primary" />,
+      icon: <Shield className="h-8 w-8 text-primary" />,
       title: 'Secure by Design',
       description: 'Robust Firestore security rules protect your data and ensure privacy.',
     },
@@ -58,7 +58,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Gamepad2 className="h-7 w-7 text-primary" />
@@ -88,63 +88,30 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <BackgroundBeamsWithCollision>
-            <motion.section
-            className="container flex flex-col items-center justify-center py-24 text-center md:py-32 lg:py-40"
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            >
-            <motion.div variants={itemVariants} className="mb-4 rounded-full border bg-card px-4 py-1.5 text-sm font-medium text-primary shadow-sm">
-                The #1 Platform for Sports Academies
-            </motion.div>
-            <motion.h1
-                variants={itemVariants}
-                className="text-4xl font-extrabold tracking-tighter md:text-6xl lg:text-7xl"
-            >
-                Command Your Court
-            </motion.h1>
-            <motion.p
-                variants={itemVariants}
-                className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
-            >
-                CourtCommand is the ultimate all-in-one solution for managing your sports academy. Streamline operations, track performance, and unlock your academy's potential.
-            </motion.p>
-            <motion.div variants={itemVariants} className="mt-8 flex flex-wrap justify-center gap-4">
-                <Button size="lg" asChild>
-                <Link href="/login">
-                    Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                <Link href="#">
-                    Book a Demo
-                </Link>
-                </Button>
-            </motion.div>
-            </motion.section>
-            
-            <motion.section
-            className="container relative -mt-16"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.5 }}
-            >
-                <div className="relative rounded-xl border bg-card p-2 shadow-2xl shadow-primary/10">
-                    <Image 
-                        src="https://picsum.photos/1200/600"
-                        alt="Dashboard preview"
-                        width={1200}
-                        height={600}
-                        className="rounded-lg"
-                        data-ai-hint="dashboard user interface"
-                    />
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/80 via-background/0 to-background/0" />
-                </div>
-            </motion.section>
-        </BackgroundBeamsWithCollision>
-
+        <HeroSection
+          badge={{
+            text: "The #1 Platform for Sports Academies",
+            action: {
+              text: "Explore features",
+              href: "#features",
+            },
+          }}
+          title="Command Your Court"
+          description="The ultimate all-in-one solution for managing your sports academy. Streamline operations, track performance, and unlock your academy's potential."
+          actions={[
+            {
+              text: "Get Started Free",
+              href: "/login",
+              variant: "default",
+              icon: <ArrowRight className="h-4 w-4" />,
+            },
+          ]}
+          image={{
+            light: "https://picsum.photos/seed/light-dashboard/1248/765",
+            dark: "https://picsum.photos/seed/dark-dashboard/1248/765",
+            alt: "CourtCommand Dashboard Preview",
+          }}
+        />
 
         <section id="features" className="container py-24 md:py-32">
           <motion.div
@@ -204,4 +171,3 @@ export default function Home() {
     </div>
   );
 }
- 
