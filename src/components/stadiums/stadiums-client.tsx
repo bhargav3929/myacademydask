@@ -6,9 +6,26 @@ import { collection, query, onSnapshot, orderBy, where, doc, getDoc } from "fire
 import { firestore, auth } from "@/lib/firebase";
 import { Stadium } from "@/lib/types";
 import { StadiumsTable } from "./stadiums-table";
-import { AddStadiumDialog } from "./stadium-form-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MotionDiv } from "../motion";
+import dynamic from "next/dynamic";
+import { RainbowButton } from "../ui/rainbow-button";
+import { PlusCircle } from "lucide-react";
+
+// Dynamically import the dialog component
+const AddStadiumDialog = dynamic(
+  () => import('./stadium-form-dialog').then(mod => mod.AddStadiumDialog),
+  { 
+    ssr: false,
+    loading: () => (
+      <RainbowButton disabled>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        New Stadium
+      </RainbowButton>
+    )
+  }
+);
+
 
 export function StadiumsClient() {
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
