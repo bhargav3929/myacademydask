@@ -101,22 +101,6 @@ export function AddStadiumDialog() {
     }
 
     try {
-        const ownerUserDocRef = doc(firestore, "users", loggedInOwner.uid);
-        const ownerUserDocSnap = await getDoc(ownerUserDocRef);
-        if (!ownerUserDocSnap.exists()) {
-            throw new Error("Owner user profile not found.");
-        }
-        const organizationId = ownerUserDocSnap.data().organizationId;
-        if (!organizationId) {
-            throw new Error("Organization ID is missing from owner profile.");
-        }
-        
-        if (await checkStadiumNameExists(values.stadiumName, organizationId)) {
-            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
-            setIsLoading(false);
-            return;
-        }
-
         const idToken = await loggedInOwner.getIdToken();
         const functionUrl = "https://us-central1-courtcommand.cloudfunctions.net/createCoachUser";
 
@@ -138,7 +122,7 @@ export function AddStadiumDialog() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to create coach user from backend.');
+            throw new Error(errorData.error.message || 'Failed to create coach user from backend.');
         }
 
         const result = await response.json();
@@ -147,6 +131,23 @@ export function AddStadiumDialog() {
         if (!resultData.success || !resultData.uid) {
             throw new Error(resultData.message || 'Failed to create coach user from backend.');
         }
+        
+        const ownerUserDocRef = doc(firestore, "users", loggedInOwner.uid);
+        const ownerUserDocSnap = await getDoc(ownerUserDocRef);
+        if (!ownerUserDocSnap.exists()) {
+            throw new Error("Owner user profile not found.");
+        }
+        const organizationId = ownerUserDocSnap.data().organizationId;
+        if (!organizationId) {
+            throw new Error("Organization ID is missing from owner profile.");
+        }
+        
+        if (await checkStadiumNameExists(values.stadiumName, organizationId)) {
+            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
+            setIsLoading(false);
+            return;
+        }
+
 
         const coachUid = resultData.uid;
         
