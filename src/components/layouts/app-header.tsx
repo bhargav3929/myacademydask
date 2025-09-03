@@ -45,11 +45,13 @@ export function AppHeader() {
           </Link>
         </div>
         
+        {/* Centered navigation */}
         <div className="absolute left-1/2 -translate-x-1/2">
             <NavBar items={navItems} />
         </div>
 
-        <div className="flex items-center gap-2 bg-background/5 border border-border backdrop-blur-lg p-1 rounded-full shadow-lg">
+        {/* This entire div will be hidden on mobile (screens smaller than md) */}
+        <div className="hidden md:flex items-center gap-2 bg-background/5 border border-border backdrop-blur-lg p-1 rounded-full shadow-lg">
           <Button variant="ghost" size="icon" className="rounded-full">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
