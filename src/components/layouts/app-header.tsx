@@ -20,6 +20,7 @@ import {
   FileText,
   LifeBuoy,
   LogOut,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,11 +76,6 @@ export function AppHeader() {
     router.push('/login');
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return "AD";
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  }
-
   const navItems = [
     { name: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { name: "Stadiums", url: "/stadiums", icon: Building },
@@ -122,7 +118,9 @@ export function AppHeader() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
                       <Avatar className="size-8">
-                        <AvatarFallback>{getInitials(user?.fullName || "")}</AvatarFallback>
+                        <AvatarFallback>
+                          <User className="size-5" />
+                        </AvatarFallback>
                       </Avatar>
                       <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
                       <span className="sr-only">Toggle user menu</span>
