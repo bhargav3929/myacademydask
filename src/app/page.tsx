@@ -64,7 +64,7 @@ export default function Home() {
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
     // The value is in HSL format "H S% L%", we need to convert it to "hsl(H, S, L)"
     if (primaryColor) {
-      setColor(`hsl(${primaryColor.replace(/ /g, ', ')})`);
+      setColor("#ffffff");
     }
   }, [theme]);
 
@@ -108,3 +108,4 @@ export default function Home() {
     </div>
   );
 }
+
