@@ -3,46 +3,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Gamepad2, ShieldCheck } from "lucide-react";
-import Link from "next/link";
-import { MotionDiv } from "@/components/motion";
+import { SignInCard2 } from "@/components/ui/sign-in-card-2";
 
 const SUPER_ADMIN_EMAIL = "superadmin@courtcommand.com";
-
-const loginFormSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-});
-
-type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginFormSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
   const handleSuccessfulLogin = async (user: any) => {
-    // We will create the Firestore document if it doesn't exist,
-    // which is safe because this code only runs after a successful login.
     const userDocRef = doc(firestore, "super_admin_users", user.uid);
     const userDocSnap = await getDoc(userDocRef);
 
@@ -51,7 +25,7 @@ export default function SuperAdminLoginPage() {
             uid: user.uid,
             email: SUPER_ADMIN_EMAIL,
             fullName: "Super Admin",
-            role: "super_admin", // This role is informational, not for security rules.
+            role: "super_admin",
             permissions: ["create_organizations", "view_analytics", "manage_billing"],
             createdAt: serverTimestamp(),
         });
@@ -66,7 +40,7 @@ export default function SuperAdminLoginPage() {
   }
 
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: {email: string, password: string}) => {
     setIsLoading(true);
     if (data.email !== SUPER_ADMIN_EMAIL) {
         toast({
@@ -93,60 +67,27 @@ export default function SuperAdminLoginPage() {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    toast({
+      title: "Feature Not Implemented",
+      description: "Google Sign-In is not available for Super Admin.",
+    });
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary/40 p-4">
-       <MotionDiv 
-         initial={{ opacity: 0, y: -20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.5 }}
-       >
-        <Card className="w-full max-w-md shadow-2xl border-2 border-primary/20">
-            <CardHeader className="text-center">
-              <div className="flex items-center gap-2.5 justify-center mb-4">
-                  <ShieldCheck className="h-8 w-8 text-primary" />
-                  <span className="text-2xl font-bold">Super Admin</span>
-              </div>
-              <CardTitle className="text-2xl">SaaS Control Panel</CardTitle>
-              <CardDescription>Sign in to manage CourtCommand.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="superadmin@courtcommand.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                         <FormDescription>Default password: superadmin123</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Signing In..." : "Sign In"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-       </MotionDiv>
+    <div className="flex min-h-screen items-center justify-center bg-secondary/40 p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary/50 to-background" />
+        <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px'
+            }}
+        />
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-primary/10 blur-[80px]" />
+        
+       <SignInCard2 onSubmit={onSubmit} isLoading={isLoading} onGoogleSignIn={handleGoogleSignIn} />
     </div>
   );
 }
+
