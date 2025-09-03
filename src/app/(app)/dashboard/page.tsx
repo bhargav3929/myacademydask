@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TotalStudentsGraph } from "@/components/dashboard/graphs/total-students-graph";
 import { NewStudentsGraph } from "@/components/dashboard/graphs/new-students-graph";
 import { TotalRevenueGraph } from "@/components/dashboard/graphs/total-revenue-graph";
@@ -295,7 +295,11 @@ export default function DashboardPage() {
                     </div>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl">
-                     <TotalStudentsGraph organizationId={organizationId} />
+                    <DialogHeader>
+                        <DialogTitle className="sr-only">Total Students Graph</DialogTitle>
+                        <DialogDescription className="sr-only">A graph showing the growth of total students over time.</DialogDescription>
+                    </DialogHeader>
+                    <TotalStudentsGraph organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
         </MotionDiv>
@@ -312,6 +316,10 @@ export default function DashboardPage() {
                     </div>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl">
+                     <DialogHeader>
+                        <DialogTitle className="sr-only">New Students Graph</DialogTitle>
+                        <DialogDescription className="sr-only">A graph showing new student admissions over time.</DialogDescription>
+                    </DialogHeader>
                     <NewStudentsGraph organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
@@ -329,6 +337,10 @@ export default function DashboardPage() {
                     </div>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle className="sr-only">Total Revenue Graph</DialogTitle>
+                        <DialogDescription className="sr-only">A graph showing total revenue from new admissions over time.</DialogDescription>
+                    </DialogHeader>
                     <TotalRevenueGraph organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
@@ -346,6 +358,10 @@ export default function DashboardPage() {
                     </div>
                 </DialogTrigger>
                 <DialogContent className="max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle className="sr-only">Active Stadiums List</DialogTitle>
+                        <DialogDescription className="sr-only">A list of all active stadiums.</DialogDescription>
+                    </DialogHeader>
                     <ActiveStadiumsList organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
