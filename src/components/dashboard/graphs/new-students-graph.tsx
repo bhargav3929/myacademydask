@@ -143,15 +143,15 @@ export function NewStudentsGraph({ organizationId }: { organizationId: string | 
   return (
     <Card className="h-full flex flex-col border-0 shadow-none">
       <CardHeader>
-        <div className="flex justify-between items-start">
-            <div>
+        <div className="flex flex-col md:flex-row justify-between md:items-start gap-4">
+            <div className="flex-1">
                 <CardTitle className="flex items-center gap-3 text-2xl">
                     <UserPlus className="size-7 text-primary" />
                     New Student Admissions
                 </CardTitle>
                 <CardDescription>Daily count of new students joining your academy {getFilterPeriodText()}</CardDescription>
             </div>
-            <div className="flex items-center gap-1 rounded-full border bg-card p-1">
+            <div className="flex items-center gap-1 rounded-full border bg-card p-1 flex-wrap">
                 {(["weekly", "monthly", "last_30_days"] as TimeFilter[]).map(filter => (
                     <Button 
                         key={filter} 

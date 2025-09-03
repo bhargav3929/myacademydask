@@ -215,32 +215,32 @@ export default function DashboardPage() {
       className="flex flex-col gap-8"
     >
       <MotionDiv variants={itemVariants}>
-        <div className="flex justify-between items-center">
-            <div className="space-y-0.5">
-            <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight">
-                    Welcome Back,
-                </h1>
-                {isLoading ? (
-                    <Skeleton className="h-8 w-48" />
-                ) : (
-                    <AnimatedText 
-                        text={`${directorName}! 👋`} 
-                        textClassName="text-2xl font-bold tracking-tight text-primary"
-                        underlineClassName="text-primary/50"
-                    />
-                )}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="space-y-0.5 self-start">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        Welcome Back,
+                    </h1>
+                    {isLoading ? (
+                        <Skeleton className="h-8 w-48" />
+                    ) : (
+                        <AnimatedText 
+                            text={`${directorName}! 👋`} 
+                            textClassName="text-2xl font-bold tracking-tight text-primary"
+                            underlineClassName="text-primary/50"
+                        />
+                    )}
+                </div>
+                <p className="text-muted-foreground text-sm md:text-base">
+                    Here's a snapshot of your academy's performance. Click a card for details.
+                </p>
             </div>
-            <p className="text-muted-foreground">
-                Here's a snapshot of your academy's performance. Click on a card to see more details.
-            </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-full border bg-card p-1">
+            <div className="flex items-center gap-1.5 flex-wrap justify-end rounded-full border bg-card p-1">
                 {(["today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
                     <Button 
                         key={filter} 
                         variant={timeFilter === filter ? 'secondary' : 'ghost'} 
-                        className="rounded-full capitalize text-sm h-8 px-4"
+                        className="rounded-full capitalize text-sm h-8 px-3"
                         onClick={() => setTimeFilter(filter)}
                     >
                         {filter}
@@ -250,7 +250,7 @@ export default function DashboardPage() {
                     <PopoverTrigger asChild>
                         <Button
                             variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
-                            className="rounded-full capitalize text-sm h-8 px-4 flex items-center gap-1.5"
+                            className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
                             onClick={() => {
                                 setTimeFilter('custom');
                                 if (timeFilter !== 'custom') {
@@ -279,7 +279,7 @@ export default function DashboardPage() {
       
       <MotionDiv
         variants={containerVariants}
-        className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
       >
         <MotionDiv variants={itemVariants}>
             <Dialog>
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                         />
                     </div>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
                     <DialogHeader>
                         <DialogTitle className="sr-only">Total Students Graph</DialogTitle>
                         <DialogDescription className="sr-only">A graph showing the growth of total students over time.</DialogDescription>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                         />
                     </div>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
                      <DialogHeader>
                         <DialogTitle className="sr-only">New Students Graph</DialogTitle>
                         <DialogDescription className="sr-only">A graph showing new student admissions over time.</DialogDescription>
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                       />
                     </div>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
                     <DialogHeader>
                         <DialogTitle className="sr-only">Total Revenue Graph</DialogTitle>
                         <DialogDescription className="sr-only">A graph showing total revenue from new admissions over time.</DialogDescription>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
                         />
                     </div>
                 </DialogTrigger>
-                <DialogContent className="max-w-xl">
+                <DialogContent className="max-w-xl w-full mx-4 sm:mx-auto">
                     <DialogHeader>
                         <DialogTitle className="sr-only">Active Stadiums List</DialogTitle>
                         <DialogDescription className="sr-only">A list of all active stadiums.</DialogDescription>

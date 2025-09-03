@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User, Edit } from "lucide-react";
+import { MoreHorizontal, User, Edit, Calendar, Map, BadgeDollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -37,6 +37,7 @@ type NewAdmissionsProps = {
 };
 
 const MotionTableRow = motion(TableRow);
+const MotionCard = motion(Card);
 
 export function NewAdmissions({ data }: NewAdmissionsProps) {
     const [stadiumsMap, setStadiumsMap] = useState<Map<string, string>>(new Map());
@@ -56,9 +57,8 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
     }, []);
 
     const getStadiumName = (stadiumId: string) => {
-        return stadiumsMap.get(stadiumId) || `Stadium ID: ${stadiumId.substring(0, 4)}...`;
+        return stadiumsMap.get(stadiumId) || `...`;
     }
-
 
   const badgeVariants: Record<Student['status'], string> = {
     active: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700",
@@ -79,6 +79,31 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
     }),
   };
 
+  const StudentActions = ({ student }: { student: Student }) => (
+    <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button aria-haspopup="true" size="icon" variant="ghost">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Toggle menu</span>
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+                <StudentProfileDialog student={student}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <User className="mr-2 size-4" /> View Profile
+                </DropdownMenuItem>
+            </StudentProfileDialog>
+            <EditStudentDialog student={student}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Edit className="mr-2 size-4" /> Edit Details
+                </DropdownMenuItem>
+            </EditStudentDialog>
+        </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <Card>
         <CardHeader>
@@ -86,7 +111,8 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
             <CardDescription>The newest students who have joined your academy across all stadiums.</CardDescription>
         </CardHeader>
         <CardContent>
-            <div className="rounded-xl border">
+            {/* Desktop Table View */}
+            <div className="rounded-xl border hidden md:block">
                 <Table>
                     <TableHeader>
                     <TableRow>
@@ -134,28 +160,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                             </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                            <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                 <StudentProfileDialog student={student}>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <User className="mr-2 size-4" /> View Profile
-                                    </DropdownMenuItem>
-                                </StudentProfileDialog>
-                                <EditStudentDialog student={student}>
-                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <Edit className="mr-2 size-4" /> Edit Details
-                                    </DropdownMenuItem>
-                                </EditStudentDialog>
-                            </DropdownMenuContent>
-                            </DropdownMenu>
+                           <StudentActions student={student} />
                         </TableCell>
                         </MotionTableRow>
                     )) : (
@@ -168,6 +173,56 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                     </AnimatePresence>
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+                <AnimatePresence>
+                {data.length > 0 ? data.map((student, i) => (
+                    <MotionCard
+                        key={student.id}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        custom={i}
+                        exit={{ opacity: 0 }}
+                        layoutId={`student-card-${student.id}`}
+                        className="overflow-hidden"
+                    >
+                        <CardContent className="p-4 flex flex-col gap-4">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="size-10">
+                                        <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold text-base">{student.fullName}</p>
+                                        <Badge variant="outline" className={cn(badgeVariants[student.status || 'active'], "capitalize mt-1")}>
+                                            {student.status || 'Active'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <StudentActions student={student} />
+                            </div>
+
+                            <div className="flex flex-col gap-2 text-sm text-muted-foreground border-t pt-3">
+                                <div className="flex items-center gap-2">
+                                    <Map className="size-4" />
+                                    <span>{getStadiumName(student.stadiumId)}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="size-4" />
+                                    <span>{student.joinDate?.toDate ? format(student.joinDate.toDate(), "dd MMM, yyyy") : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </MotionCard>
+                )) : (
+                     <div className="text-center py-16 text-muted-foreground col-span-full">
+                        <p>No new admissions found.</p>
+                    </div>
+                )}
+                </AnimatePresence>
             </div>
         </CardContent>
     </Card>
