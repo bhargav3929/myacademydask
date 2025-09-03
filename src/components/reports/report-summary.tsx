@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ListChecks, TrendingUp, DollarSign, CalendarDays, BarChart, Users, Star, AlertTriangle } from "lucide-react";
+import { ListChecks, TrendingUp, DollarSign, CalendarDays, BarChart, Users, Star, AlertTriangle, UserX } from "lucide-react";
 import type { ReportSummaryData, RevenueData } from "./report-types";
 
 interface ReportSummaryProps {
@@ -53,13 +53,23 @@ export function ReportSummary({ summary, revenue }: ReportSummaryProps) {
             )}
         </div>
          <div>
-            <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><AlertTriangle className="size-4 text-red-500" />Attendance Below 60% ({summary.below60Attendance.length})</h4>
+            <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><AlertTriangle className="size-4 text-orange-500" />Attendance Below 60% ({summary.below60Attendance.length})</h4>
             {summary.below60Attendance.length > 0 ? (
                  <div className="flex flex-wrap gap-1">
-                    {summary.below60Attendance.map(name => <Badge key={name} variant="secondary" className="bg-red-100 text-red-800">{name}</Badge>)}
+                    {summary.below60Attendance.map(name => <Badge key={name} variant="secondary" className="bg-orange-100 text-orange-800">{name}</Badge>)}
                 </div>
             ) : (
                 <p className="text-xs text-muted-foreground">No students had attendance below 60%.</p>
+            )}
+        </div>
+         <div>
+            <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><UserX className="size-4 text-red-500" />Zero Attendance ({summary.zeroAttendance.length})</h4>
+            {summary.zeroAttendance.length > 0 ? (
+                 <div className="flex flex-wrap gap-1">
+                    {summary.zeroAttendance.map(name => <Badge key={name} variant="destructive" className="bg-red-100 text-red-800">{name}</Badge>)}
+                </div>
+            ) : (
+                <p className="text-xs text-muted-foreground">No students were absent for all marked sessions.</p>
             )}
         </div>
       </CardContent>

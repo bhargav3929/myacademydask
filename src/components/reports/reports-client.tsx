@@ -175,6 +175,7 @@ export function ReportsClient() {
             averageAttendance: avgAttendance,
             alwaysPresent: studentRows.filter(s => s.percentage === 100).map(s => s.name),
             below60Attendance: studentRows.filter(s => s.percentage < 60 && s.presents > 0).map(s => s.name),
+            zeroAttendance: studentRows.filter(s => s.percentage === 0 && s.absents > 0).map(s => s.name),
         }
     };
 
@@ -212,7 +213,7 @@ export function ReportsClient() {
       
       if (studentsData.length === 0) {
         toast({ title: "No Students Found", description: "There are no students enrolled in this stadium to generate a report for." });
-        setProcessedReport({ dates: [], studentData: [], summary: { totalStudents: 0, averageAttendance: 0, alwaysPresent: [], below60Attendance: [] } });
+        setProcessedReport({ dates: [], studentData: [], summary: { totalStudents: 0, averageAttendance: 0, alwaysPresent: [], below60Attendance: [], zeroAttendance: [] } });
         setNewJoiners([]);
         setRevenueData({ totalRevenue: 0, monthName: format(dateRange.from, "MMMM yyyy"), highestRevenueDay: { date: '', amount: 0 }, growth: 0 });
         setIsGenerating(false);

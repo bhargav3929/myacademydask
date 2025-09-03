@@ -24,6 +24,7 @@ export interface ReportSummaryData {
     averageAttendance: number;
     alwaysPresent: string[];
     below60Attendance: string[];
+    zeroAttendance: string[];
 }
 
 export interface ProcessedReport {

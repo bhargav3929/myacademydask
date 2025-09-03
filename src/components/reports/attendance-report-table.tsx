@@ -24,7 +24,7 @@ export function AttendanceReportTable({ reportData }: AttendanceReportTableProps
   
   const getPercentageColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-600";
-    if (percentage >= 70) return "text-yellow-600";
+    if (percentage >= 60) return "text-yellow-600";
     return "text-red-600";
   }
 
@@ -37,13 +37,13 @@ export function AttendanceReportTable({ reportData }: AttendanceReportTableProps
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="w-full whitespace-nowrap">
+        <ScrollArea className="w-full whitespace-nowrap rounded-lg border">
             <Table className="min-w-full">
             <TableHeader>
-                <TableRow>
-                <TableHead className="sticky left-0 bg-background font-semibold w-[200px] z-10">Student Name</TableHead>
+                <TableRow className="bg-muted hover:bg-muted">
+                <TableHead className="sticky left-0 bg-muted font-semibold w-[200px] z-10">Student Name</TableHead>
                 {dates.map((date) => (
-                    <TableHead key={date.toString()} className="text-center">{format(date, "d")}</TableHead>
+                    <TableHead key={date.toString()} className="text-center font-normal text-muted-foreground">{format(date, "d")}</TableHead>
                 ))}
                 <TableHead className="text-center font-semibold">Presents</TableHead>
                 <TableHead className="text-center font-semibold">Absents</TableHead>
@@ -80,5 +80,3 @@ export function AttendanceReportTable({ reportData }: AttendanceReportTableProps
     </Card>
   );
 }
-
-    
