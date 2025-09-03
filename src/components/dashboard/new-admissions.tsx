@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User, Edit, Calendar, Map, BadgeDollarSign } from "lucide-react";
+import { MoreHorizontal, User, Edit, Calendar, Map as MapIcon, BadgeDollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -207,7 +207,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
 
                             <div className="flex flex-col gap-2 text-sm text-muted-foreground border-t pt-3">
                                 <div className="flex items-center gap-2">
-                                    <Map className="size-4" />
+                                    <MapIcon className="size-4" />
                                     <span>{getStadiumName(student.stadiumId)}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
