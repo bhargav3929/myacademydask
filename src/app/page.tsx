@@ -60,8 +60,14 @@ export default function Home() {
   const [color, setColor] = useState("#ffffff")
 
   useEffect(() => {
-    setColor(theme === "dark" ? "#ffffff" : "#000000")
-  }, [theme])
+    // We can get the computed style of the primary color from the CSS variables
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+    // The value is in HSL format "H S% L%", we need to convert it to "hsl(H, S, L)"
+    if (primaryColor) {
+      setColor(`hsl(${primaryColor.replace(/ /g, ', ')})`);
+    }
+  }, [theme]);
+
 
   return (
     <div className="flex min-h-screen flex-col text-foreground bg-[#020617]">
