@@ -5,13 +5,13 @@ import * as cors from "cors";
 
 admin.initializeApp();
 
-const corsHandler = cors({ origin: true });
+const corsHandler = cors({ origin: true, allowedHeaders: ["Content-Type", "Authorization"] });
 
 /**
  * Creates a new coach user account and sets custom claims.
  * This function must be called by an authenticated user (an owner).
  */
-export const createCoachUser = functions.https.onRequest(async (req, res) => {
+export const createCoachUser = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     // 0. Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
