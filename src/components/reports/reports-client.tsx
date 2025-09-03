@@ -120,12 +120,15 @@ export function ReportsClient() {
     
     const joiners = students
         .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
-        .map(s => ({ 
-            name: s.fullName, 
-            joinDate: s.joinDate.toDate(), 
-            stadiumName: stadiums.find(stadium => stadium.id === s.stadiumId)?.name || 'N/A',
-            coachName: coaches[s.coachId] || 'N/A'
-        }));
+        .map(s => {
+            const stadium = stadiums.find(stadium => stadium.id === s.stadiumId);
+            return { 
+                name: s.fullName, 
+                joinDate: s.joinDate.toDate(), 
+                stadiumName: stadium?.name || 'N/A',
+                coachName: stadium?.coachDetails.name || 'N/A'
+            };
+        });
 
     // Revenue calculation
     const currentMonthRevenue = students

@@ -53,7 +53,6 @@ export interface Student {
   batch: StudentBatches;
   contact?: string;
   stadiumId: string;
-  coachId: string;
   organizationId: string;
   joinDate: Timestamp;
   status: 'active' | 'trial' | 'inactive';
@@ -79,6 +78,7 @@ export interface AttendanceSubmission {
   batch: StudentBatches;
   date: string; // YYYY-MM-DD
   submittedByCoachId: string;
+  organizationId: string;
   timestamp: Timestamp;
 }
 
