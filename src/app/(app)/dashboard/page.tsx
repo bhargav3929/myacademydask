@@ -434,7 +434,3 @@ export default function DashboardPage() {
     </MotionDiv>
   );
 }
-
-    
-
-    
