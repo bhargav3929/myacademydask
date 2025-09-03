@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as cors from "cors";
@@ -11,9 +10,9 @@ export const createCoachUser = functions.region('us-central1').https.onRequest((
   corsHandler(req, res, async () => {
     // Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
+        res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+        res.set('Access-Control-Allow-Methods', 'POST');
         res.set('Access-Control-Allow-Origin', '*');
-        res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         res.status(204).send('');
         return;
     }
