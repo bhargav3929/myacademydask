@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from "react";
@@ -11,7 +12,7 @@ import {
   animate,
 } from "framer-motion";
 
-const StarField = dynamic(() => import("./StarField").then(mod => mod.StarField), { ssr: false });
+const StarField = dynamic(() => import("./StarField"), { ssr: false });
 
 const COLORS_TOP = ["#13FFAA", "#1E67C6", "#CE84CF", "#DD335C"];
 
