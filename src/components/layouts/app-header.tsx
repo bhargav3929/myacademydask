@@ -2,6 +2,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, firestore } from "@/lib/firebase";
+
 import {
   Bell,
   ChevronDown,
@@ -12,6 +18,8 @@ import {
   LayoutDashboard,
   Gamepad2,
   FileText,
+  LifeBuoy,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,12 +30,55 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback } from "../ui/avatar";
 import { NavBar } from "../ui/tubelight-navbar";
+
+interface UserProfile {
+    fullName: string;
+    email: string;
+}
 
 export function AppHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+        if (currentUser) {
+            const userDocRef = doc(firestore, "users", currentUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+                setUser(userDocSnap.data() as UserProfile);
+            } else {
+                 setUser({ fullName: "Academy Director", email: currentUser.email || ""});
+            }
+        }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "AD";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
 
   const navItems = [
     { name: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -66,29 +117,51 @@ export function AppHeader() {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Toggle notifications</span>
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
-                  <Avatar className="size-8">
-                    <AvatarImage src="https://i.pravatar.cc/150?u=owner" />
-                    <AvatarFallback>AD</AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
-                  <span className="sr-only">Toggle user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <p>Academy Director</p>
-                  <p className="text-xs text-muted-foreground font-normal">admin@court.com</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <AlertDialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
+                      <Avatar className="size-8">
+                        <AvatarFallback>{getInitials(user?.fullName || "")}</AvatarFallback>
+                      </Avatar>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
+                      <span className="sr-only">Toggle user menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <p>{user?.fullName || "Academy Director"}</p>
+                      <p className="text-xs text-muted-foreground font-normal">{user?.email || "..."}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <LifeBuoy className="mr-2 h-4 w-4" />
+                            Support
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Contact Support</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Please contact the developer Bhargav for any query.
+                            <br />
+                            <br />
+                            Contact Number: <span className="font-bold text-foreground">955 314 3929</span>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Close</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </header>
