@@ -4,7 +4,8 @@
 import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AuroraHero } from '@/components/ui/futurastic-hero-section';
+import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
+import { motion } from 'framer-motion';
 
 
 export default function Home() {
@@ -34,7 +35,28 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <AuroraHero />
+        <BackgroundBeamsWithCollision>
+             <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] px-4 py-24">
+                 <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    className="text-center"
+                 >
+                    <h1 className="max-w-4xl bg-gradient-to-br from-white to-gray-400 bg-clip-text text-center text-4xl font-bold leading-tight text-transparent sm:text-6xl sm:leading-tight md:text-7xl md:leading-tight">
+                        The Ultimate Command Center for Your Sports Academy
+                    </h1>
+                    <p className="my-6 max-w-xl mx-auto text-center text-base leading-relaxed text-gray-300 md:text-lg md:leading-relaxed">
+                        Streamline your operations, manage stadiums, track attendance, and empower your coaches with a single, powerful platform.
+                    </p>
+                    <Link href="/dashboard">
+                        <Button size="lg">
+                            Get Started Now
+                        </Button>
+                    </Link>
+                </motion.div>
+            </div>
+        </BackgroundBeamsWithCollision>
       </main>
 
       <footer className="bg-gray-950 text-gray-400">
@@ -53,3 +75,4 @@ export default function Home() {
     </div>
   );
 }
+
