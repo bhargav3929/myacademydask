@@ -21,8 +21,8 @@ type Activity = {
 };
 
 const activityIcons: Record<ActivityType, React.ReactNode> = {
-  attendance_submission: <CalendarCheck className="size-5 text-green-500" />,
-  new_student: <UserPlus className="size-5 text-primary" />,
+  attendance_submission: <CalendarCheck className="size-4 text-green-500" />,
+  new_student: <UserPlus className="size-4 text-primary" />,
 };
 
 export function RecentActivity({ organizationId }: { organizationId: string | null }) {
@@ -154,8 +154,8 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
         {loading ? (
            <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 py-2">
-                    <Skeleton className="flex size-10 items-center justify-center rounded-full" />
+                <div key={i} className="flex items-center gap-3 py-2">
+                    <Skeleton className="flex size-8 items-center justify-center rounded-full" />
                     <div className="flex-grow space-y-1.5">
                         <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/4" />
@@ -166,18 +166,18 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
         ) : activities.length > 0 ? (
           <div className="space-y-1">
             {activities.map((activity) => (
-             <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-4 py-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-secondary border">
+             <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-3 py-2">
+                <div className="flex size-8 items-center justify-center rounded-full bg-secondary border">
                     {activityIcons[activity.type]}
                 </div>
                 <div className="flex-grow">
                     <p className="font-semibold text-sm leading-tight">
                         {activity.title}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground leading-snug">
                         {activity.description}
                         {isClient && activity.timestamp && (
-                            <span className="ml-2 text-xs">
+                            <span className="ml-1.5">
                                 {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
                             </span>
                         )}
