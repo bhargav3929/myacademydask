@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, SlidersHorizontal } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -24,6 +24,7 @@ import { TotalStudentsGraph } from "@/components/dashboard/graphs/total-students
 import { NewStudentsGraph } from "@/components/dashboard/graphs/new-students-graph";
 import { TotalRevenueGraph } from "@/components/dashboard/graphs/total-revenue-graph";
 import { ActiveStadiumsList } from "@/components/dashboard/graphs/active-stadiums-list";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all" | "custom";
 
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [activeStadiums, setActiveStadiums] = useState(0);
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
+  const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
 
   const filterStudentsByDate = useCallback((students: Student[], filter: TimeFilter, dateRange?: DateRange) => {
     const now = new Date();
@@ -177,6 +179,13 @@ export default function DashboardPage() {
     }
   }
 
+  const handleFilterClick = (filter: TimeFilter) => {
+    setTimeFilter(filter);
+    if (filter === 'custom') {
+      setCustomPopoverOpen(true);
+    }
+  };
+
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -215,7 +224,7 @@ export default function DashboardPage() {
       className="flex flex-col gap-8"
     >
       <MotionDiv variants={itemVariants}>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-0.5 self-start">
                 <div className="flex items-center gap-3">
                     <h1 className="text-2xl font-bold tracking-tight">
@@ -232,10 +241,12 @@ export default function DashboardPage() {
                     )}
                 </div>
                 <p className="text-muted-foreground text-sm md:text-base">
-                    Here's a snapshot of your academy's performance. Click a card for details.
+                    Here's a snapshot of your academy's performance.
                 </p>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap justify-end rounded-full border bg-card p-1">
+
+            {/* Desktop Filters */}
+            <div className="hidden md:flex items-center gap-1.5 flex-wrap justify-end rounded-full border bg-card p-1">
                 {(["today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
                     <Button 
                         key={filter} 
@@ -246,7 +257,7 @@ export default function DashboardPage() {
                         {filter}
                     </Button>
                 ))}
-                <Popover>
+                <Popover open={customPopoverOpen} onOpenChange={setCustomPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
@@ -270,6 +281,49 @@ export default function DashboardPage() {
                         selected={customDateRange}
                         onSelect={setCustomDateRange}
                         numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
+
+            {/* Mobile Filters */}
+            <div className="md:hidden self-end">
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                             <SlidersHorizontal className="size-4" />
+                            <span>{getFilterPeriodText()}</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                         {(["today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+                            <DropdownMenuItem key={filter} onSelect={() => handleFilterClick(filter)} className="capitalize">
+                                {filter}
+                            </DropdownMenuItem>
+                        ))}
+                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleFilterClick('custom')}>
+                             <CalendarIcon className="mr-2 size-4" /> Custom Range
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                 <Popover open={customPopoverOpen} onOpenChange={setCustomPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <span></span>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 mt-2" align="end">
+                        <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={customDateRange?.from}
+                        selected={customDateRange}
+                        onSelect={(range) => {
+                            setCustomDateRange(range);
+                            if(range?.from) {
+                                setCustomPopoverOpen(false);
+                            }
+                        }}
+                        numberOfMonths={1}
                         />
                     </PopoverContent>
                 </Popover>
@@ -383,3 +437,5 @@ export default function DashboardPage() {
     </MotionDiv>
   );
 }
+
+    
