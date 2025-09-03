@@ -6,6 +6,32 @@ import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
 import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+
+
+const Footer = () => {
+    const [year, setYear] = useState(new Date().getFullYear());
+
+    useEffect(() => {
+        setYear(new Date().getFullYear());
+    }, []);
+
+    return (
+        <footer className="bg-gray-950 text-gray-400">
+            <div className="container flex flex-col md:flex-row items-center justify-between py-8 text-sm gap-4">
+                <div className="flex items-center gap-2.5">
+                    <Gamepad2 className="h-6 w-6" />
+                    <span className="font-semibold">&copy; {year} CourtCommand. All rights reserved.</span>
+                </div>
+                <div className="flex items-center gap-6">
+                    <Link href="#" className="transition-colors hover:text-white">Privacy Policy</Link>
+                    <Link href="#" className="transition-colors hover:text-white">Terms of Service</Link>
+                    <Link href="#" className="transition-colors hover:text-white">Contact</Link>
+                </div>
+            </div>
+        </footer>
+    );
+};
 
 
 export default function Home() {
@@ -59,20 +85,7 @@ export default function Home() {
         </BackgroundBeamsWithCollision>
       </main>
 
-      <footer className="bg-gray-950 text-gray-400">
-        <div className="container flex flex-col md:flex-row items-center justify-between py-8 text-sm gap-4">
-          <div className="flex items-center gap-2.5">
-            <Gamepad2 className="h-6 w-6" />
-            <span className="font-semibold">&copy; {new Date().getFullYear()} CourtCommand. All rights reserved.</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link href="#" className="transition-colors hover:text-white">Privacy Policy</Link>
-            <Link href="#" className="transition-colors hover:text-white">Terms of Service</Link>
-             <Link href="#" className="transition-colors hover:text-white">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
-
