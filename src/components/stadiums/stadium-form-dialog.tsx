@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
-import { auth, firestore, functions } from "@/lib/firebase";
+import { auth, firestore } from "@/lib/firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { getApp } from "firebase/app";
 
 
 import { Button } from "@/components/ui/button";
@@ -117,35 +119,25 @@ export function AddStadiumDialog() {
             return;
         }
 
-        const idToken = await loggedInOwner.getIdToken();
-        const functionUrl = "https://us-central1-courtcommand.cloudfunctions.net/createCoachUser";
+        // Use the Firebase Functions SDK to call the callable function
+        const app = getApp();
+        const functions = getFunctions(app, 'us-central1');
+        const createCoachUser = httpsCallable(functions, 'createCoachUser');
 
-        const response = await fetch(functionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
-            },
-            body: JSON.stringify({
-                email: values.coachEmail,
-                password: values.coachPassword,
-                displayName: values.coachFullName,
-                organizationId: organizationId,
-            }),
+        const result = await createCoachUser({
+            email: values.coachEmail,
+            password: values.coachPassword,
+            displayName: values.coachFullName,
+            coachUsername: values.coachUsername,
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || 'Failed to create coach user.');
+        const resultData = result.data as { success: boolean, uid: string, message?: string };
+
+        if (!resultData.success || !resultData.uid) {
+            throw new Error(resultData.message || 'Failed to create coach user from backend.');
         }
 
-        const result = await response.json();
-
-        const { uid: coachUid } = result;
-
-        if (!coachUid) {
-            throw new Error("Failed to get coach UID from backend.");
-        }
+        const coachUid = resultData.uid;
         
         const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
@@ -191,10 +183,8 @@ export function AddStadiumDialog() {
 
     } catch (error: any) {
         console.error("Stadium creation failed:", error);
+        // The error from a callable function has a 'message' property
         let errorMessage = error.message || "An unexpected error occurred. Please try again.";
-        if (error.code === "functions/already-exists" || error.message?.includes("already in use")) {
-             errorMessage = "This email is already registered to another coach.";
-        }
         
         toast({
             variant: "destructive",
@@ -351,5 +341,3 @@ export function AddStadiumDialog() {
     </Dialog>
   );
 }
-
-    
