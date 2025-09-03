@@ -63,21 +63,18 @@ export function EditStadiumDialog({ stadium, children }: EditStadiumDialogProps)
     try {
       const batch = writeBatch(firestore);
 
-      // 1. Update Stadium Document
-      const stadiumDocRef = doc(firestore, `stadiums`, stadium.id);
+      const stadiumDocRef = doc(firestore, "stadiums", stadium.id);
       batch.update(stadiumDocRef, { 
         name: values.name,
         location: values.location,
-        'coachDetails.name': values.coachName,
-        'coachDetails.phone': values.coachPhone,
+        "coachDetails.name": values.coachName,
+        "coachDetails.phone": values.coachPhone,
         updatedAt: new Date(),
        });
 
-      // 2. Update User document for the coach
-      const userDocRef = doc(firestore, 'users', stadium.assignedCoachId);
+      const userDocRef = doc(firestore, "users", stadium.assignedCoachId);
        batch.update(userDocRef, {
         fullName: values.coachName,
-        // We don't update phone here unless it's a specific field on the user doc
       });
 
       await batch.commit();

@@ -96,16 +96,15 @@ export function AddStadiumDialog() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    const owner = auth.currentUser;
-    if (!owner) {
+    const loggedInOwner = auth.currentUser;
+    if (!loggedInOwner) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to create a stadium." });
         setIsLoading(false);
         return;
     }
 
     try {
-        // Fetch the owner's organization ID from their user profile
-        const ownerUserDocRef = doc(firestore, "users", owner.uid);
+        const ownerUserDocRef = doc(firestore, "users", loggedInOwner.uid);
         const ownerUserDocSnap = await getDoc(ownerUserDocRef);
         if (!ownerUserDocSnap.exists()) {
             throw new Error("Owner user profile not found.");
@@ -115,26 +114,23 @@ export function AddStadiumDialog() {
             throw new Error("Organization ID is missing from owner profile.");
         }
         
-        // --- Validation Moved to onSubmit ---
         if (await checkStadiumNameExists(values.stadiumName, organizationId)) {
             form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
             setIsLoading(false);
             return;
         }
 
-        // 1. Create Coach Auth User
         const userCredential = await createUserWithEmailAndPassword(auth, values.coachEmail, values.coachPassword);
         const coachUid = userCredential.user.uid;
         
         const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
 
-        // 2. Create Stadium Document
         const stadiumDocRef = doc(collection(firestore, "stadiums"));
         batch.set(stadiumDocRef, {
             name: values.stadiumName,
             location: values.location,
-            organizationId: organizationId, // Use the fetched organizationId
+            organizationId: organizationId,
             assignedCoachId: coachUid,
             coachDetails: {
                 name: values.coachFullName,
@@ -147,7 +143,6 @@ export function AddStadiumDialog() {
             updatedAt: timestamp,
         });
 
-        // 3. Create User Profile in 'users' collection
         const userDocRef = doc(firestore, "users", coachUid);
         batch.set(userDocRef, {
             uid: coachUid,
@@ -155,7 +150,7 @@ export function AddStadiumDialog() {
             username: values.coachUsername,
             fullName: values.coachFullName,
             role: "coach",
-            organizationId: organizationId, // Use the same organizationId
+            organizationId: organizationId,
             assignedStadiums: [stadiumDocRef.id],
             createdAt: timestamp,
         });
@@ -266,6 +261,8 @@ export function AddStadiumDialog() {
                         type="email" 
                         placeholder="coach@example.com" 
                         {...field}
+                        readOnly
+                        onFocus={(e) => e.target.removeAttribute('readonly')}
                         onBlur={async (e) => {
                             field.onBlur();
                             if(e.target.value && await checkEmailExists(e.target.value)) {
@@ -288,6 +285,8 @@ export function AddStadiumDialog() {
                             <Input 
                             placeholder="e.g., john_smith_1" 
                             {...field}
+                            readOnly
+                            onFocus={(e) => e.target.removeAttribute('readonly')}
                             onBlur={async (e) => {
                                 field.onBlur();
                                 if(e.target.value && await checkUsernameExists(e.target.value)) {
