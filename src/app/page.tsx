@@ -5,12 +5,29 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
 
-const AuroraHero = dynamic(() => import('@/components/ui/futurastic-hero-section').then(mod => mod.AuroraHero), {
-  ssr: false,
-  loading: () => <div className="relative grid min-h-screen place-content-center overflow-hidden bg-gray-950" />,
-});
-
+const HeroContent = () => (
+    <div className="relative z-10 flex flex-col items-center">
+        <span className="mb-1.5 inline-block rounded-full bg-gray-600/50 px-3 py-1.5 text-sm">
+          The Ultimate Command Center
+        </span>
+        <h1 className="max-w-4xl bg-gradient-to-br from-white to-gray-400 bg-clip-text text-center text-4xl font-bold leading-tight text-transparent sm:text-6xl sm:leading-tight md:text-7xl md:leading-tight">
+          Manage Your Sports Academy with Precision
+        </h1>
+        <p className="my-6 max-w-xl text-center text-base leading-relaxed md:text-lg md:leading-relaxed text-gray-200">
+          Streamline your operations, manage stadiums, track attendance, and empower your coaches with a single, powerful platform.
+        </p>
+        <Link href="/dashboard">
+             <Button
+                size="lg"
+                className="group relative w-fit items-center gap-1.5 rounded-full bg-gray-950/10 px-6 py-3 text-gray-50 transition-colors hover:bg-gray-950/50 border"
+            >
+                Get Started Now
+            </Button>
+        </Link>
+      </div>
+)
 
 const Footer = () => {
     return (
@@ -58,7 +75,9 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <AuroraHero />
+        <BackgroundBeamsWithCollision className="bg-gray-950 grid min-h-screen place-content-center">
+            <HeroContent />
+        </BackgroundBeamsWithCollision>
       </main>
 
       <Footer />
