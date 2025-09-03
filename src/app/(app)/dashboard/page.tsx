@@ -90,9 +90,13 @@ export default function DashboardPage() {
         const userDocRef = doc(firestore, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
-          const orgId = userDocSnap.data().organizationId;
-          setOrganizationId(orgId);
-          setDirectorName(userDocSnap.data().fullName || "Academy Director");
+          const userData = userDocSnap.data();
+          // Ensure we only set data for the owner on the owner dashboard
+          if (userData.role === 'owner') {
+            const orgId = userData.organizationId;
+            setOrganizationId(orgId);
+            setDirectorName(userData.fullName || "Academy Director");
+          }
         } else {
             setIsLoading(false);
             setDirectorName("Academy Director");
@@ -434,3 +438,5 @@ export default function DashboardPage() {
     </MotionDiv>
   );
 }
+
+    

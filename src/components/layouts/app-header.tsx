@@ -62,7 +62,11 @@ export function AppHeader() {
             const userDocRef = doc(firestore, "users", currentUser.uid);
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
-                setUser(userDocSnap.data() as UserProfile);
+                const userData = userDocSnap.data();
+                // Ensure we only set data for the owner on the owner dashboard header
+                if (userData.role === 'owner') {
+                    setUser(userData as UserProfile);
+                }
             } else {
                  setUser({ fullName: "Academy Director", email: currentUser.email || ""});
             }
@@ -166,3 +170,5 @@ export function AppHeader() {
     </>
   );
 }
+
+    
