@@ -8,7 +8,7 @@ interface MousePosition {
   y: number
 }
 
-function useMousePosition(): MousePosition {
+function MousePosition(): MousePosition {
   const [mousePosition, setMousePosition] = useState<MousePosition>({
     x: 0,
     y: 0,
@@ -72,7 +72,7 @@ const Particles: React.FC<ParticlesProps> = ({
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const context = useRef<CanvasRenderingContext2D | null>(null)
   const circles = useRef<any[]>([])
-  const mousePosition = useMousePosition()
+  const mousePosition = MousePosition()
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 })
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1
@@ -150,7 +150,7 @@ const Particles: React.FC<ParticlesProps> = ({
     const translateY = 0
     const pSize = Math.floor(Math.random() * 2) + size
     const alpha = 0
-    const targetAlpha = parseFloat((Math.random() * 0.6 + 0.1).toFixed(1))
+    const targetAlpha = parseFloat((Math.random() * 0.5 + 0.4).toFixed(1))
     const dx = (Math.random() - 0.5) * 0.1
     const dy = (Math.random() - 0.5) * 0.1
     const magnetism = 0.1 + Math.random() * 4
