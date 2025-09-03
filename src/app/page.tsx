@@ -1,10 +1,15 @@
+
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowRight, BarChart, CalendarCheck, Shield, Users, Gamepad2 } from 'lucide-react';
+import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AuroraHero } from '@/components/ui/futurastic-hero-section';
+import dynamic from 'next/dynamic';
+
+const AuroraHero = dynamic(
+  () => import('@/components/ui/futurastic-hero-section').then(mod => mod.AuroraHero),
+  { ssr: false }
+);
 
 
 export default function Home() {
