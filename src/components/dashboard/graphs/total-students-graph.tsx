@@ -11,9 +11,11 @@ import { format, startOfToday, eachDayOfInterval, subDays, isWithinInterval, par
 import { Student } from "@/lib/types";
 import { Button } from "../../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
-import { CalendarIcon, Users } from "lucide-react";
+import { CalendarIcon, SlidersHorizontal, Users } from "lucide-react";
 import { Calendar } from "../../ui/calendar";
 import { DateRange } from "react-day-picker";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 
 interface ChartData {
   name: string;
@@ -45,6 +47,8 @@ export function TotalStudentsGraph({ organizationId }: { organizationId: string 
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all_time");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
+
 
   useEffect(() => {
     if (!organizationId) {
@@ -147,6 +151,13 @@ export function TotalStudentsGraph({ organizationId }: { organizationId: string 
     }
   }
 
+  const handleFilterClick = (filter: TimeFilter) => {
+    setTimeFilter(filter);
+    if (filter === 'custom') {
+      setCustomPopoverOpen(true);
+    }
+  };
+
 
   return (
     <Card className="h-full flex flex-col border-0 shadow-none">
@@ -157,9 +168,10 @@ export function TotalStudentsGraph({ organizationId }: { organizationId: string 
                     <Users className="size-7 text-primary" />
                     Total Student Growth
                 </CardTitle>
-                <CardDescription>Cumulative student enrollment over time {getFilterPeriodText()}</CardDescription>
+                <CardDescription className="hidden md:block">Cumulative student enrollment over time {getFilterPeriodText()}</CardDescription>
             </div>
-            <div className="flex items-center gap-1 rounded-full border bg-card p-1 flex-wrap">
+             {/* Desktop Filters */}
+            <div className="hidden md:flex items-center gap-1 rounded-full border bg-card p-1 flex-wrap">
                 {(["weekly", "monthly", "last_30_days", "all_time"] as TimeFilter[]).map(filter => (
                     <Button 
                         key={filter} 
@@ -189,6 +201,44 @@ export function TotalStudentsGraph({ organizationId }: { organizationId: string 
                             selected={dateRange}
                             onSelect={setDateRange}
                             numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
+             {/* Mobile Filters */}
+             <div className="md:hidden self-end">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="flex items-center gap-2">
+                             <SlidersHorizontal className="size-4" />
+                             <span className="sr-only">Filter</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                         {(["weekly", "monthly", "last_30_days", "all_time"] as TimeFilter[]).map(filter => (
+                            <DropdownMenuItem key={filter} onSelect={() => handleFilterClick(filter)} className="capitalize">
+                                {filter.replace('_', ' ')}
+                            </DropdownMenuItem>
+                        ))}
+                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleFilterClick('custom')}>
+                             <CalendarIcon className="mr-2 size-4" /> Custom Range
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Popover open={customPopoverOpen} onOpenChange={setCustomPopoverOpen}>
+                    <PopoverTrigger asChild><span /></PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 mt-2" align="end">
+                        <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={(range) => {
+                            setDateRange(range);
+                            if(range?.from) setCustomPopoverOpen(false);
+                        }}
+                        numberOfMonths={1}
                         />
                     </PopoverContent>
                 </Popover>

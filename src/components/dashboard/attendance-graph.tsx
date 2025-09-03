@@ -11,9 +11,11 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInte
 import { Attendance } from "@/lib/types";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, SlidersHorizontal } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { DateRange } from "react-day-picker";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+
 
 interface ChartData {
   name: string;
@@ -48,6 +50,8 @@ export function AttendanceGraph({ organizationId }: { organizationId: string | n
     from: startOfWeek(new Date()),
     to: endOfWeek(new Date()),
   });
+  const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
+
 
   useEffect(() => {
     if (!organizationId) {
@@ -137,16 +141,29 @@ export function AttendanceGraph({ organizationId }: { organizationId: string | n
     }
   }
 
+  const handleFilterClick = (filter: TimeFilter) => {
+    setTimeFilter(filter);
+    if (filter === 'custom') {
+      setCustomPopoverOpen(true);
+    }
+  };
+
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-center">
             <div>
-                <CardTitle>Attendance Graph</CardTitle>
-                <CardDescription>Total student attendance across all stadiums {getFilterPeriodText()}</CardDescription>
+                <CardTitle>
+                    <span className="md:hidden">Attendance</span>
+                    <span className="hidden md:inline">Attendance Graph</span>
+                </CardTitle>
+                <CardDescription className="hidden md:block">
+                    Total student attendance across all stadiums {getFilterPeriodText()}
+                </CardDescription>
             </div>
-            <div className="flex items-center gap-1 rounded-full border bg-card p-1">
+            {/* Desktop Filters */}
+            <div className="hidden md:flex items-center gap-1 rounded-full border bg-card p-1">
                 {(["weekly", "monthly"] as TimeFilter[]).map(filter => (
                     <Button 
                         key={filter} 
@@ -176,6 +193,42 @@ export function AttendanceGraph({ organizationId }: { organizationId: string | n
                             selected={dateRange}
                             onSelect={setDateRange}
                             numberOfMonths={2}
+                        />
+                    </PopoverContent>
+                </Popover>
+            </div>
+
+            {/* Mobile Filters */}
+            <div className="md:hidden">
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="flex items-center gap-2">
+                             <SlidersHorizontal className="size-4" />
+                             <span className="sr-only">Filter attendance</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => handleFilterClick('weekly')}>This Week</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleFilterClick('monthly')}>This Month</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleFilterClick('custom')}>
+                            <CalendarIcon className="mr-2 size-4" /> Custom Range
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                 <Popover open={customPopoverOpen} onOpenChange={setCustomPopoverOpen}>
+                    <PopoverTrigger asChild><span /></PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 mt-2" align="end">
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={(range) => {
+                                setDateRange(range);
+                                if (range?.from) setCustomPopoverOpen(false);
+                            }}
+                            numberOfMonths={1}
                         />
                     </PopoverContent>
                 </Popover>

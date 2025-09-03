@@ -240,7 +240,7 @@ export default function DashboardPage() {
                         />
                     )}
                 </div>
-                <p className="text-muted-foreground text-sm md:text-base">
+                <p className="text-muted-foreground text-sm md:text-base hidden md:block">
                     Here's a snapshot of your academy's performance.
                 </p>
             </div>
