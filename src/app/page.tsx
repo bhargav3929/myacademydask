@@ -4,12 +4,7 @@
 import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import dynamic from 'next/dynamic';
-
-const AuroraHero = dynamic(
-  () => import('@/components/ui/futurastic-hero-section').then(mod => mod.AuroraHero),
-  { ssr: false }
-);
+import { AuroraHero } from '@/components/ui/futurastic-hero-section';
 
 
 export default function Home() {
@@ -58,4 +53,3 @@ export default function Home() {
     </div>
   );
 }
-
