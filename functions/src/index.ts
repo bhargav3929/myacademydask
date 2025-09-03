@@ -1,70 +1,83 @@
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import * as cors from "cors";
 
 admin.initializeApp();
 
-/**
- * Creates a new coach user account, sets custom claims, and creates a user profile in Firestore.
- * This is a Callable Function and must be called by an authenticated user (an owner).
- */
-export const createCoachUser = functions
-  .region('us-central1') // It's good practice to specify the region
-  .https.onCall(async (data, context) => {
+const corsHandler = cors({ origin: true });
+
+export const createCoachUser = functions.region('us-central1').https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.status(204).send('');
+        return;
+    }
+
     // 1. Authentication and Authorization Check
-    // Ensure the user is authenticated.
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+    const idToken = req.headers.authorization?.split('Bearer ')[1];
+    if (!idToken) {
+        res.status(401).send({ error: 'Unauthorized', message: 'The function must be called while authenticated.' });
+        return;
     }
     
-    // Check if the caller is an owner by verifying custom claims.
-    const callerUserRecord = await admin.auth().getUser(context.auth.uid);
-    if (callerUserRecord.customClaims?.role !== 'owner') {
-         throw new functions.https.HttpsError('permission-denied', 'Only owners can create coach users.');
-    }
-    const organizationId = callerUserRecord.customClaims?.organizationId;
-     if (!organizationId) {
-        throw new functions.https.HttpsError('failed-precondition', 'The owner is not associated with an organization.');
-    }
-
-
-    // 2. Input Validation
-    const { email, password, displayName, coachUsername } = data || {};
-    if (!email || !password || !displayName || !organizationId || !coachUsername) {
-      throw new functions.https.HttpsError('invalid-argument', 'The function must be called with email, password, displayName, coachUsername and a valid owner token.');
-    }
-
     try {
-      // 3. Create User in Firebase Authentication
-      const userRecord = await admin.auth().createUser({
-        email: email,
-        password: password,
-        displayName: displayName,
-        emailVerified: true, // Coaches are created by owners, so we can assume verification
-      });
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const callerUid = decodedToken.uid;
+        const callerUserRecord = await admin.auth().getUser(callerUid);
 
-      // 4. Set Custom Claims for the new user
-      await admin.auth().setCustomUserClaims(userRecord.uid, { 
-          role: "coach",
-          organizationId: organizationId 
-      });
+        if (callerUserRecord.customClaims?.role !== 'owner') {
+            res.status(403).send({ error: 'permission-denied', message: 'Only owners can create coach users.' });
+            return;
+        }
+        
+        const organizationId = callerUserRecord.customClaims?.organizationId;
+        if (!organizationId) {
+            res.status(400).send({ error: 'failed-precondition', message: 'The owner is not associated with an organization.' });
+            return;
+        }
 
-      // 5. The logic to create the user and stadium documents now resides in the frontend
-      //    This function's responsibility is now solely to create the auth user and set claims.
-      //    The frontend will use the returned UID to create the necessary Firestore documents.
+        // 2. Input Validation
+        const { email, password, displayName, coachUsername } = req.body.data || {};
+        if (!email || !password || !displayName || !coachUsername) {
+            res.status(400).send({ error: 'invalid-argument', message: 'The function must be called with email, password, displayName, and coachUsername.'});
+            return;
+        }
 
-      return { success: true, uid: userRecord.uid };
+        // 3. Create User in Firebase Authentication
+        const userRecord = await admin.auth().createUser({
+            email: email,
+            password: password,
+            displayName: displayName,
+            emailVerified: true,
+        });
+
+        // 4. Set Custom Claims for the new user
+        await admin.auth().setCustomUserClaims(userRecord.uid, { 
+            role: "coach",
+            organizationId: organizationId 
+        });
+        
+        // 5. Respond with success
+        res.status(200).send({ data: { success: true, uid: userRecord.uid }});
 
     } catch (error: any) {
         console.error('Error creating coach user:', error);
         // Map common auth errors to user-friendly callable errors
         if (error.code === 'auth/email-already-exists') {
-            throw new functions.https.HttpsError('already-exists', 'The email address is already in use by another account.');
+            res.status(409).send({ error: 'already-exists', message: 'The email address is already in use by another account.'});
+            return;
         }
         if (error.code === 'auth/invalid-password') {
-            throw new functions.https.HttpsError('invalid-argument', 'The password must be a string with at least 6 characters.');
+            res.status(400).send({ error: 'invalid-argument', message: 'The password must be a string with at least 6 characters.'});
+            return;
         }
         // For other errors, throw a generic internal error
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred while creating the user.');
+        res.status(500).send({ error: 'internal', message: 'An unexpected error occurred while creating the user.'});
     }
   });
+});
