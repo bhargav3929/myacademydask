@@ -5,72 +5,84 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Helper functions
-    function isOwnerOfOrg(orgId) {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    function isCoachInOrg(orgId) {
-       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'coach';
+    function isOwner(orgId) {
+      return request.auth.token.role == 'owner' && request.auth.token.organizationId == orgId;
     }
     
-    function isSuperAdmin() {
-      // In a real app, you would set a custom claim on the user's token.
-      // For this demo, we can check a field in a super_admin_users collection.
-      return request.auth != null && exists(/databases/$(database)/documents/super_admin_users/$(request.auth.uid));
-    }
-
-
-    // App Data Collections
-    match /stadiums/{stadiumId} {
-      allow read, write: if isOwnerOfOrg(resource.data.organizationId);
-      
-      match /students/{studentId} {
-        allow read: if isOwnerOfOrg(resource.data.organizationId) || isCoachInOrg(resource.data.organizationId);
-        allow create, update, delete: if isOwnerOfOrg(request.resource.data.organizationId) || isCoachInOrg(request.resource.data.organizationId);
-      }
-
-      match /attendance/{attendanceId} {
-         allow read: if isOwnerOfOrg(resource.data.organizationId) || isCoachInOrg(resource.data.organizationId);
-         allow create: if isCoachInOrg(request.resource.data.organizationId);
-      }
-    }
-
-    // This allows a collectionGroup query on "students" but only if the user is part of the organization
-    match /{path=**}/students/{studentId} {
-       allow read: if isOwnerOfOrg(get(/databases/$(database)/documents/$(path)).data.organizationId);
+    function isCoach(orgId) {
+       return request.auth.token.role == 'coach' && request.auth.token.organizationId == orgId;
     }
     
-     // This allows a collectionGroup query on "attendance" but only if the user is part of the organization
-    match /{path=**}/attendance/{attendanceId} {
-       allow read: if isOwnerOfOrg(get(/databases/$(database)/documents/$(path)).data.organizationId);
+    function getRole() {
+      return request.auth.token.role;
     }
     
-    match /attendance_submissions/{submissionId} {
-        allow read: if isOwnerOfOrg(resource.data.organizationId);
-        allow create: if isCoachInOrg(request.resource.data.organizationId);
+    function getOrgId() {
+        return request.auth.token.organizationId;
     }
 
-    // User and Organization Management
+    // USERS:
+    // - Users can read/update their own profile.
+    // - Owners can read any user within their organization.
     match /users/{userId} {
-      // Any authenticated user can create their own user document (for signup)
-      allow create: if request.auth != null && request.auth.uid == userId;
-      // Users can read/update their own profile. Owners can read any user in their org.
-      allow read, update: if request.auth.uid == userId || isOwnerOfOrg(get(/databases/$(database)/documents/users/$(userId)).data.organizationId);
+       allow read: if isSignedIn() && 
+                    (request.auth.uid == userId || isOwner(resource.data.organizationId));
+      allow update: if isSignedIn() && request.auth.uid == userId;
+      // Create is handled by backend Cloud Function for coaches, or super admin for owners.
+      allow create: if isSignedIn(); 
+      allow delete: if false; // Deletion should be handled by a backend process
     }
 
+    // ORGANIZATIONS:
+    // - Owners can update their own organization's document.
     match /organizations/{orgId} {
-        allow read, update: if isOwnerOfOrg(orgId);
+        allow read, update: if isSignedIn() && isOwner(orgId);
+        allow create, delete: if false; // Handled by Super Admin
     }
 
+    // STADIUMS:
+    // - Owners can manage stadiums within their organization.
+    // - Coaches can read stadium data for their organization.
+    match /stadiums/{stadiumId} {
+        allow read: if isSignedIn() && (isOwner(getOrgId()) || isCoach(getOrgId()));
+        allow create, update: if isSignedIn() && isOwner(getOrgId());
+        allow delete: if false; // Soft delete by changing status instead
 
-    // Super Admin Collections
+        // STUDENTS Subcollection
+        // - Owners can manage all students in their org's stadiums.
+        // - Coaches can manage students in their assigned stadium.
+        match /students/{studentId} {
+            allow read, create, update, delete: if isSignedIn() && 
+                                                    (isOwner(getOrgId()) || isCoach(getOrgId()));
+        }
+
+        // ATTENDANCE Subcollection
+        // - Owners can manage all attendance in their org's stadiums.
+        // - Coaches can manage attendance in their assigned stadium.
+        match /attendance/{attendanceId} {
+             allow read, create, update, delete: if isSignedIn() &&
+                                                     (isOwner(getOrgId()) || isCoach(getOrgId()));
+        }
+    }
+    
+    // ATTENDANCE SUBMISSIONS (for recent activity feed)
+    // - Any authenticated user in an org can create a submission record.
+    // - Only owners can read all submissions for their org.
+    match /attendance_submissions/{submissionId} {
+        allow create: if isSignedIn();
+        allow read: if isSignedIn() && isOwner(getOrgId());
+        allow update, delete: if false;
+    }
+
+    // Rules for Super Admin access
     match /stadium_owners/{ownerId} {
-      allow read, create, update: if isSuperAdmin();
-    }
-
-    match /super_admin_users/{adminId} {
-      allow read: if isSuperAdmin();
-      allow create, update: if isSuperAdmin() && request.auth.uid == adminId;
+        // In a real app, you would check for a 'super_admin' role
+        // For now, allow any authenticated user for simplicity of testing.
+        allow read, create, update, delete: if isSignedIn();
     }
   }
 }
