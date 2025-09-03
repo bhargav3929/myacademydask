@@ -1,14 +1,13 @@
 
 'use client';
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
+import { GradientBackground } from '@/components/ui/gradient-background';
 
 const HeroContent = () => (
-    <div className="relative z-10 flex flex-col items-center">
+    <div className="relative z-10 flex flex-col items-center text-white">
         <span className="mb-1.5 inline-block rounded-full bg-gray-600/50 px-3 py-1.5 text-sm">
           The Ultimate Command Center
         </span>
@@ -31,8 +30,8 @@ const HeroContent = () => (
 
 const Footer = () => {
     return (
-        <footer className="bg-gray-950 text-gray-400 border-t border-gray-800">
-            <div className="container flex flex-col md:flex-row items-center justify-between py-8 text-sm gap-4">
+        <footer className="w-full absolute bottom-0 bg-transparent text-gray-400 border-t border-gray-800/50">
+            <div className="container flex flex-col md:flex-row items-center justify-between py-6 text-sm gap-4 mx-auto max-w-screen-2xl">
                 <div className="flex items-center gap-2.5">
                     <Gamepad2 className="h-6 w-6" />
                     <span className="font-semibold">&copy; {new Date().getFullYear()} CourtCommand. All rights reserved.</span>
@@ -51,9 +50,9 @@ const Footer = () => {
 export default function Home() {
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-950 text-foreground">
+    <div className="flex min-h-screen flex-col text-foreground">
        <header className="fixed top-0 z-50 w-full bg-transparent">
-        <div className="container flex h-20 max-w-screen-2xl items-center justify-between">
+        <div className="container flex h-20 max-w-screen-2xl items-center justify-between mx-auto">
           <Link href="/" className="flex items-center gap-2.5">
             <Gamepad2 className="h-7 w-7 text-white" />
             <span className="text-lg font-bold text-white">CourtCommand</span>
@@ -75,9 +74,9 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <BackgroundBeamsWithCollision className="bg-gray-950 grid min-h-screen place-content-center">
+        <GradientBackground>
             <HeroContent />
-        </BackgroundBeamsWithCollision>
+        </GradientBackground>
       </main>
 
       <Footer />
