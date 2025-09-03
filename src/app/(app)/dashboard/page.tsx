@@ -19,6 +19,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { TotalStudentsGraph } from "@/components/dashboard/graphs/total-students-graph";
+import { NewStudentsGraph } from "@/components/dashboard/graphs/new-students-graph";
+import { TotalRevenueGraph } from "@/components/dashboard/graphs/total-revenue-graph";
+import { ActiveStadiumsList } from "@/components/dashboard/graphs/active-stadiums-list";
 
 type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all" | "custom";
 
@@ -227,7 +232,7 @@ export default function DashboardPage() {
                 )}
             </div>
             <p className="text-muted-foreground">
-                Here's a snapshot of your academy's performance.
+                Here's a snapshot of your academy's performance. Click on a card to see more details.
             </p>
             </div>
             <div className="flex items-center gap-2 rounded-full border bg-card p-1">
@@ -248,7 +253,6 @@ export default function DashboardPage() {
                             className="rounded-full capitalize text-sm h-8 px-4 flex items-center gap-1.5"
                             onClick={() => {
                                 setTimeFilter('custom');
-                                // Reset custom date range if clicking the button again
                                 if (timeFilter !== 'custom') {
                                     setCustomDateRange(undefined);
                                 }
@@ -278,37 +282,73 @@ export default function DashboardPage() {
         className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
       >
         <MotionDiv variants={itemVariants}>
-          <StatCard
-            title="Total Students"
-            value={totalStudents.toString()}
-            icon="Users"
-            trendPeriod="Across all stadiums"
-            primary
-          />
+            <Dialog>
+                <DialogTrigger asChild>
+                    <div className="cursor-pointer">
+                        <StatCard
+                            title="Total Students"
+                            value={totalStudents.toString()}
+                            icon="Users"
+                            trendPeriod="Across all stadiums"
+                            primary
+                        />
+                    </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                     <TotalStudentsGraph organizationId={organizationId} />
+                </DialogContent>
+            </Dialog>
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
-          <StatCard
-            title="New Students Joined"
-            value={filteredStudents.length.toString()}
-            icon="UserPlus"
-            trendPeriod={getFilterPeriodText()}
-          />
+             <Dialog>
+                <DialogTrigger asChild>
+                    <div className="cursor-pointer">
+                        <StatCard
+                            title="New Students Joined"
+                            value={filteredStudents.length.toString()}
+                            icon="UserPlus"
+                            trendPeriod={getFilterPeriodText()}
+                        />
+                    </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                    <NewStudentsGraph organizationId={organizationId} />
+                </DialogContent>
+            </Dialog>
         </MotionDiv>
         <MotionDiv variants={itemVariants}>
-          <StatCard
-            title="Total Revenue"
-            value={formattedRevenue}
-            icon="DollarSign"
-            trendPeriod={getFilterPeriodText()}
-          />
+            <Dialog>
+                <DialogTrigger asChild>
+                    <div className="cursor-pointer">
+                      <StatCard
+                        title="Total Revenue"
+                        value={formattedRevenue}
+                        icon="DollarSign"
+                        trendPeriod={getFilterPeriodText()}
+                      />
+                    </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                    <TotalRevenueGraph organizationId={organizationId} />
+                </DialogContent>
+            </Dialog>
         </MotionDiv>
          <MotionDiv variants={itemVariants}>
-          <StatCard
-            title="Active Stadiums"
-            value={activeStadiums.toString()}
-            icon="Building"
-            trendPeriod="Online now"
-          />
+            <Dialog>
+                <DialogTrigger asChild>
+                    <div className="cursor-pointer">
+                        <StatCard
+                            title="Active Stadiums"
+                            value={activeStadiums.toString()}
+                            icon="Building"
+                            trendPeriod="Online now"
+                        />
+                    </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-xl">
+                    <ActiveStadiumsList organizationId={organizationId} />
+                </DialogContent>
+            </Dialog>
         </MotionDiv>
       </MotionDiv>
 
