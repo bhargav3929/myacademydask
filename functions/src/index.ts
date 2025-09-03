@@ -5,7 +5,13 @@ import * as cors from "cors";
 
 admin.initializeApp();
 
-const corsHandler = cors({ origin: true });
+// Initialize CORS middleware with specific options
+const corsHandler = cors({
+  origin: true,
+  methods: "POST,GET,OPTIONS",
+  allowedHeaders: "Content-Type,Authorization"
+});
+
 
 /**
  * Creates a new coach user account and sets custom claims.
@@ -76,5 +82,3 @@ export const createCoachUser = functions.https.onRequest((req, res) => {
     }
   });
 });
-
-    
