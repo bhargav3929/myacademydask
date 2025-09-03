@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -161,7 +162,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
         batch: selectedBatch,
         date: dateStr,
         submittedByCoachId: auth.currentUser.uid,
-        timestamp: submissionTimestamp,
+        timestamp: serverTimestamp(),
       });
       
       await dbBatch.commit();
