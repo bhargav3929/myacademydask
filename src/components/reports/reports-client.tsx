@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Stadium, Attendance, Student } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarIcon, FileText } from "lucide-react";
-import { format, startOfMonth } from "date-fns";
+import { format, startOfMonth, eachDayOfInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-
-type ReportData = (Attendance & { studentName: string });
+import type { ReportData, ProcessedReport, NewJoiner } from "./report-types";
+import { AttendanceReportTable } from "./attendance-report-table";
+import { ReportSummary } from "./report-summary";
+import { NewJoiners } from "./new-joiners";
 
 export function ReportsClient() {
   const { toast } = useToast();
@@ -29,7 +30,8 @@ export function ReportsClient() {
     from: startOfMonth(new Date()),
     to: new Date(),
   });
-  const [reportData, setReportData] = useState<ReportData[]>([]);
+  const [processedReport, setProcessedReport] = useState<ProcessedReport | null>(null);
+  const [newJoiners, setNewJoiners] = useState<NewJoiner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -67,50 +69,92 @@ export function ReportsClient() {
     return () => unsubscribe();
   }, [organizationId]);
 
+  const processDataForReport = (students: Student[], attendanceRecords: ReportData[], range: DateRange): { report: ProcessedReport, joiners: NewJoiner[] } => {
+    const dates = eachDayOfInterval({ start: range.from!, end: range.to! });
+    const studentData: Record<string, { name: string; attendance: Record<string, 'present' | 'absent' | null> }> = {};
+    
+    students.forEach(s => {
+      studentData[s.id] = { name: s.fullName, attendance: {} };
+      dates.forEach(d => {
+        studentData[s.id].attendance[format(d, 'yyyy-MM-dd')] = null;
+      });
+    });
+
+    attendanceRecords.forEach(rec => {
+      if (studentData[rec.studentId]) {
+        studentData[rec.studentId].attendance[rec.date] = rec.status;
+      }
+    });
+
+    const studentRows = Object.entries(studentData).map(([id, data]) => {
+      const presents = Object.values(data.attendance).filter(s => s === 'present').length;
+      const absents = Object.values(data.attendance).filter(s => s === 'absent').length;
+      const totalDays = Object.values(data.attendance).filter(s => s !== null).length;
+      const percentage = totalDays > 0 ? Math.round((presents / totalDays) * 100) : 0;
+      return { id, name: data.name, attendance: data.attendance, presents, absents, percentage };
+    });
+
+    const totalAttendance = studentRows.reduce((acc, row) => acc + row.percentage, 0);
+    const avgAttendance = studentRows.length > 0 ? Math.round(totalAttendance / studentRows.length) : 0;
+    
+    const report: ProcessedReport = {
+        dates,
+        studentData: studentRows,
+        summary: {
+            totalStudents: students.length,
+            averageAttendance: avgAttendance,
+            alwaysPresent: studentRows.filter(s => s.percentage === 100).map(s => s.name),
+            alwaysAbsent: studentRows.filter(s => s.presents === 0 && s.absents > 0).map(s => s.name),
+        }
+    };
+    
+    const joiners = students
+        .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
+        .map(s => ({ name: s.fullName, joinDate: s.joinDate.toDate() }));
+
+    return { report, joiners };
+  }
+
   const handleGenerateReport = async () => {
-    if (!selectedStadium || !dateRange?.from) {
+    if (!selectedStadium || !dateRange?.from || !dateRange?.to) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please select a stadium and a date range.",
+        description: "Please select a stadium and a complete date range.",
       });
       return;
     }
     
     setIsGenerating(true);
-    setReportData([]);
+    setProcessedReport(null);
+    setNewJoiners([]);
 
     try {
-      // 1. Fetch student data for the selected stadium
       const studentsRef = collection(firestore, `stadiums/${selectedStadium}/students`);
       const studentsSnapshot = await getDocs(studentsRef);
-      const studentsMap = new Map<string, string>();
-      studentsSnapshot.forEach(doc => {
-          studentsMap.set(doc.id, doc.data().fullName);
-      });
+      const studentsData = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
 
-      // 2. Fetch attendance data
       const attendanceQuery = query(
         collection(firestore, `stadiums/${selectedStadium}/attendance`),
         where("date", ">=", format(dateRange.from, "yyyy-MM-dd")),
-        where("date", "<=", format(dateRange.to || dateRange.from, "yyyy-MM-dd")),
-        orderBy("date", "desc")
+        where("date", "<=", format(dateRange.to, "yyyy-MM-dd")),
       );
-
       const attendanceSnapshot = await getDocs(attendanceQuery);
-      const data: ReportData[] = attendanceSnapshot.docs.map((doc) => {
-          const attendance = doc.data() as Attendance;
-          return {
-              ...attendance,
-              studentName: studentsMap.get(attendance.studentId) || "Unknown Student",
-          };
-      });
+      const attendanceData = attendanceSnapshot.docs.map(doc => doc.data() as ReportData);
+      
+      if (studentsData.length === 0) {
+        toast({ title: "No Students Found", description: "There are no students enrolled in this stadium to generate a report for." });
+        return;
+      }
 
-      setReportData(data);
+      const { report, joiners } = processDataForReport(studentsData, attendanceData, dateRange);
+      
+      setProcessedReport(report);
+      setNewJoiners(joiners);
 
       toast({
-          title: "Report Generated",
-          description: `Found ${data.length} attendance records.`,
+          title: "Report Generated Successfully",
+          description: `Displaying report for ${studentsData.length} students.`,
       });
 
     } catch (error) {
@@ -183,62 +227,34 @@ export function ReportsClient() {
         </CardContent>
       </Card>
 
-    {(isGenerating || reportData.length > 0) && (
+      {isGenerating && (
         <Card>
             <CardHeader>
-                <CardTitle>Report Preview</CardTitle>
-                <CardDescription>
-                    A preview of the attendance records for the selected criteria.
-                </CardDescription>
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-2/3 mt-2" />
             </CardHeader>
             <CardContent>
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Student Name</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Batch</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isGenerating ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : reportData.length > 0 ? (
-                                reportData.map((record) => (
-                                <TableRow key={record.id}>
-                                    <TableCell className="font-medium">{record.studentName}</TableCell>
-                                    <TableCell>{format(new Date(record.date), "PPP")}</TableCell>
-                                    <TableCell>
-                                        <span className={cn("px-2 py-1 rounded-full text-xs font-semibold", record.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')}>
-                                            {record.status === 'present' ? 'Present' : 'Absent'}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>{record.batch}</TableCell>
-                                </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        No records found for the selected criteria.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
                 </div>
             </CardContent>
         </Card>
-    )}
+      )}
+
+      {processedReport && (
+        <div className="space-y-6">
+            <AttendanceReportTable reportData={processedReport} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ReportSummary summary={processedReport.summary} />
+              <NewJoiners joiners={newJoiners} />
+            </div>
+        </div>
+      )}
 
     </div>
   );
 }
+
+    
