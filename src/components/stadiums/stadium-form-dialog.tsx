@@ -177,7 +177,7 @@ export function AddStadiumDialog() {
     } catch (error: any) {
         console.error("Stadium creation failed:", error);
         let errorMessage = error.message || "An unexpected error occurred. Please try again.";
-        if (error.code === "functions/already-exists") {
+        if (error.code === "functions/already-exists" || error.code?.includes("already-exists")) {
              errorMessage = "This email is already registered to another coach.";
         } else if (error.code === 'auth/email-already-in-use') {
              errorMessage = "This email is already registered to another coach.";
