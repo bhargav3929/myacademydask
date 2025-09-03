@@ -42,7 +42,6 @@ const generateReportHTML = ({ reportData, newJoiners, revenueData, stadiumName, 
             <td>${joiner.name}</td>
             <td class="join-date">${format(joiner.joinDate, "MMM dd, yyyy")}</td>
             <td>${joiner.coachName}</td>
-            <td>${joiner.stadiumName}</td>
         </tr>
     `).join('');
 
@@ -57,94 +56,93 @@ const generateReportHTML = ({ reportData, newJoiners, revenueData, stadiumName, 
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #374151; line-height: 1.6; }
             .report-container { max-width: 1200px; margin: 0 auto; background: white; }
+            .page-wrapper {
+                padding: 30px;
+                border: 2px solid #1E3A8A;
+                min-height: calc(100vh - 60px);
+                position: relative;
+                margin: 0;
+            }
             .page-break { page-break-after: always; }
-            .header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 32px; display: flex; justify-content: space-between; align-items: center; }
-            .stadium-name { font-size: 28px; font-weight: 700; }
-            .report-title { font-size: 24px; font-weight: 600; text-align: center; flex-grow: 1; }
-            .date-range { font-size: 14px; font-weight: 400; text-align: right; }
-            .header-divider { height: 3px; background: linear-gradient(90deg, #047857, #10B981); }
-            .content { padding: 40px; }
+            .header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 24px; display: flex; justify-content: space-between; align-items: center; }
+            .stadium-name { font-size: 24px; font-weight: 700; }
+            .report-title { font-size: 20px; font-weight: 600; text-align: center; flex-grow: 1; }
+            .date-range { font-size: 13px; font-weight: 400; text-align: right; }
+            .content { padding: 30px 10px; }
             .section { margin-bottom: 32px; }
-            .section-title { font-size: 20px; font-weight: 600; color: #1E3A8A; margin-bottom: 20px; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px; }
-            .attendance-table { width: 100%; border-collapse: collapse; overflow: hidden; }
-            .attendance-table th { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 12px; font-weight: 600; font-size: 13px; text-align: center; }
-            .attendance-table th:first-child { text-align: left; min-width: 150px; }
+            .section-title { font-size: 18px; font-weight: 600; color: #1E3A8A; margin-bottom: 16px; border-bottom: 2px solid #E5E7EB; padding-bottom: 6px; }
+            .attendance-table { width: 100%; border-collapse: collapse; overflow: hidden; font-size: 10px; }
+            .attendance-table th { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 10px 6px; font-weight: 600; text-align: center; }
+            .attendance-table th:first-child { text-align: left; width: 120px; }
             .attendance-table th.summary-col { background: linear-gradient(135deg, #047857 0%, #10B981 100%); }
-            .attendance-table td { padding: 10px 12px; border-bottom: 1px solid #E5E7EB; text-align: center; font-size: 13px; }
+            .attendance-table td { padding: 8px 6px; border: 1px solid #E5E7EB; text-align: center; }
             .attendance-table td:first-child { text-align: left; font-weight: 500; }
             .attendance-table tr:nth-child(even) { background-color: #F9FAFB; }
-            .present { color: #10B981; font-weight: 600; font-size: 16px; }
-            .absent { color: #EF4444; font-weight: 600; font-size: 16px; }
+            .present { color: #10B981; font-weight: 600; font-size: 12px; }
+            .absent { color: #EF4444; font-weight: 600; font-size: 12px; }
             .summary-cell, .percentage-cell { font-weight: 600; }
             .percentage-high { color: #10B981; } .percentage-medium { color: #F59E0B; } .percentage-low { color: #EF4444; }
-            .summary-card { background: #F9FAFB; border-radius: 16px; padding: 24px; border: 1px solid #E5E7EB; }
-            .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-            .summary-item { display: flex; align-items: center; gap: 16px; }
-            .summary-icon { font-size: 28px; width: 52px; height: 52px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-            .summary-label { font-size: 14px; color: #6B7280; font-weight: 500; }
-            .summary-value { font-size: 24px; font-weight: 700; color: #1E3A8A; }
+            
+            .summary-card { background: #F9FAFB; border-radius: 12px; padding: 24px; border: 1px solid #E5E7EB; }
+            .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .summary-item { display: flex; align-items: center; gap: 12px; }
+            .summary-icon { font-size: 24px; width: 48px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+            .summary-label { font-size: 13px; color: #6B7280; font-weight: 500; }
+            .summary-value { font-size: 22px; font-weight: 700; color: #1E3A8A; }
+            
             .joiners-table { width: 100%; border-collapse: collapse; }
-            .joiners-table th { background: linear-gradient(135deg, #047857 0%, #10B981 100%); color: white; padding: 12px; font-weight: 600; text-align: left; }
-            .joiners-table td { padding: 12px; border-bottom: 1px solid #E5E7EB; }
+            .joiners-table th { background: linear-gradient(135deg, #047857 0%, #10B981 100%); color: white; padding: 10px; font-weight: 600; text-align: left; font-size: 13px; }
+            .joiners-table td { padding: 10px; border-bottom: 1px solid #E5E7EB; font-size: 12px; }
             .joiners-table tr:nth-child(even) td { background-color: #F9FAFB; }
             .join-date { font-weight: 500; color: #047857; }
         </style>
     </head>
     <body>
         <div class="report-container">
-            <div class="header">
-                <div class="stadium-name">${stadiumName}</div>
-                <div class="report-title">Monthly Attendance Report</div>
-                <div class="date-range">
-                    ${format(dateRange.from!, 'MMM, yyyy')}<br>
-                    Generated: ${format(new Date(), 'MMM d, yyyy')}
+            <div class="page-wrapper">
+                <div class="header">
+                    <div class="stadium-name">${stadiumName}</div>
+                    <div class="report-title">Attendance Report</div>
+                    <div class="date-range">
+                        ${dateRange.to ? `${format(dateRange.from!, 'MMM d, yyyy')} – ${format(dateRange.to, 'MMM d, yyyy')}` : format(dateRange.from!, 'MMMM yyyy')}<br>
+                        Generated: ${format(new Date(), 'MMM d, yyyy')}
+                    </div>
                 </div>
-            </div>
-            <div class="header-divider"></div>
-            <div class="content">
-                <div class="section">
-                    <h2 class="section-title">Attendance Register</h2>
-                    <table class="attendance-table">
-                        <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                ${dates.map(d => `<th>${format(d, 'd')}</th>`).join('')}
-                                <th class="summary-col">P</th>
-                                <th class="summary-col">A</th>
-                                <th class="summary-col">%</th>
-                            </tr>
-                        </thead>
-                        <tbody>${attendanceRows}</tbody>
-                    </table>
-                </div>
-                <div class="section">
-                    <h2 class="section-title">Summary</h2>
-                    <div class="summary-card">
+                
+                <div class="content">
+                    <div class="section">
+                        <h2 class="section-title">Attendance Register</h2>
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    ${dates.map(d => `<th>${format(d, 'd')}</th>`).join('')}
+                                    <th class="summary-col">P</th>
+                                    <th class="summary-col">A</th>
+                                    <th class="summary-col">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>${attendanceRows}</tbody>
+                        </table>
+                    </div>
+                    <div class="section">
+                        <h2 class="section-title">Report Summary</h2>
                         <div class="summary-grid">
                             <div class="summary-item"><div class="summary-icon">👥</div><div><div class="summary-label">Total Students</div><div class="summary-value">${summary.totalStudents}</div></div></div>
                             <div class="summary-item"><div class="summary-icon">📊</div><div><div class="summary-label">Average Attendance</div><div class="summary-value">${summary.averageAttendance}%</div></div></div>
                             <div class="summary-item"><div class="summary-icon">🌟</div><div><div class="summary-label">Perfect Attendance</div><div class="summary-value">${summary.alwaysPresent.length}</div></div></div>
                             <div class="summary-item"><div class="summary-icon">⚠️</div><div><div class="summary-label">Below 60% Attendance</div><div class="summary-value">${summary.below60Attendance.length}</div></div></div>
+                            <div class="summary-item"><div class="summary-icon">💰</div><div><div class="summary-label">Total Revenue</div><div class="summary-value">$${revenueData.totalRevenue.toLocaleString()}</div></div></div>
+                            <div class="summary-item"><div class="summary-icon">📈</div><div><div class="summary-label">Growth (vs Last Period)</div><div class="summary-value">${revenueData.growth > 0 ? `+${revenueData.growth}` : revenueData.growth}%</div></div></div>
                         </div>
                     </div>
-                </div>
-                <div class="section">
-                    <h2 class="section-title">Revenue Report</h2>
-                    <div class="summary-card">
-                        <div class="summary-grid">
-                             <div class="summary-item"><div class="summary-icon">💰</div><div><div class="summary-label">Total Revenue</div><div class="summary-value">$${revenueData.totalRevenue.toLocaleString()}</div></div></div>
-                             <div class="summary-item"><div class="summary-icon">📅</div><div><div class="summary-label">Month</div><div class="summary-value">${revenueData.monthName}</div></div></div>
-                             <div class="summary-item"><div class="summary-icon">🏆</div><div><div class="summary-label">Highest Revenue Day</div><div class="summary-value">${revenueData.highestRevenueDay.date ? `${format(new Date(revenueData.highestRevenueDay.date), 'MMM d')} – $${revenueData.highestRevenueDay.amount.toLocaleString()}`: 'N/A'}</div></div></div>
-                             <div class="summary-item"><div class="summary-icon">📈</div><div><div class="summary-label">Growth (vs Last Month)</div><div class="summary-value">${revenueData.growth > 0 ? `+${revenueData.growth}` : revenueData.growth}%</div></div></div>
-                        </div>
+                    <div class="section">
+                        <h2 class="section-title">New Joiners</h2>
+                        <table class="joiners-table">
+                            <thead><tr><th>Name</th><th>Join Date</th><th>Assigned Coach</th></tr></thead>
+                            <tbody>${joinerRows.length > 0 ? joinerRows : `<tr><td colspan="3" style="text-align:center; padding: 20px;">No new students in this period.</td></tr>`}</tbody>
+                        </table>
                     </div>
-                </div>
-                <div class="section">
-                    <h2 class="section-title">New Students This Month</h2>
-                    <table class="joiners-table">
-                        <thead><tr><th>Name</th><th>Join Date</th><th>Assigned Coach</th><th>Stadium</th></tr></thead>
-                        <tbody>${joinerRows.length > 0 ? joinerRows : `<tr><td colspan="4" style="text-align:center; padding: 20px;">No new students this month.</td></tr>`}</tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -160,8 +158,8 @@ export const generatePdf = async (props: GeneratePdfProps) => {
     // Create an off-screen iframe to render the HTML
     const iframe = document.createElement('iframe');
     iframe.style.position = 'absolute';
-    iframe.style.width = '1200px'; // Corresponds to max-width in CSS
-    iframe.style.height = '100vh';
+    iframe.style.width = '1200px';
+    iframe.style.height = '1697px'; // A4 landscape-ish aspect ratio
     iframe.style.left = '-9999px';
     document.body.appendChild(iframe);
 
@@ -175,7 +173,7 @@ export const generatePdf = async (props: GeneratePdfProps) => {
     iframeDoc.write(reportHtml);
     iframeDoc.close();
 
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for render
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for render
 
     const reportContainer = iframeDoc.body.firstElementChild as HTMLElement;
     if (!reportContainer) {
@@ -184,12 +182,14 @@ export const generatePdf = async (props: GeneratePdfProps) => {
     }
 
     const canvas = await html2canvas(reportContainer, {
-        scale: 2, // Higher scale for better quality
+        scale: 2,
         useCORS: true,
         logging: false,
+        width: 1200,
+        windowWidth: 1200,
     });
 
-    document.body.removeChild(iframe); // Clean up iframe
+    document.body.removeChild(iframe);
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
