@@ -3,21 +3,29 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ListChecks } from "lucide-react";
-import type { ReportSummaryData } from "./report-types";
+import { ListChecks, TrendingUp, DollarSign, CalendarDays, BarChart, Users, Star, AlertTriangle } from "lucide-react";
+import type { ReportSummaryData, RevenueData } from "./report-types";
 
 interface ReportSummaryProps {
-  summary: ReportSummaryData;
+  summary: ReportSummaryData | null;
+  revenue: RevenueData | null;
 }
 
-const StatCard = ({ title, value }: { title: string; value: string | number }) => (
-    <div className="flex flex-col space-y-1 rounded-lg border p-3 text-center">
-      <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
+const StatCard = ({ icon: Icon, title, value, color }: { icon: React.ElementType, title: string; value: string | number, color?: string }) => (
+    <div className="flex items-center gap-4 rounded-lg border p-4 bg-background">
+      <div className="flex items-center justify-center size-12 rounded-lg bg-secondary">
+        <Icon className="size-6 text-secondary-foreground" />
+      </div>
+      <div>
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className={`text-2xl font-bold ${color || 'text-foreground'}`}>{value}</p>
+      </div>
     </div>
 );
 
-export function ReportSummary({ summary }: ReportSummaryProps) {
+export function ReportSummary({ summary, revenue }: ReportSummaryProps) {
+    if (!summary || !revenue) return null;
+
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
@@ -25,16 +33,17 @@ export function ReportSummary({ summary }: ReportSummaryProps) {
             <ListChecks className="size-5" />
             Report Summary
         </CardTitle>
-        <CardDescription>An overview of the attendance report.</CardDescription>
+        <CardDescription>An overview of the attendance and revenue for the selected period.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-            <StatCard title="Total Students" value={summary.totalStudents} />
-            <StatCard title="Avg. Attendance" value={`${summary.averageAttendance}%`} />
-            <StatCard title="Total Revenue" value={`$${summary.totalRevenue.toLocaleString()}`} />
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StatCard icon={Users} title="Total Students" value={summary.totalStudents} />
+            <StatCard icon={BarChart} title="Avg. Attendance" value={`${summary.averageAttendance}%`} />
+            <StatCard icon={DollarSign} title="Total Revenue" value={`$${revenue.totalRevenue.toLocaleString()}`} color="text-green-600" />
+            <StatCard icon={TrendingUp} title="Revenue Growth" value={`${revenue.growth}%`} color={revenue.growth > 0 ? "text-green-600" : "text-red-600"} />
         </div>
         <div>
-            <h4 className="font-medium text-sm mb-2">Perfect Attendance (100%)</h4>
+            <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><Star className="size-4 text-yellow-500" />Perfect Attendance ({summary.alwaysPresent.length})</h4>
             {summary.alwaysPresent.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
                     {summary.alwaysPresent.map(name => <Badge key={name} variant="secondary" className="bg-green-100 text-green-800">{name}</Badge>)}
@@ -44,13 +53,13 @@ export function ReportSummary({ summary }: ReportSummaryProps) {
             )}
         </div>
          <div>
-            <h4 className="font-medium text-sm mb-2">Complete Absentees</h4>
-            {summary.alwaysAbsent.length > 0 ? (
+            <h4 className="font-medium text-sm mb-2 flex items-center gap-2"><AlertTriangle className="size-4 text-red-500" />Attendance Below 60% ({summary.below60Attendance.length})</h4>
+            {summary.below60Attendance.length > 0 ? (
                  <div className="flex flex-wrap gap-1">
-                    {summary.alwaysAbsent.map(name => <Badge key={name} variant="secondary" className="bg-red-100 text-red-800">{name}</Badge>)}
+                    {summary.below60Attendance.map(name => <Badge key={name} variant="secondary" className="bg-red-100 text-red-800">{name}</Badge>)}
                 </div>
             ) : (
-                <p className="text-xs text-muted-foreground">No students were absent for all marked days.</p>
+                <p className="text-xs text-muted-foreground">No students had attendance below 60%.</p>
             )}
         </div>
       </CardContent>

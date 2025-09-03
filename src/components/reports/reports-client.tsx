@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, orderBy, onSnapshot, Timestamp, collectionGroup } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Stadium, Attendance, Student } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarIcon, FileText, Download } from "lucide-react";
-import { format, startOfMonth, eachDayOfInterval } from "date-fns";
+import { format, startOfMonth, eachDayOfInterval, subMonths } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import type { ReportData, ProcessedReport, NewJoiner } from "./report-types";
+import type { ReportData, ProcessedReport, NewJoiner, RevenueData } from "./report-types";
 import { AttendanceReportTable } from "./attendance-report-table";
 import { ReportSummary } from "./report-summary";
 import { NewJoiners } from "./new-joiners";
@@ -26,6 +26,7 @@ export function ReportsClient() {
   const { toast } = useToast();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
+  const [coaches, setCoaches] = useState<Record<string, string>>({});
   const [selectedStadium, setSelectedStadium] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -33,6 +34,7 @@ export function ReportsClient() {
   });
   const [processedReport, setProcessedReport] = useState<ProcessedReport | null>(null);
   const [newJoiners, setNewJoiners] = useState<NewJoiner[]>([]);
+  const [revenueData, setRevenueData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -62,16 +64,33 @@ export function ReportsClient() {
       collection(firestore, "stadiums"),
       where("organizationId", "==", organizationId)
     );
-    const unsubscribe = onSnapshot(stadiumsQuery, (snapshot) => {
+    const unsubscribeStadiums = onSnapshot(stadiumsQuery, (snapshot) => {
       const stadiumsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Stadium[];
       setStadiums(stadiumsData);
       setLoading(false);
     });
+    
+    const coachesQuery = query(
+        collection(firestore, "users"),
+        where("organizationId", "==", organizationId),
+        where("role", "==", "coach")
+    );
+    const unsubscribeCoaches = onSnapshot(coachesQuery, (snapshot) => {
+        const coachesMap: Record<string, string> = {};
+        snapshot.forEach(doc => {
+            coachesMap[doc.id] = doc.data().fullName;
+        });
+        setCoaches(coachesMap);
+    });
 
-    return () => unsubscribe();
+
+    return () => {
+        unsubscribeStadiums();
+        unsubscribeCoaches();
+    };
   }, [organizationId]);
-
-  const processDataForReport = (students: Student[], attendanceRecords: ReportData[], range: DateRange): { report: ProcessedReport, joiners: NewJoiner[] } => {
+  
+  const processDataForReport = async (students: Student[], attendanceRecords: ReportData[], range: DateRange): Promise<{ report: ProcessedReport, joiners: NewJoiner[], revenue: RevenueData }> => {
     const dates = eachDayOfInterval({ start: range.from!, end: range.to! });
     const studentData: Record<string, { name: string; attendance: Record<string, 'present' | 'absent' | null> }> = {};
     
@@ -101,9 +120,52 @@ export function ReportsClient() {
     
     const joiners = students
         .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
-        .map(s => ({ name: s.fullName, joinDate: s.joinDate.toDate(), fees: s.fees || 0 }));
+        .map(s => ({ 
+            name: s.fullName, 
+            joinDate: s.joinDate.toDate(), 
+            stadiumName: stadiums.find(stadium => stadium.id === s.stadiumId)?.name || 'N/A',
+            coachName: coaches[s.coachId] || 'N/A'
+        }));
+
+    // Revenue calculation
+    const currentMonthRevenue = students
+        .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
+        .reduce((acc, s) => acc + (s.fees || 0), 0);
     
-    const totalRevenue = joiners.reduce((acc, joiner) => acc + joiner.fees, 0);
+    const revenueByDay: Record<string, number> = {};
+     students
+        .filter(s => s.joinDate.toDate() >= range.from! && s.joinDate.toDate() <= range.to!)
+        .forEach(s => {
+            const dateStr = format(s.joinDate.toDate(), 'yyyy-MM-dd');
+            revenueByDay[dateStr] = (revenueByDay[dateStr] || 0) + (s.fees || 0);
+        });
+
+    const highestRevenueDay = Object.entries(revenueByDay).reduce((max, entry) => entry[1] > max.amount ? { date: entry[0], amount: entry[1] } : max, { date: '', amount: 0 });
+
+    // Previous month revenue for growth calculation
+    const prevMonthStart = subMonths(range.from!, 1);
+    const prevMonthEnd = subMonths(range.to!, 1);
+
+    const prevMonthStudentsQuery = query(
+        collectionGroup(firestore, "students"), 
+        where("organizationId", "==", organizationId),
+        where("stadiumId", "==", selectedStadium),
+        where("joinDate", ">=", Timestamp.fromDate(prevMonthStart)),
+        where("joinDate", "<=", Timestamp.fromDate(prevMonthEnd))
+    );
+    const prevMonthSnapshot = await getDocs(prevMonthStudentsQuery);
+    const prevMonthRevenue = prevMonthSnapshot.docs.reduce((acc, doc) => acc + (doc.data().fees || 0), 0);
+    
+    const growth = prevMonthRevenue > 0 
+        ? Math.round(((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100)
+        : currentMonthRevenue > 0 ? 100 : 0;
+
+    const revenue: RevenueData = {
+        totalRevenue: currentMonthRevenue,
+        monthName: format(range.from!, 'MMMM yyyy'),
+        highestRevenueDay,
+        growth
+    }
 
     const report: ProcessedReport = {
         dates,
@@ -111,14 +173,14 @@ export function ReportsClient() {
         summary: {
             totalStudents: students.length,
             averageAttendance: avgAttendance,
-            totalRevenue: totalRevenue,
             alwaysPresent: studentRows.filter(s => s.percentage === 100).map(s => s.name),
-            alwaysAbsent: studentRows.filter(s => s.presents === 0 && s.absents > 0).map(s => s.name),
+            below60Attendance: studentRows.filter(s => s.percentage < 60 && s.presents > 0).map(s => s.name),
         }
     };
 
-    return { report, joiners };
+    return { report, joiners, revenue };
   }
+
 
   const handleGenerateReport = async () => {
     if (!selectedStadium || !dateRange?.from || !dateRange?.to) {
@@ -133,6 +195,7 @@ export function ReportsClient() {
     setIsGenerating(true);
     setProcessedReport(null);
     setNewJoiners([]);
+    setRevenueData(null);
 
     try {
       const studentsRef = collection(firestore, `stadiums/${selectedStadium}/students`);
@@ -149,13 +212,18 @@ export function ReportsClient() {
       
       if (studentsData.length === 0) {
         toast({ title: "No Students Found", description: "There are no students enrolled in this stadium to generate a report for." });
+        setProcessedReport({ dates: [], studentData: [], summary: { totalStudents: 0, averageAttendance: 0, alwaysPresent: [], below60Attendance: [] } });
+        setNewJoiners([]);
+        setRevenueData({ totalRevenue: 0, monthName: format(dateRange.from, "MMMM yyyy"), highestRevenueDay: { date: '', amount: 0 }, growth: 0 });
+        setIsGenerating(false);
         return;
       }
 
-      const { report, joiners } = processDataForReport(studentsData, attendanceData, dateRange);
+      const { report, joiners, revenue } = await processDataForReport(studentsData, attendanceData, dateRange);
       
       setProcessedReport(report);
       setNewJoiners(joiners);
+      setRevenueData(revenue);
 
       toast({
           title: "Report Generated Successfully",
@@ -175,11 +243,11 @@ export function ReportsClient() {
   };
 
   const handleDownloadPdf = async () => {
-    if (!processedReport || !stadiums.length || !dateRange?.from) return;
+    if (!processedReport || !stadiums.length || !dateRange?.from || !revenueData) return;
     setIsDownloading(true);
     try {
       const stadiumName = stadiums.find(s => s.id === selectedStadium)?.name || "Unknown Stadium";
-      await generatePdf({ reportData: processedReport, newJoiners, stadiumName, dateRange });
+      await generatePdf({ reportData: processedReport, newJoiners, revenueData, stadiumName, dateRange });
       toast({ title: "PDF Download Started", description: "Your report is being downloaded." });
     } catch (error) {
         console.error("Error generating PDF:", error);
@@ -273,7 +341,7 @@ export function ReportsClient() {
             </div>
             <AttendanceReportTable reportData={processedReport} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <ReportSummary summary={processedReport.summary} />
+              <ReportSummary summary={processedReport.summary} revenue={revenueData} />
               <NewJoiners joiners={newJoiners} />
             </div>
         </div>

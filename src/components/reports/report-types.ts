@@ -1,5 +1,5 @@
 
-import type { Attendance, Student } from "@/lib/types";
+import type { Attendance, Student, Stadium } from "@/lib/types";
 
 export type ReportData = Attendance & { studentName: string };
 
@@ -12,12 +12,18 @@ export interface StudentReportData {
     percentage: number;
 }
 
+export interface RevenueData {
+    totalRevenue: number;
+    monthName: string;
+    highestRevenueDay: { date: string, amount: number };
+    growth: number;
+}
+
 export interface ReportSummaryData {
     totalStudents: number;
     averageAttendance: number;
-    totalRevenue: number;
     alwaysPresent: string[];
-    alwaysAbsent: string[];
+    below60Attendance: string[];
 }
 
 export interface ProcessedReport {
@@ -29,5 +35,6 @@ export interface ProcessedReport {
 export interface NewJoiner {
     name: string;
     joinDate: Date;
-    fees: number;
+    coachName: string;
+    stadiumName: string;
 }

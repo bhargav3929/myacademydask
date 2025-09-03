@@ -7,14 +7,13 @@ import type { NewJoiner } from "./report-types";
 import { format } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 interface NewJoinersProps {
   joiners: NewJoiner[];
 }
 
 export function NewJoiners({ joiners }: NewJoinersProps) {
-  const totalRevenue = joiners.reduce((acc, joiner) => acc + joiner.fees, 0);
-
   return (
     <Card>
       <CardHeader>
@@ -26,32 +25,29 @@ export function NewJoiners({ joiners }: NewJoinersProps) {
                 </CardTitle>
                 <CardDescription>Students who registered within the selected period.</CardDescription>
             </div>
-            <div className="text-right">
-                <p className="text-sm text-muted-foreground">Revenue</p>
-                <p className="text-xl font-bold text-green-600">${totalRevenue.toLocaleString()}</p>
-            </div>
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-48">
+        <ScrollArea className="h-72">
             {joiners.length > 0 ? (
-                <div className="space-y-4">
-                    {joiners.map((joiner, index) => (
-                        <div key={index} className="flex items-center">
-                            <Avatar className="h-9 w-9">
-                                <AvatarFallback>{joiner.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="ml-4 space-y-1">
-                                <p className="text-sm font-medium leading-none">{joiner.name}</p>
-                                <p className="text-sm text-muted-foreground">Joined on {format(joiner.joinDate, "PPP")}</p>
-                            </div>
-                             <div className="ml-auto text-right">
-                                <p className="text-sm font-semibold text-foreground">${joiner.fees.toLocaleString()}</p>
-                                <p className="text-xs text-muted-foreground">Fee Paid</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Coach</TableHead>
+                            <TableHead>Join Date</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {joiners.map((joiner, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-medium">{joiner.name}</TableCell>
+                                <TableCell>{joiner.coachName}</TableCell>
+                                <TableCell>{format(joiner.joinDate, "dd MMM, yyyy")}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             ) : (
                 <div className="flex h-full items-center justify-center">
                     <p className="text-sm text-muted-foreground">No new students joined in this period.</p>

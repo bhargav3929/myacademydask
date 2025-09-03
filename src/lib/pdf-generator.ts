@@ -1,202 +1,222 @@
 
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import type { ProcessedReport, NewJoiner } from "@/components/reports/report-types";
+import type { ProcessedReport, NewJoiner, RevenueData } from "@/components/reports/report-types";
 
 interface GeneratePdfProps {
   reportData: ProcessedReport;
   newJoiners: NewJoiner[];
+  revenueData: RevenueData;
   stadiumName: string;
   dateRange: DateRange;
 }
 
-const PRIMARY_COLOR = "#1E3A8A";
-const GREEN_COLOR = "#10B981";
-const RED_COLOR = "#EF4444";
-const GRAY_BACKGROUND = "#F3F4F6";
-const LIGHT_GRAY_BACKGROUND = "#F9FAFB";
-const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"/><path d="M18 16.5V14a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2.5"/><path d="M6 14.5V14a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v.5"/><path d="M12 8a4 4 0 0 0-4 4v2"/><path d="M12 8a4 4 0 0 1 4 4v2"/><path d="m5 16 1-1"/><path d="m19 16-1-1"/><path d="M12 8V2"/></svg>`;
+const getPercentageClass = (percentage: number) => {
+    if (percentage >= 90) return "percentage-high";
+    if (percentage >= 60) return "percentage-medium";
+    return "percentage-low";
+};
 
-export const generatePdf = async ({ reportData, newJoiners, stadiumName, dateRange }: GeneratePdfProps) => {
-  const doc = new jsPDF({
-    orientation: "landscape",
-    unit: "px",
-    format: "a4",
-  });
+const generateReportHTML = ({ reportData, newJoiners, revenueData, stadiumName, dateRange }: GeneratePdfProps): string => {
+    const { dates, studentData, summary } = reportData;
 
-  const { dates, studentData, summary } = reportData;
-  const checkMark = "✓"; 
-  const crossMark = "✗"; 
+    const attendanceRows = studentData.map(student => `
+        <tr>
+            <td>${student.name}</td>
+            ${dates.map(date => {
+                const status = student.attendance[format(date, "yyyy-MM-dd")];
+                if (status === 'present') return `<td class="present">✓</td>`;
+                if (status === 'absent') return `<td class="absent">✗</td>`;
+                return `<td>-</td>`;
+            }).join('')}
+            <td class="summary-cell">${student.presents}</td>
+            <td class="summary-cell">${student.absents}</td>
+            <td class="percentage-cell ${getPercentageClass(student.percentage)}">${student.percentage}%</td>
+        </tr>
+    `).join('');
 
-  const addHeader = (pageNumber: number) => {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    // Blue Banner
-    doc.setFillColor(PRIMARY_COLOR);
-    doc.rect(0, 0, pageWidth, 50, 'F');
+    const joinerRows = newJoiners.map(joiner => `
+        <tr>
+            <td>${joiner.name}</td>
+            <td class="join-date">${format(joiner.joinDate, "MMM dd, yyyy")}</td>
+            <td>${joiner.coachName}</td>
+            <td>${joiner.stadiumName}</td>
+        </tr>
+    `).join('');
+
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Premium Attendance Report</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #374151; line-height: 1.6; }
+            .report-container { max-width: 1200px; margin: 0 auto; background: white; }
+            .page-break { page-break-after: always; }
+            .header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 32px; display: flex; justify-content: space-between; align-items: center; }
+            .stadium-name { font-size: 28px; font-weight: 700; }
+            .report-title { font-size: 24px; font-weight: 600; text-align: center; flex-grow: 1; }
+            .date-range { font-size: 14px; font-weight: 400; text-align: right; }
+            .header-divider { height: 3px; background: linear-gradient(90deg, #047857, #10B981); }
+            .content { padding: 40px; }
+            .section { margin-bottom: 32px; }
+            .section-title { font-size: 20px; font-weight: 600; color: #1E3A8A; margin-bottom: 20px; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px; }
+            .attendance-table { width: 100%; border-collapse: collapse; overflow: hidden; }
+            .attendance-table th { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); color: white; padding: 12px; font-weight: 600; font-size: 13px; text-align: center; }
+            .attendance-table th:first-child { text-align: left; min-width: 150px; }
+            .attendance-table th.summary-col { background: linear-gradient(135deg, #047857 0%, #10B981 100%); }
+            .attendance-table td { padding: 10px 12px; border-bottom: 1px solid #E5E7EB; text-align: center; font-size: 13px; }
+            .attendance-table td:first-child { text-align: left; font-weight: 500; }
+            .attendance-table tr:nth-child(even) { background-color: #F9FAFB; }
+            .present { color: #10B981; font-weight: 600; font-size: 16px; }
+            .absent { color: #EF4444; font-weight: 600; font-size: 16px; }
+            .summary-cell, .percentage-cell { font-weight: 600; }
+            .percentage-high { color: #10B981; } .percentage-medium { color: #F59E0B; } .percentage-low { color: #EF4444; }
+            .summary-card { background: #F9FAFB; border-radius: 16px; padding: 24px; border: 1px solid #E5E7EB; }
+            .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+            .summary-item { display: flex; align-items: center; gap: 16px; }
+            .summary-icon { font-size: 28px; width: 52px; height: 52px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+            .summary-label { font-size: 14px; color: #6B7280; font-weight: 500; }
+            .summary-value { font-size: 24px; font-weight: 700; color: #1E3A8A; }
+            .joiners-table { width: 100%; border-collapse: collapse; }
+            .joiners-table th { background: linear-gradient(135deg, #047857 0%, #10B981 100%); color: white; padding: 12px; font-weight: 600; text-align: left; }
+            .joiners-table td { padding: 12px; border-bottom: 1px solid #E5E7EB; }
+            .joiners-table tr:nth-child(even) td { background-color: #F9FAFB; }
+            .join-date { font-weight: 500; color: #047857; }
+        </style>
+    </head>
+    <body>
+        <div class="report-container">
+            <div class="header">
+                <div class="stadium-name">${stadiumName}</div>
+                <div class="report-title">Monthly Attendance Report</div>
+                <div class="date-range">
+                    ${format(dateRange.from!, 'MMM, yyyy')}<br>
+                    Generated: ${format(new Date(), 'MMM d, yyyy')}
+                </div>
+            </div>
+            <div class="header-divider"></div>
+            <div class="content">
+                <div class="section">
+                    <h2 class="section-title">Attendance Register</h2>
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                ${dates.map(d => `<th>${format(d, 'd')}</th>`).join('')}
+                                <th class="summary-col">P</th>
+                                <th class="summary-col">A</th>
+                                <th class="summary-col">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>${attendanceRows}</tbody>
+                    </table>
+                </div>
+                <div class="section">
+                    <h2 class="section-title">Summary</h2>
+                    <div class="summary-card">
+                        <div class="summary-grid">
+                            <div class="summary-item"><div class="summary-icon">👥</div><div><div class="summary-label">Total Students</div><div class="summary-value">${summary.totalStudents}</div></div></div>
+                            <div class="summary-item"><div class="summary-icon">📊</div><div><div class="summary-label">Average Attendance</div><div class="summary-value">${summary.averageAttendance}%</div></div></div>
+                            <div class="summary-item"><div class="summary-icon">🌟</div><div><div class="summary-label">Perfect Attendance</div><div class="summary-value">${summary.alwaysPresent.length}</div></div></div>
+                            <div class="summary-item"><div class="summary-icon">⚠️</div><div><div class="summary-label">Below 60% Attendance</div><div class="summary-value">${summary.below60Attendance.length}</div></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h2 class="section-title">Revenue Report</h2>
+                    <div class="summary-card">
+                        <div class="summary-grid">
+                             <div class="summary-item"><div class="summary-icon">💰</div><div><div class="summary-label">Total Revenue</div><div class="summary-value">$${revenueData.totalRevenue.toLocaleString()}</div></div></div>
+                             <div class="summary-item"><div class="summary-icon">📅</div><div><div class="summary-label">Month</div><div class="summary-value">${revenueData.monthName}</div></div></div>
+                             <div class="summary-item"><div class="summary-icon">🏆</div><div><div class="summary-label">Highest Revenue Day</div><div class="summary-value">${revenueData.highestRevenueDay.date ? `${format(new Date(revenueData.highestRevenueDay.date), 'MMM d')} – $${revenueData.highestRevenueDay.amount.toLocaleString()}`: 'N/A'}</div></div></div>
+                             <div class="summary-item"><div class="summary-icon">📈</div><div><div class="summary-label">Growth (vs Last Month)</div><div class="summary-value">${revenueData.growth > 0 ? `+${revenueData.growth}` : revenueData.growth}%</div></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h2 class="section-title">New Students This Month</h2>
+                    <table class="joiners-table">
+                        <thead><tr><th>Name</th><th>Join Date</th><th>Assigned Coach</th><th>Stadium</th></tr></thead>
+                        <tbody>${joinerRows.length > 0 ? joinerRows : `<tr><td colspan="4" style="text-align:center; padding: 20px;">No new students this month.</td></tr>`}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+};
+
+
+export const generatePdf = async (props: GeneratePdfProps) => {
+    const reportHtml = generateReportHTML(props);
     
-    // Logo and Stadium Name
-    doc.addSvgAsImage(LOGO_SVG, 28, 14, 22, 22);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor("#FFFFFF");
-    doc.text(stadiumName, 60, 28);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("CourtCommand", 60, 40);
+    // Create an off-screen iframe to render the HTML
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '1200px'; // Corresponds to max-width in CSS
+    iframe.style.height = '100vh';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
 
-    // Report Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Attendance Report", pageWidth - 30, 28, { align: "right" });
-    const dateRangeText = dateRange.from && dateRange.to 
-        ? `${format(dateRange.from, "dd MMM yyyy")} – ${format(dateRange.to, "dd MMM yyyy")}`
-        : "N/A";
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text(dateRangeText, pageWidth - 30, 40, { align: "right" });
-
-    // Reset colors
-    doc.setTextColor(0,0,0);
-  };
-  
-  const addFooter = () => {
-    const pageCount = (doc.internal as any).getNumberOfPages();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setDrawColor("#E5E7EB");
-        doc.line(30, doc.internal.pageSize.getHeight() - 35, pageWidth - 30, doc.internal.pageSize.getHeight() - 35);
-        doc.setFontSize(8);
-        doc.setTextColor("#6B7280");
-        doc.text(
-            `Report generated on: ${format(new Date(), "dd MMM yyyy, hh:mm a")}`,
-            30,
-            doc.internal.pageSize.getHeight() - 20
-        );
-         doc.text(
-            `Page ${i} of ${pageCount}`,
-            pageWidth - 30,
-            doc.internal.pageSize.getHeight() - 20,
-            { align: 'right' }
-        );
+    const iframeDoc = iframe.contentWindow?.document;
+    if (!iframeDoc) {
+        document.body.removeChild(iframe);
+        throw new Error("Could not create iframe for PDF generation.");
     }
-  };
+    
+    iframeDoc.open();
+    iframeDoc.write(reportHtml);
+    iframeDoc.close();
 
-  const tableHead = [
-    { content: "Student Name", styles: { halign: 'left', fontStyle: 'bold', minCellWidth: 100 } },
-    ...dates.map(date => ({ content: format(date, "d"), styles: { minCellWidth: 15, halign: 'center' } })),
-    { content: "P", styles: { halign: 'center', fontStyle: 'bold' } },
-    { content: "A", styles: { halign: 'center', fontStyle: 'bold' } },
-    { content: "%", styles: { halign: 'center', fontStyle: 'bold' } },
-  ];
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for render
 
-  const tableBody = studentData.map(student => [
-    { content: student.name, styles: { fontStyle: 'bold' } },
-    ...dates.map(date => {
-        const status = student.attendance[format(date, "yyyy-MM-dd")];
-        return status === 'present' ? checkMark : status === 'absent' ? crossMark : '-';
-    }),
-    student.presents,
-    student.absents,
-    `${student.percentage}%`
-  ]);
-
-  autoTable(doc, {
-    startY: 65,
-    head: [tableHead],
-    body: tableBody,
-    theme: "grid",
-    headStyles: { fillColor: PRIMARY_COLOR, textColor: 255, fontSize: 9, fontStyle: 'bold', cellPadding: { top: 4, bottom: 4 } },
-    styles: { fontSize: 8, cellPadding: 3, halign: 'center', },
-    columnStyles: {
-        0: { halign: 'left' },
-    },
-    didDrawPage: (data) => {
-        addHeader(data.pageNumber);
-    },
-    didDrawCell: (data) => {
-        if (data.section === 'body' && data.row.index % 2 !== 0) {
-            data.cell.styles.fillColor = LIGHT_GRAY_BACKGROUND;
-        }
-    },
-    didParseCell: (data) => {
-        if (data.section === 'body' && data.column.index > 0 && data.column.index <= dates.length) {
-             if (data.cell.raw === checkMark) data.cell.styles.textColor = GREEN_COLOR;
-             if (data.cell.raw === crossMark) data.cell.styles.textColor = RED_COLOR;
-             data.cell.styles.fontStyle = 'bold';
-        }
-         if (data.section === 'body' && data.column.index === dates.length + 3) {
-             const percentage = parseInt(String(data.cell.raw).replace('%', ''));
-             if (percentage >= 90) data.cell.styles.textColor = GREEN_COLOR;
-             else if (percentage >= 70) data.cell.styles.textColor = "#F59E0B"; // amber-500
-             else data.cell.styles.textColor = RED_COLOR;
-             data.cell.styles.fontStyle = 'bold';
-        }
+    const reportContainer = iframeDoc.body.firstElementChild as HTMLElement;
+    if (!reportContainer) {
+        document.body.removeChild(iframe);
+        throw new Error("Report container not found in iframe.");
     }
-  });
 
-  let finalY = (doc as any).lastAutoTable.finalY + 25;
-  if (finalY > doc.internal.pageSize.getHeight() - 150) {
-      doc.addPage();
-      finalY = 65;
-  }
-  
-  // Two-column layout for summary and new joiners
-  autoTable(doc, {
-      startY: finalY,
-      head: [[{content: '📊 Report Summary', colSpan: 2, styles: { halign: 'left', fillColor: PRIMARY_COLOR, textColor: 255 }}]],
-      body: [
-        ["Total Students", summary.totalStudents],
-        ["Avg. Attendance", `${summary.averageAttendance}%`],
-        ["Total Revenue", `$${summary.totalRevenue.toLocaleString()}`],
-      ],
-      theme: 'grid',
-      columnStyles: { 0: { fontStyle: 'bold' } },
-      margin: { left: 30, right: doc.internal.pageSize.getWidth() / 2 + 15 },
-  });
-  
-  let summaryFinalY = (doc as any).lastAutoTable.finalY;
-  
-  autoTable(doc, {
-      startY: summaryFinalY + 10,
-      head: [[{content: '🌟 Perfect Attendance', styles: { halign: 'left', fillColor: PRIMARY_COLOR, textColor: 255 }}]],
-      body: [[summary.alwaysPresent.join(", ") || "None"]],
-      theme: 'grid',
-      margin: { left: 30, right: doc.internal.pageSize.getWidth() / 2 + 15 },
-  });
-  
-  summaryFinalY = (doc as any).lastAutoTable.finalY;
-
-   autoTable(doc, {
-      startY: summaryFinalY + 10,
-      head: [[{content: '⚠️ Complete Absentees', styles: { halign: 'left', fillColor: PRIMARY_COLOR, textColor: 255 }}]],
-      body: [[summary.alwaysAbsent.join(", ") || "None"]],
-      theme: 'grid',
-      margin: { left: 30, right: doc.internal.pageSize.getWidth() / 2 + 15 },
-  });
-  
-
-  if (newJoiners.length > 0) {
-    const joinersHead = [['Student Name', 'Joined On', 'Fee Paid']];
-    const joinersBody = newJoiners.map(j => [j.name, format(j.joinDate, "dd MMM, yyyy"), `$${j.fees.toLocaleString()}`]);
-    autoTable(doc, {
-        startY: finalY,
-        head: [[{content: '✨ New Joiners This Period', colSpan: 3, styles: { halign: 'left', fillColor: PRIMARY_COLOR, textColor: 255 }}]],
-        body: [...joinersHead, ...joinersBody],
-        theme: 'grid',
-        headStyles: { fontStyle: 'bold' },
-        didDrawCell: (data) => {
-            if (data.section === 'body' && data.row.index > 0 && data.row.index % 2 === 0) { // Start striping from second body row
-                data.cell.styles.fillColor = LIGHT_GRAY_BACKGROUND;
-            }
-        },
-        margin: { left: doc.internal.pageSize.getWidth() / 2, right: 30 },
+    const canvas = await html2canvas(reportContainer, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
     });
-  }
 
-  addFooter();
+    document.body.removeChild(iframe); // Clean up iframe
 
-  doc.save(`CourtCommand_Report_${stadiumName.replace(/ /g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: 'a4',
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const ratio = canvasWidth / pdfWidth;
+    const pageHeight = canvasHeight / ratio;
+
+    let heightLeft = pageHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pageHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+        position = heightLeft - pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pageHeight);
+        heightLeft -= pdfHeight;
+    }
+    
+    pdf.save(`CourtCommand_Report_${props.stadiumName.replace(/ /g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 };
