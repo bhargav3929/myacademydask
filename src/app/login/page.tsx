@@ -8,7 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { auth, firestore, functions } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -71,30 +72,40 @@ export default function LoginPage() {
     }
     return querySnapshot.docs[0].data().email;
   }
+  
+  const setInitialOwnerClaim = async () => {
+    try {
+        const setOwnerClaim = httpsCallable(functions, 'setOwnerClaim');
+        await setOwnerClaim();
+        console.log("Successfully set owner claim for initial setup.");
+    } catch (error) {
+        console.error("Failed to set owner claim:", error);
+        // This might not be critical for the user to see, but good for debugging.
+        // We can optionally show a toast here if this step is crucial for immediate use.
+    }
+  }
 
-  const handleSuccessfulLogin = async (user: any) => {
+  const handleSuccessfulLogin = async (user: any, isInitialSetup: boolean = false) => {
     const userDocRef = doc(firestore, "users", user.uid);
     let userDocSnap = await getDoc(userDocRef);
 
     if (!userDocSnap.exists()) {
-        // This can happen if auth user exists but firestore doc doesn't.
-        // We can create it here if needed, or treat as an error.
-        // For owner, we definitely want to create it.
         if (user.email === OWNER_EMAIL) {
             await setDoc(userDocRef, {
                 uid: user.uid,
                 email: OWNER_EMAIL,
                 username: OWNER_USERNAME,
                 fullName: "Academy Director",
-                role: "owner",
+                role: "owner", // Set role in Firestore document
                 organizationId: MOCK_ORGANIZATION_ID,
                 createdAt: serverTimestamp(),
             });
-            // Re-fetch the snap after creating it
+            
+            // Set the custom claim in Auth for the new owner
+            await setInitialOwnerClaim();
+            // Re-fetch the snap after creating it and setting claim
             userDocSnap = await getDoc(userDocRef);
         } else {
-             // This case should ideally not be reached if sign-up is controlled.
-             // For robustness, we can show an error or create a default profile.
              console.error("User profile not found in Firestore for:", user.uid);
              toast({
                 variant: "destructive",
@@ -105,6 +116,8 @@ export default function LoginPage() {
         }
     }
     
+    // Refresh token to get latest custom claims
+    await user.getIdToken(true);
     const userRole = userDocSnap.exists() ? userDocSnap.data()?.role : "owner";
 
     toast({
@@ -126,12 +139,9 @@ export default function LoginPage() {
       const emailToLogin = await getEmailFromIdentifier(data.identifier);
       
       if (!emailToLogin) {
-          // If identifier doesn't match any email or username, it's invalid credentials
-          // unless it's the very first login for the admin.
           if(data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-              // This handles the case where even the owner's email doesn't exist yet.
               const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-              await handleSuccessfulLogin(userCredential.user);
+              await handleSuccessfulLogin(userCredential.user, true);
               return;
           }
           throw new Error("Invalid credentials");
@@ -142,11 +152,9 @@ export default function LoginPage() {
         await handleSuccessfulLogin(userCredential.user);
       } catch (error: any) {
         if (error.code === 'auth/user-not-found' && data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-           // This is the special case for the very first login of the owner account.
            const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-           await handleSuccessfulLogin(userCredential.user);
+           await handleSuccessfulLogin(userCredential.user, true);
         } else {
-            // For all other errors, including wrong password, show a generic message.
             throw new Error("Invalid credentials");
         }
       }

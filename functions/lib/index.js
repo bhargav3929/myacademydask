@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createCoachUser = void 0;
+exports.setOwnerClaim = exports.createCoachUser = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require("cors");
@@ -8,7 +8,7 @@ admin.initializeApp();
 const corsHandler = cors({ origin: true });
 exports.createCoachUser = functions.region('us-central1').https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
-        var _a, _b, _c;
+        var _a;
         // Handle preflight OPTIONS request
         if (req.method === 'OPTIONS') {
             res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
@@ -20,26 +20,26 @@ exports.createCoachUser = functions.region('us-central1').https.onRequest((req, 
         // 1. Authentication and Authorization Check
         const idToken = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split('Bearer ')[1];
         if (!idToken) {
-            res.status(401).send({ error: 'Unauthorized', message: 'The function must be called while authenticated.' });
+            res.status(401).send({ error: { message: 'The function must be called while authenticated.' } });
             return;
         }
         try {
             const decodedToken = await admin.auth().verifyIdToken(idToken);
             const callerUid = decodedToken.uid;
-            const callerUserRecord = await admin.auth().getUser(callerUid);
-            if (((_b = callerUserRecord.customClaims) === null || _b === void 0 ? void 0 : _b.role) !== 'owner') {
-                res.status(403).send({ error: 'permission-denied', message: 'Only owners can create coach users.' });
+            // Use the token to check for role, don't getUser
+            if (decodedToken.role !== 'owner') {
+                res.status(403).send({ error: { message: 'Only owners can create coach users.' } });
                 return;
             }
-            const organizationId = (_c = callerUserRecord.customClaims) === null || _c === void 0 ? void 0 : _c.organizationId;
+            const organizationId = decodedToken.organizationId;
             if (!organizationId) {
-                res.status(400).send({ error: 'failed-precondition', message: 'The owner is not associated with an organization.' });
+                res.status(400).send({ error: { message: 'The owner is not associated with an organization.' } });
                 return;
             }
             // 2. Input Validation
             const { email, password, displayName, coachUsername } = req.body.data || {};
             if (!email || !password || !displayName || !coachUsername) {
-                res.status(400).send({ error: 'invalid-argument', message: 'The function must be called with email, password, displayName, and coachUsername.' });
+                res.status(400).send({ error: { message: 'The function must be called with email, password, displayName, and coachUsername.' } });
                 return;
             }
             // 3. Create User in Firebase Authentication
@@ -61,16 +61,37 @@ exports.createCoachUser = functions.region('us-central1').https.onRequest((req, 
             console.error('Error creating coach user:', error);
             // Map common auth errors to user-friendly callable errors
             if (error.code === 'auth/email-already-exists') {
-                res.status(409).send({ error: 'already-exists', message: 'The email address is already in use by another account.' });
+                res.status(409).send({ error: { message: 'The email address is already in use by another account.' } });
                 return;
             }
             if (error.code === 'auth/invalid-password') {
-                res.status(400).send({ error: 'invalid-argument', message: 'The password must be a string with at least 6 characters.' });
+                res.status(400).send({ error: { message: 'The password must be a string with at least 6 characters.' } });
                 return;
             }
             // For other errors, throw a generic internal error
-            res.status(500).send({ error: 'internal', message: 'An unexpected error occurred while creating the user.' });
+            res.status(500).send({ error: { message: 'An unexpected error occurred while creating the user.' } });
         }
     });
+});
+exports.setOwnerClaim = functions.region('us-central1').https.onCall(async (data, context) => {
+    // Check if the user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+    }
+    const uid = context.auth.uid;
+    const user = await admin.auth().getUser(uid);
+    // Check if it's the owner account (using a fixed email for security)
+    if (user.email !== 'director@courtcommand.com') {
+        throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
+    }
+    try {
+        // Set custom claims
+        await admin.auth().setCustomUserClaims(uid, { role: 'owner', organizationId: 'mock-org-id-for-testing' });
+        return { success: true, message: 'Owner claim set successfully.' };
+    }
+    catch (error) {
+        console.error('Error setting owner claim:', error);
+        throw new functions.https.HttpsError('internal', 'An unexpected error occurred.');
+    }
 });
 //# sourceMappingURL=index.js.map
