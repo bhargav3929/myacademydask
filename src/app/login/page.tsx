@@ -75,13 +75,12 @@ export default function LoginPage() {
   
   const setInitialOwnerClaim = async () => {
     try {
-        const setOwnerClaim = httpsCallable(functions, 'setOwnerClaim');
-        await setOwnerClaim();
+        const setOwnerClaimFunction = httpsCallable(functions, 'setOwnerClaim');
+        await setOwnerClaimFunction();
         console.log("Successfully set owner claim for initial setup.");
     } catch (error) {
         console.error("Failed to set owner claim:", error);
         // This might not be critical for the user to see, but good for debugging.
-        // We can optionally show a toast here if this step is crucial for immediate use.
     }
   }
 
@@ -89,8 +88,10 @@ export default function LoginPage() {
     const userDocRef = doc(firestore, "users", user.uid);
     let userDocSnap = await getDoc(userDocRef);
 
-    if (!userDocSnap.exists()) {
+    if (isInitialSetup || !userDocSnap.exists()) {
         if (user.email === OWNER_EMAIL) {
+            // This is the first time the owner is logging in.
+            // Create their profile and set their custom auth claim.
             await setDoc(userDocRef, {
                 uid: user.uid,
                 email: OWNER_EMAIL,
@@ -103,9 +104,8 @@ export default function LoginPage() {
             
             // Set the custom claim in Auth for the new owner
             await setInitialOwnerClaim();
-            // Re-fetch the snap after creating it and setting claim
-            userDocSnap = await getDoc(userDocRef);
-        } else {
+            userDocSnap = await getDoc(userDocRef); // Re-fetch snap after creation
+        } else if (!userDocSnap.exists()) {
              console.error("User profile not found in Firestore for:", user.uid);
              toast({
                 variant: "destructive",
@@ -118,7 +118,8 @@ export default function LoginPage() {
     
     // Refresh token to get latest custom claims
     await user.getIdToken(true);
-    const userRole = userDocSnap.exists() ? userDocSnap.data()?.role : "owner";
+    const idTokenResult = await user.getIdTokenResult();
+    const userRole = idTokenResult.claims.role;
 
     toast({
       title: "Login Successful",
@@ -154,8 +155,10 @@ export default function LoginPage() {
         if (error.code === 'auth/user-not-found' && data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
            const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
            await handleSuccessfulLogin(userCredential.user, true);
-        } else {
+        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
             throw new Error("Invalid credentials");
+        } else {
+             throw error;
         }
       }
 
