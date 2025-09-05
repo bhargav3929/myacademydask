@@ -57,28 +57,3 @@ export const createCoachUser = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('internal', 'An unexpected error occurred while creating the user.');
     }
 });
-
-
-export const setOwnerClaim = functions.https.onCall(async (data, context) => {
-    // Check if the user is authenticated
-    if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
-    }
-
-    const uid = context.auth.uid;
-    const user = await admin.auth().getUser(uid);
-
-    // This check is a failsafe. The owner should be the only one with this email.
-    if (user.email !== 'director@courtcommand.com') {
-         throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
-    }
-
-    try {
-        // Set custom claims
-        await admin.auth().setCustomUserClaims(uid, { role: 'owner', organizationId: 'mock-org-id-for-testing' });
-        return { success: true, message: 'Owner claim set successfully.' };
-    } catch (error) {
-        console.error('Error setting owner claim:', error);
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred.');
-    }
-});

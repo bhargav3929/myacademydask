@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore, functions } from "@/lib/firebase";
 import { httpsCallable } from "firebase/functions";
@@ -36,7 +36,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 // In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-const OWNER_EMAIL = "director@courtcommand.com";
+const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || "director@courtcommand.com";
 const OWNER_USERNAME = "admin";
 const OWNER_PASSWORD = "admin123";
 
@@ -58,11 +58,9 @@ export default function LoginPage() {
     if (z.string().email().safeParse(identifier).success) {
         return identifier;
     }
-    // Handle owner username specifically
     if (identifier.toLowerCase() === OWNER_USERNAME) {
         return OWNER_EMAIL;
     }
-    // Handle other usernames
     const usersRef = collection(firestore, "users");
     const q = query(usersRef, where("username", "==", identifier));
     const querySnapshot = await getDocs(q);
@@ -72,65 +70,54 @@ export default function LoginPage() {
     }
     return querySnapshot.docs[0].data().email;
   }
-  
-  const setInitialOwnerClaim = async () => {
+
+  const handleSuccessfulLogin = async (user: User, isInitialSetup: boolean = false) => {
     try {
-        const setOwnerClaimFunction = httpsCallable(functions, 'setOwnerClaim');
-        await setOwnerClaimFunction();
-        console.log("Successfully set owner claim for initial setup.");
-    } catch (error) {
-        console.error("Failed to set owner claim:", error);
-        // This might not be critical for the user to see, but good for debugging.
-    }
-  }
-
-  const handleSuccessfulLogin = async (user: any, isInitialSetup: boolean = false) => {
-    let userDocSnap = await getDoc(doc(firestore, "users", user.uid));
-
-    if (isInitialSetup || !userDocSnap.exists()) {
-        if (user.email === OWNER_EMAIL) {
-            // This is the first time the owner is logging in.
-            await setInitialOwnerClaim();
-
-            // Force refresh to get the new custom claim in the token
-            await user.getIdToken(true);
-            
-            // Create their profile.
-            await setDoc(doc(firestore, "users", user.uid), {
+        if (isInitialSetup) {
+             const userDocRef = doc(firestore, "users", user.uid);
+             await setDoc(userDocRef, {
                 uid: user.uid,
                 email: OWNER_EMAIL,
                 username: OWNER_USERNAME,
                 fullName: "Academy Director",
-                role: "owner", // Set role in Firestore document
+                role: "owner", 
                 organizationId: MOCK_ORGANIZATION_ID,
                 createdAt: serverTimestamp(),
             });
 
-        } else if (!userDocSnap.exists()) {
-             console.error("User profile not found in Firestore for:", user.uid);
-             toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: "User profile is missing. Please contact support.",
-            });
-            return;
+            // Call the setOwnerClaim cloud function
+            const setClaim = httpsCallable(functions, 'setOwnerClaim');
+            await setClaim();
         }
-    }
-    
-    // **THE FIX**: Force refresh the ID token again to get the latest custom claims.
-    await user.getIdToken(true);
-    const idTokenResult = await user.getIdTokenResult();
-    const userRole = idTokenResult.claims.role;
+        
+        // Force a token refresh on the client to get the new claims
+        await user.getIdToken(true);
+        
+        // 4. Redirect based on the role from the refreshed token
+        const idTokenResult = await user.getIdTokenResult();
+        const userRole = idTokenResult.claims.role;
 
-    toast({
-      title: "Login Successful",
-      description: "Redirecting to your dashboard...",
-    });
+        toast({
+          title: "Login Successful",
+          description: "Redirecting to your dashboard...",
+        });
 
-    if (userRole === 'coach') {
-      router.push('/coach/dashboard');
-    } else {
-      router.push('/dashboard');
+        if (userRole === 'owner') {
+          router.push('/dashboard');
+        } else if (userRole === 'coach') {
+          router.push('/coach/dashboard');
+        } else {
+          // Default redirect for any other roles or if role is not set
+          router.push('/dashboard');
+        }
+
+    } catch (error: any) {
+        console.error("Error during successful login handling:", error);
+        toast({
+            variant: "destructive",
+            title: "Login Finalization Failed",
+            description: error.message || "An unexpected error occurred.",
+        });
     }
   }
 
