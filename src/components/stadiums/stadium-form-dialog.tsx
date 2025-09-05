@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { auth, firestore, functions } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -92,45 +93,14 @@ export function AddStadiumDialog() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    const loggedInOwner = auth.currentUser;
-    if (!loggedInOwner) {
+    if (!auth.currentUser) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to create a stadium." });
         setIsLoading(false);
         return;
     }
 
     try {
-        const idToken = await loggedInOwner.getIdToken();
-        
-        // This should be the URL of your deployed function
-        const functionUrl = 'https://us-central1-courtcommand.cloudfunctions.net/createCoachUser';
-
-        const response = await fetch(functionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({
-                email: values.coachEmail,
-                password: values.coachPassword,
-                displayName: values.coachFullName,
-                coachUsername: values.coachUsername,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error.message || 'Failed to create coach user from backend.');
-        }
-
-        const resultData = await response.json();
-        
-        if (!resultData.success || !resultData.uid) {
-            throw new Error(resultData.message || 'Failed to create coach user from backend.');
-        }
-        
-        const ownerUserDocRef = doc(firestore, "users", loggedInOwner.uid);
+        const ownerUserDocRef = doc(firestore, "users", auth.currentUser.uid);
         const ownerUserDocSnap = await getDoc(ownerUserDocRef);
         if (!ownerUserDocSnap.exists()) {
             throw new Error("Owner user profile not found.");
@@ -139,14 +109,27 @@ export function AddStadiumDialog() {
         if (!organizationId) {
             throw new Error("Organization ID is missing from owner profile.");
         }
-        
+
         if (await checkStadiumNameExists(values.stadiumName, organizationId)) {
             form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
             setIsLoading(false);
             return;
         }
 
+        const createCoachUser = httpsCallable(functions, 'createCoachUser');
+        const result = await createCoachUser({
+            email: values.coachEmail,
+            password: values.coachPassword,
+            displayName: values.coachFullName,
+            coachUsername: values.coachUsername,
+        });
 
+        const resultData = result.data as { success: boolean, uid?: string, message?: string };
+        
+        if (!resultData.success || !resultData.uid) {
+            throw new Error(resultData.message || 'Failed to create coach user from backend.');
+        }
+        
         const coachUid = resultData.uid;
         
         const batch = writeBatch(firestore);

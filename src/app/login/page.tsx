@@ -90,6 +90,11 @@ export default function LoginPage() {
     if (isInitialSetup || !userDocSnap.exists()) {
         if (user.email === OWNER_EMAIL) {
             // This is the first time the owner is logging in.
+            await setInitialOwnerClaim();
+
+            // Force refresh to get the new custom claim in the token
+            await user.getIdToken(true);
+            
             // Create their profile.
             await setDoc(doc(firestore, "users", user.uid), {
                 uid: user.uid,
@@ -100,9 +105,7 @@ export default function LoginPage() {
                 organizationId: MOCK_ORGANIZATION_ID,
                 createdAt: serverTimestamp(),
             });
-            
-            // Set the custom claim in Auth for the new owner
-            await setInitialOwnerClaim();
+
         } else if (!userDocSnap.exists()) {
              console.error("User profile not found in Firestore for:", user.uid);
              toast({
@@ -114,7 +117,7 @@ export default function LoginPage() {
         }
     }
     
-    // **THE FIX**: Force refresh the ID token to get the latest custom claims.
+    // **THE FIX**: Force refresh the ID token again to get the latest custom claims.
     await user.getIdToken(true);
     const idTokenResult = await user.getIdTokenResult();
     const userRole = idTokenResult.claims.role;
