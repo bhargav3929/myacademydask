@@ -27,7 +27,6 @@ export const createCoachUser = functions.region('us-central1').https.onRequest((
     
     try {
         const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const callerUid = decodedToken.uid;
         
         // Use the token to check for role, don't getUser
         if (decodedToken.role !== 'owner') {
