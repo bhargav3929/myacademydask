@@ -7,7 +7,7 @@ admin.initializeApp();
 
 const corsHandler = cors({ origin: true });
 
-export const createCoachUser = functions.region('us-central1').https.onRequest((req, res) => {
+export const createCoachUser = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     // Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
@@ -28,7 +28,7 @@ export const createCoachUser = functions.region('us-central1').https.onRequest((
     try {
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         
-        // Use the token to check for role, don't getUser
+        // Use the token to check for role
         if (decodedToken.role !== 'owner') {
             res.status(403).send({ error: { message: 'Only owners can create coach users.' }});
             return;
@@ -40,8 +40,8 @@ export const createCoachUser = functions.region('us-central1').https.onRequest((
             return;
         }
 
-        // 2. Input Validation
-        const { email, password, displayName, coachUsername } = req.body.data || {};
+        // 2. Input Validation from request body
+        const { email, password, displayName, coachUsername } = req.body;
         if (!email || !password || !displayName || !coachUsername) {
             res.status(400).send({ error: { message: 'The function must be called with email, password, displayName, and coachUsername.'}});
             return;
@@ -62,7 +62,7 @@ export const createCoachUser = functions.region('us-central1').https.onRequest((
         });
         
         // 5. Respond with success
-        res.status(200).send({ data: { success: true, uid: userRecord.uid }});
+        res.status(200).send({ success: true, uid: userRecord.uid });
 
     } catch (error: any) {
         console.error('Error creating coach user:', error);
@@ -81,7 +81,7 @@ export const createCoachUser = functions.region('us-central1').https.onRequest((
   });
 });
 
-export const setOwnerClaim = functions.region('us-central1').https.onCall(async (data, context) => {
+export const setOwnerClaim = functions.https.onCall(async (data, context) => {
     // Check if the user is authenticated
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
@@ -90,7 +90,7 @@ export const setOwnerClaim = functions.region('us-central1').https.onCall(async 
     const uid = context.auth.uid;
     const user = await admin.auth().getUser(uid);
 
-    // Check if it's the owner account (using a fixed email for security)
+    // This check is a failsafe. The owner should be the only one with this email.
     if (user.email !== 'director@courtcommand.com') {
          throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
     }
