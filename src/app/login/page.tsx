@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
-import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, firestore, functions } from "@/lib/firebase";
 import { httpsCallable } from "firebase/functions";
 
@@ -34,12 +34,10 @@ const loginFormSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-// In a real app, this would come from the authenticated user's session
 const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || "director@courtcommand.com";
 const OWNER_USERNAME = "admin";
 const OWNER_PASSWORD = "admin123";
-
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,92 +46,101 @@ export default function LoginPage() {
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
-    defaultValues: {
-      identifier: "",
-      password: "",
-    },
+    defaultValues: { identifier: "", password: "" },
   });
 
   const getEmailFromIdentifier = async (identifier: string): Promise<string | null> => {
-    if (z.string().email().safeParse(identifier).success) {
-        return identifier;
-    }
-    if (identifier.toLowerCase() === OWNER_USERNAME) {
-        return OWNER_EMAIL;
-    }
+    if (z.string().email().safeParse(identifier).success) return identifier;
+    if (identifier.toLowerCase() === OWNER_USERNAME) return OWNER_EMAIL;
     const usersRef = collection(firestore, "users");
     const q = query(usersRef, where("username", "==", identifier));
     const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-        return null; 
-    }
+    if (querySnapshot.empty) return null;
     return querySnapshot.docs[0].data().email;
-  }
+  };
 
   const handleSuccessfulLogin = async (user: User, isInitialSetup: boolean = false) => {
     try {
-        if (isInitialSetup) {
-             const userDocRef = doc(firestore, "users", user.uid);
-             await setDoc(userDocRef, {
-                uid: user.uid,
-                email: OWNER_EMAIL,
-                username: OWNER_USERNAME,
-                fullName: "Academy Director",
-                role: "owner", 
-                organizationId: MOCK_ORGANIZATION_ID,
-                createdAt: serverTimestamp(),
-            });
+      let userRole: string | undefined;
 
-            // Call the setOwnerClaim cloud function
-            const setClaim = httpsCallable(functions, 'setOwnerClaim');
-            await setClaim();
-        }
-        
-        // Force a token refresh on the client to get the new claims
-        await user.getIdToken(true);
-        
-        // 4. Redirect based on the role from the refreshed token
-        const idTokenResult = await user.getIdTokenResult();
-        const userRole = idTokenResult.claims.role;
-
-        toast({
-          title: "Login Successful",
-          description: "Redirecting to your dashboard...",
+      if (isInitialSetup) {
+        const userDocRef = doc(firestore, "users", user.uid);
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: OWNER_EMAIL,
+          username: OWNER_USERNAME,
+          fullName: "Academy Director",
+          role: "owner",
+          organizationId: MOCK_ORGANIZATION_ID,
+          createdAt: serverTimestamp(),
         });
 
-        if (userRole === 'owner') {
-          router.push('/dashboard');
-        } else if (userRole === 'coach') {
-          router.push('/coach/dashboard');
-        } else {
-          // Default redirect for any other roles or if role is not set
-          router.push('/dashboard');
+        toast({
+          title: "Finalizing Initial Setup",
+          description: "Assigning owner permissions. This may take a moment...",
+        });
+
+        const setClaim = httpsCallable(functions, 'setOwnerClaim');
+        await setClaim();
+
+        // ---- ROBUST POLLING FOR CUSTOM CLAIM ----
+        let ownerClaimVerified = false;
+        const maxAttempts = 20; // Poll for up to 20 seconds
+        for (let i = 0; i < maxAttempts; i++) {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+          await user.getIdToken(true); // Force refresh the token
+          const idTokenResult = await user.getIdTokenResult();
+          if (idTokenResult.claims.role === 'owner') {
+            console.log(`Owner claim verified after ${i + 1} seconds.`);
+            userRole = idTokenResult.claims.role;
+            ownerClaimVerified = true;
+            break;
+          }
         }
+
+        if (!ownerClaimVerified) {
+          throw new Error("Could not verify owner permissions after initial setup. Please try logging in again.");
+        }
+        // ---- END POLLING LOGIC ----
+
+      } else {
+        await user.getIdToken(true);
+        const idTokenResult = await user.getIdTokenResult();
+        userRole = idTokenResult.claims.role;
+      }
+
+      toast({
+        title: "Login Successful",
+        description: "Redirecting to your dashboard...",
+      });
+
+      const targetUrl = userRole === 'coach' ? '/coach/dashboard' : '/dashboard';
+      // Use full page navigation to ensure a clean state
+      window.location.href = targetUrl;
 
     } catch (error: any) {
-        console.error("Error during successful login handling:", error);
-        toast({
-            variant: "destructive",
-            title: "Login Finalization Failed",
-            description: error.message || "An unexpected error occurred.",
-        });
+      console.error("Error during successful login handling:", error);
+      toast({
+        variant: "destructive",
+        title: "Login Finalization Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+       setIsLoading(false);
     }
-  }
-
+  };
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
       const emailToLogin = await getEmailFromIdentifier(data.identifier);
-      
+
       if (!emailToLogin) {
-          if(data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-              const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-              await handleSuccessfulLogin(userCredential.user, true);
-              return;
-          }
-          throw new Error("Invalid credentials");
+        if (data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
+          const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
+          await handleSuccessfulLogin(userCredential.user, true);
+          return;
+        }
+        throw new Error("Invalid credentials");
       }
 
       try {
@@ -141,80 +148,73 @@ export default function LoginPage() {
         await handleSuccessfulLogin(userCredential.user);
       } catch (error: any) {
         if (error.code === 'auth/user-not-found' && data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-           const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-           await handleSuccessfulLogin(userCredential.user, true);
+          const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
+          await handleSuccessfulLogin(userCredential.user, true);
         } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-            throw new Error("Invalid credentials");
+          throw new Error("Invalid credentials");
         } else {
-             throw error;
+          throw error;
         }
       }
-
     } catch (error: any) {
-        console.error("Login failed:", error.message);
-        toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "Invalid credentials. Please check your username and password.",
-        });
-    } finally {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid credentials. Please check your username and password.",
+      });
       setIsLoading(false);
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/40 p-4">
-       <MotionDiv 
-         initial={{ opacity: 0, y: -20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ duration: 0.5 }}
-       >
+      <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="text-center">
-              <Link href="/" className="flex items-center gap-2.5 justify-center mb-4">
-                  <Gamepad2 className="h-8 w-8 text-primary" />
-                  <span className="text-2xl font-bold">CourtCommand</span>
-              </Link>
-              <CardTitle className="text-2xl">Welcome Back</CardTitle>
-              <CardDescription>Enter your credentials to sign in to your account.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="identifier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email or Username</FormLabel>
-                        <FormControl>
-                          <Input placeholder="name@example.com or your_username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Signing In..." : "Sign In"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-       </MotionDiv>
+          <CardHeader className="text-center">
+            <Link href="/" className="flex items-center gap-2.5 justify-center mb-4">
+              <Gamepad2 className="h-8 w-8 text-primary" />
+              <span className="text-2xl font-bold">CourtCommand</span>
+            </Link>
+            <CardTitle className="text-2xl">Welcome Back</CardTitle>
+            <CardDescription>Enter your credentials to sign in to your account.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="identifier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email or Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="name@example.com or your_username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing In..." : "Sign In"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </MotionDiv>
     </div>
   );
 }

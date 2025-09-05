@@ -57,3 +57,28 @@ export const createCoachUser = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('internal', 'An unexpected error occurred while creating the user.');
     }
 });
+
+export const setOwnerClaim = functions.https.onCall(async (_, context) => {
+    // 1. Authentication Check
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+    }
+
+    const uid = context.auth.uid;
+    const organizationId = "mock-org-id-for-testing";
+
+    try {
+        // 2. Set Custom Claims
+        await admin.auth().setCustomUserClaims(uid, {
+            role: "owner",
+            organizationId: organizationId,
+        });
+
+        // 3. Respond with success
+        return { success: true, message: "Owner claim set successfully." };
+
+    } catch (error: any) {
+        console.error('Error setting owner claim:', error);
+        throw new functions.https.HttpsError('internal', 'An unexpected error occurred while setting the custom claim.');
+    }
+});

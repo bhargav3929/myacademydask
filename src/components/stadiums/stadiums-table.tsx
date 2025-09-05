@@ -46,8 +46,8 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
         },
         }),
     };
-    const MotionTableRow = motion(TableRow);
-    const MotionCard = motion(Card);
+    const MotionTableRow = motion.tr;
+    const MotionCard = motion.div;
 
   const StadiumActions = ({ stadium }: { stadium: Stadium }) => (
     <DropdownMenu>
@@ -149,6 +149,7 @@ export function StadiumsTable({ data }: StadiumsTableProps) {
                 animate="visible"
                 exit="hidden"
                 custom={i}
+                className="rounded-lg border bg-card text-card-foreground shadow-sm"
             >
                 <CardContent className="p-4 flex flex-col gap-4">
                     <div className="flex items-start justify-between">

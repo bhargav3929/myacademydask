@@ -59,11 +59,15 @@ export function AppHeader() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
         if (currentUser) {
+            // --- Step 1: Log Claims ---
+            const idTokenResult = await currentUser.getIdTokenResult();
+            console.log("--- User Token Claims ---", idTokenResult.claims);
+            // -------------------------
+
             const userDocRef = doc(firestore, "users", currentUser.uid);
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
-                // Ensure we only set data for the owner on the owner dashboard header
                 if (userData.role === 'owner') {
                     setUser(userData as UserProfile);
                 }

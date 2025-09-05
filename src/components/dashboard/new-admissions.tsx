@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User, Edit, Calendar, MapPin as MapIcon, BadgeDollarSign } from "lucide-react";
+import { MoreHorizontal, User, Edit, Calendar, MapPin as MapIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -35,9 +35,6 @@ import { EditStudentDialog } from "./edit-student-dialog";
 type NewAdmissionsProps = {
   data: Student[];
 };
-
-const MotionTableRow = motion(TableRow);
-const MotionCard = motion(Card);
 
 export function NewAdmissions({ data }: NewAdmissionsProps) {
     const [stadiumsMap, setStadiumsMap] = useState<Map<string, string>>(new Map());
@@ -128,7 +125,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                     <TableBody>
                     <AnimatePresence>
                     {data.length > 0 ? data.map((student, i) => (
-                        <MotionTableRow 
+                        <motion.tr
                             key={student.id}
                             variants={itemVariants}
                             initial="hidden"
@@ -162,7 +159,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                         <TableCell className="text-right">
                            <StudentActions student={student} />
                         </TableCell>
-                        </MotionTableRow>
+                        </motion.tr>
                     )) : (
                         <TableRow>
                             <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
@@ -179,7 +176,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
                 <AnimatePresence>
                 {data.length > 0 ? data.map((student, i) => (
-                    <MotionCard
+                    <motion.div
                         key={student.id}
                         variants={itemVariants}
                         initial="hidden"
@@ -187,7 +184,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                         custom={i}
                         exit={{ opacity: 0 }}
                         layoutId={`student-card-${student.id}`}
-                        className="overflow-hidden"
+                        className="rounded-xl border bg-card text-card-foreground shadow overflow-hidden"
                     >
                         <CardContent className="p-4 flex flex-col gap-4">
                             <div className="flex items-start justify-between">
@@ -216,7 +213,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                                 </div>
                             </div>
                         </CardContent>
-                    </MotionCard>
+                    </motion.div>
                 )) : (
                      <div className="text-center py-16 text-muted-foreground col-span-full">
                         <p>No new admissions found.</p>
