@@ -1,64 +1,86 @@
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import * as cors from "cors";
 
 admin.initializeApp();
 
-export const createCoachUser = functions
-  .region('us-central1')
-  .https.onCall(async (data, context) => {
-    console.log('createCoachUser called, data:', data, 'context.auth?.uid:', context.auth?.uid);
+const corsHandler = cors({ origin: true });
 
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
-    }
+export const createCoachUser = functions.region('us-central1').https.onRequest((req, res) => {
+    corsHandler(req, res, async () => {
 
-    // Check role from token (context.auth.token)
-    const role = (context.auth.token && context.auth.token.role) || null;
-    console.log('Caller custom claims token.role =', role);
-    if (role !== 'owner') {
-      throw new functions.https.HttpsError('permission-denied', 'Only owners can create coach users.');
-    }
-    
-    const organizationId = context.auth.token.organizationId;
-     if (!organizationId) {
-        throw new functions.https.HttpsError('failed-precondition', 'The owner is not associated with an organization.');
-    }
+        // Handle preflight OPTIONS request for CORS
+        if (req.method === 'OPTIONS') {
+            res.status(204).send('');
+            return;
+        }
 
-    const { email, password, displayName, coachUsername } = data || {};
+        try {
+            // 1. Authentication and Authorization Check
+            const idToken = req.headers.authorization?.split('Bearer ')[1];
+            if (!idToken) {
+                res.status(401).send({ error: { message: 'Authentication token is missing.' } });
+                return;
+            }
+            
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            
+            if (decodedToken.role !== 'owner') {
+                res.status(403).send({ error: { message: 'Only owners can create coach users.' } });
+                return;
+            }
+            
+            const organizationId = decodedToken.organizationId;
+            if (!organizationId) {
+                res.status(400).send({ error: { message: 'The owner is not associated with an organization.' } });
+                return;
+            }
 
-    if (!email || !password || !displayName) {
-      throw new functions.https.HttpsError('invalid-argument', 'Missing required fields.');
-    }
+            // 2. Input Validation
+            const { email, password, displayName, coachUsername } = req.body.data || {};
+            if (!email || !password || !displayName || !coachUsername) {
+                res.status(400).send({ error: { message: 'The request body is missing required fields: email, password, displayName, coachUsername.' } });
+                return;
+            }
 
-    try {
-      const userRecord = await admin.auth().createUser({
-        email,
-        password,
-        displayName,
-        emailVerified: true,
-      });
+            // 3. Create User in Firebase Authentication
+            const userRecord = await admin.auth().createUser({
+                email: email,
+                password: password,
+                displayName: displayName,
+                emailVerified: true,
+            });
 
-      await admin.auth().setCustomUserClaims(userRecord.uid, {
-        role: "coach",
-        ownerId: context.auth.uid, // optional, tie coach to creator
-        organizationId: organizationId
-      });
+            // 4. Set Custom Claims for the new user
+            await admin.auth().setCustomUserClaims(userRecord.uid, {
+                role: "coach",
+                organizationId: organizationId
+            });
 
-      // No need to create a user doc here, stadium form dialog does that.
+            // 5. Respond with success
+            res.status(200).send({ data: { success: true, uid: userRecord.uid } });
 
-      console.log('createCoachUser success uid:', userRecord.uid);
-      return { success: true, uid: userRecord.uid };
+        } catch (error: any) {
+            console.error('Error creating coach user:', error);
 
-    } catch (err: any) {
-      console.error('createCoachUser error:', err);
-      // map auth errors nicely
-      if (err.code && err.code.startsWith('auth/')) {
-        throw new functions.https.HttpsError('already-exists', err.message);
-      }
-      throw new functions.https.HttpsError('internal', err.message || 'Internal error');
-    }
-  });
+            if (error.code === 'auth/id-token-expired') {
+                res.status(401).send({ error: { message: 'Authentication token has expired. Please log in again.' } });
+                return;
+            }
+             if (error.code === 'auth/email-already-exists') {
+                res.status(409).send({ error: { message: 'The email address is already in use by another account.' } });
+                return;
+            }
+            if (error.code === 'auth/invalid-password') {
+                res.status(400).send({ error: { message: 'The password must be a string with at least 6 characters.' } });
+                return;
+            }
+            
+            res.status(500).send({ error: { message: 'An unexpected error occurred while creating the user.' } });
+        }
+    });
+});
 
 
 export const setOwnerClaim = functions
@@ -71,7 +93,6 @@ export const setOwnerClaim = functions
     }
 
     try {
-      // Fetch user document from Firestore
       const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
       
       if (!userDoc.exists) {
@@ -83,9 +104,6 @@ export const setOwnerClaim = functions
       const userRole = userData?.role;
       const organizationId = userData?.organizationId;
 
-      console.log("User role in Firestore:", userRole);
-
-      // Only set owner claims if the user's Firestore role is "owner"
       if (userRole === "owner") {
         await admin.auth().setCustomUserClaims(context.auth.uid, { role: "owner", organizationId });
         console.log("Owner claim set successfully for:", context.auth.uid);

@@ -9,24 +9,19 @@ admin.initializeApp();
 const corsHandler = cors({ origin: true });
 exports.createCoachUser = functions.region('us-central1').https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
-        var _a;
-        // Handle preflight OPTIONS request
+        // Handle preflight OPTIONS request for CORS
         if (req.method === 'OPTIONS') {
-            res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-            res.set('Access-Control-Allow-Methods', 'POST');
-            res.set('Access-Control-Allow-Origin', '*');
             res.status(204).send('');
             return;
         }
-        // 1. Authentication and Authorization Check
-        const idToken = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split('Bearer ')[1];
-        if (!idToken) {
-            res.status(401).send({ error: { message: 'The function must be called while authenticated.' } });
-            return;
-        }
         try {
+            // 1. Authentication and Authorization Check
+            const idToken = req.headers.authorization?.split('Bearer ')[1];
+            if (!idToken) {
+                res.status(401).send({ error: { message: 'Authentication token is missing.' } });
+                return;
+            }
             const decodedToken = await admin.auth().verifyIdToken(idToken);
-            // Use the token to check for role, don't getUser
             if (decodedToken.role !== 'owner') {
                 res.status(403).send({ error: { message: 'Only owners can create coach users.' } });
                 return;
@@ -39,7 +34,7 @@ exports.createCoachUser = functions.region('us-central1').https.onRequest((req, 
             // 2. Input Validation
             const { email, password, displayName, coachUsername } = req.body.data || {};
             if (!email || !password || !displayName || !coachUsername) {
-                res.status(400).send({ error: { message: 'The function must be called with email, password, displayName, and coachUsername.' } });
+                res.status(400).send({ error: { message: 'The request body is missing required fields: email, password, displayName, coachUsername.' } });
                 return;
             }
             // 3. Create User in Firebase Authentication
@@ -59,7 +54,10 @@ exports.createCoachUser = functions.region('us-central1').https.onRequest((req, 
         }
         catch (error) {
             console.error('Error creating coach user:', error);
-            // Map common auth errors to user-friendly callable errors
+            if (error.code === 'auth/id-token-expired') {
+                res.status(401).send({ error: { message: 'Authentication token has expired. Please log in again.' } });
+                return;
+            }
             if (error.code === 'auth/email-already-exists') {
                 res.status(409).send({ error: { message: 'The email address is already in use by another account.' } });
                 return;
@@ -68,30 +66,40 @@ exports.createCoachUser = functions.region('us-central1').https.onRequest((req, 
                 res.status(400).send({ error: { message: 'The password must be a string with at least 6 characters.' } });
                 return;
             }
-            // For other errors, throw a generic internal error
             res.status(500).send({ error: { message: 'An unexpected error occurred while creating the user.' } });
         }
     });
 });
-exports.setOwnerClaim = functions.region('us-central1').https.onCall(async (data, context) => {
-    // Check if the user is authenticated
+exports.setOwnerClaim = functions
+    .region("us-central1")
+    .https.onCall(async (_, context) => {
+    console.log("setOwnerClaim called for user:", context.auth?.uid);
     if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
-    }
-    const uid = context.auth.uid;
-    const user = await admin.auth().getUser(uid);
-    // Check if it's the owner account (using a fixed email for security)
-    if (user.email !== 'director@courtcommand.com') {
-        throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
+        throw new functions.https.HttpsError("unauthenticated", "Must be authenticated");
     }
     try {
-        // Set custom claims
-        await admin.auth().setCustomUserClaims(uid, { role: 'owner', organizationId: 'mock-org-id-for-testing' });
-        return { success: true, message: 'Owner claim set successfully.' };
+        // Fetch user document from Firestore
+        const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+        if (!userDoc.exists) {
+            console.log("User document not found, skipping claim setting");
+            return { success: true, message: "User document not found, no claims set" };
+        }
+        const userData = userDoc.data();
+        const userRole = userData?.role;
+        const organizationId = userData?.organizationId;
+        if (userRole === "owner") {
+            await admin.auth().setCustomUserClaims(context.auth.uid, { role: "owner", organizationId });
+            console.log("Owner claim set successfully for:", context.auth.uid);
+            return { success: true, message: "Owner claim set successfully" };
+        }
+        else {
+            console.log("User is not an owner, skipping claim setting");
+            return { success: true, message: "User is not an owner, no claims set" };
+        }
     }
     catch (error) {
-        console.error('Error setting owner claim:', error);
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred.');
+        console.error("Error in setOwnerClaim:", error);
+        throw new functions.https.HttpsError("internal", error.message);
     }
 });
 //# sourceMappingURL=index.js.map
