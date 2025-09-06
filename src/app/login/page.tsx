@@ -7,9 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, firestore, functions } from "@/lib/firebase";
-import { httpsCallable } from "firebase/functions";
+import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, firestore } from "@/lib/firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Gamepad2 } from "lucide-react";
 import Link from "next/link";
 import { MotionDiv } from "@/components/motion";
+
+// force region to match backend
+const functions = getFunctions(getApp(), "us-central1");
 
 const loginFormSchema = z.object({
   identifier: z.string().min(1, { message: "Please enter your email or username." }),
@@ -59,108 +62,83 @@ export default function LoginPage() {
     return querySnapshot.docs[0].data().email;
   };
 
-  const handleSuccessfulLogin = async (user: User, isInitialSetup: boolean = false) => {
+  const handleSuccessfulLogin = async (user: User, isNewOwner: boolean) => {
+    console.log(`Handling successful login for user: ${user.email}`);
+    setIsLoading(true);
+
     try {
-      let userRole: string | undefined;
-
-      if (isInitialSetup) {
-        const userDocRef = doc(firestore, "users", user.uid);
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: OWNER_EMAIL,
-          username: OWNER_USERNAME,
-          fullName: "Academy Director",
-          role: "owner",
-          organizationId: MOCK_ORGANIZATION_ID,
-          createdAt: serverTimestamp(),
-        });
-
-        toast({
-          title: "Finalizing Initial Setup",
-          description: "Assigning owner permissions. This may take a moment...",
-        });
-
-        const setClaim = httpsCallable(functions, 'setOwnerClaim');
-        await setClaim();
-
-        // ---- ROBUST POLLING FOR CUSTOM CLAIM ----
-        let ownerClaimVerified = false;
-        const maxAttempts = 20; // Poll for up to 20 seconds
-        for (let i = 0; i < maxAttempts; i++) {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-          await user.getIdToken(true); // Force refresh the token
-          const idTokenResult = await user.getIdTokenResult();
-          if (idTokenResult.claims.role === 'owner') {
-            console.log(`Owner claim verified after ${i + 1} seconds.`);
-            userRole = idTokenResult.claims.role;
-            ownerClaimVerified = true;
-            break;
-          }
+        if (isNewOwner) {
+            console.log("New owner detected, setting custom claim...");
+            const setOwnerClaim = httpsCallable(functions, "setOwnerClaim");
+            await setOwnerClaim();
+            console.log("`setOwnerClaim` function called. Forcing token refresh...");
+            await user.getIdToken(true); // This is the critical step!
+            console.log("Token refreshed.");
         }
 
-        if (!ownerClaimVerified) {
-          throw new Error("Could not verify owner permissions after initial setup. Please try logging in again.");
-        }
-        // ---- END POLLING LOGIC ----
+        const finalTokenResult = await user.getIdTokenResult();
+        const userRole = finalTokenResult.claims.role as string | undefined;
 
-      } else {
-        await user.getIdToken(true);
-        const idTokenResult = await user.getIdTokenResult();
-        userRole = idTokenResult.claims.role;
-      }
-
-      toast({
-        title: "Login Successful",
-        description: "Redirecting to your dashboard...",
-      });
-
-      const targetUrl = userRole === 'coach' ? '/coach/dashboard' : '/dashboard';
-      // Use full page navigation to ensure a clean state
-      window.location.href = targetUrl;
+        console.log(`Final user role for redirection is: ${userRole}`);
+        toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
+        
+        const targetUrl = userRole === 'coach' ? '/coach/dashboard' : '/dashboard';
+        window.location.href = targetUrl; // Use full page reload to ensure all state is fresh
 
     } catch (error: any) {
-      console.error("Error during successful login handling:", error);
-      toast({
-        variant: "destructive",
-        title: "Login Finalization Failed",
-        description: error.message || "An unexpected error occurred.",
-      });
-       setIsLoading(false);
+        console.error("Error during login finalization:", error);
+        toast({
+            variant: "destructive",
+            title: "Login Finalization Failed",
+            description: error.message || "An unexpected error occurred during role verification.",
+        });
+        setIsLoading(false);
     }
   };
 
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    let isNewOwner = false;
     try {
-      const emailToLogin = await getEmailFromIdentifier(data.identifier);
+      let emailToLogin = await getEmailFromIdentifier(data.identifier);
 
       if (!emailToLogin) {
         if (data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
+          console.log("Owner account not found. Creating new owner account.");
+          isNewOwner = true;
           const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-          await handleSuccessfulLogin(userCredential.user, true);
-          return;
+          
+          const userDocRef = doc(firestore, "users", userCredential.user.uid);
+          await setDoc(userDocRef, {
+            uid: userCredential.user.uid,
+            email: OWNER_EMAIL,
+            username: OWNER_USERNAME,
+            fullName: "Academy Director",
+            role: "owner",
+            organizationId: MOCK_ORGANIZATION_ID,
+            createdAt: serverTimestamp(),
+          });
+          
+          await handleSuccessfulLogin(userCredential.user, isNewOwner);
+          return; // Exit after handling
         }
         throw new Error("Invalid credentials");
       }
 
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
-        await handleSuccessfulLogin(userCredential.user);
-      } catch (error: any) {
-        if (error.code === 'auth/user-not-found' && data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-          const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-          await handleSuccessfulLogin(userCredential.user, true);
-        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-          throw new Error("Invalid credentials");
-        } else {
-          throw error;
-        }
-      }
+      const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
+      await handleSuccessfulLogin(userCredential.user, false);
+
     } catch (error: any) {
+      console.error("Login onSubmit error:", error);
+      let errorMessage = "Invalid credentials. Please check your username and password.";
+      if (error.code !== 'auth/wrong-password' && error.code !== 'auth/user-not-found' && error.message) {
+        errorMessage = error.message;
+      }
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid credentials. Please check your username and password.",
+        description: errorMessage,
       });
       setIsLoading(false);
     }

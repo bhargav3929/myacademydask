@@ -1,74 +1,91 @@
-
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setOwnerClaim = exports.createCoachUser = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
-exports.createCoachUser = functions.https.onCall(async (data, context) => {
-    // 1. Authentication and Authorization Check
+exports.createCoachUser = functions
+    .region('us-central1')
+    .https.onCall(async (data, context) => {
+    var _a;
+    console.log('createCoachUser called, data:', data, 'context.auth?.uid:', (_a = context.auth) === null || _a === void 0 ? void 0 : _a.uid);
     if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+        throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
     }
-    const callerIsOwner = context.auth.token.role === 'owner';
-    if (!callerIsOwner) {
+    // Check role from token (context.auth.token)
+    const role = (context.auth.token && context.auth.token.role) || null;
+    console.log('Caller custom claims token.role =', role);
+    if (role !== 'owner') {
         throw new functions.https.HttpsError('permission-denied', 'Only owners can create coach users.');
     }
-    const organizationId = context.auth.token.organizationId;
-    if (!organizationId) {
-        throw new functions.https.HttpsError('failed-precondition', 'The owner is not associated with an organization.');
-    }
-    // 2. Input Validation
-    const { email, password, displayName, coachUsername } = data;
-    if (!email || !password || !displayName || !coachUsername) {
-        throw new functions.https.HttpsError('invalid-argument', 'The function must be called with email, password, displayName, and coachUsername.');
+    const { email, password, displayName, coachUsername } = data || {};
+    if (!email || !password || !displayName) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing required fields.');
     }
     try {
-        // 3. Create User in Firebase Authentication
         const userRecord = await admin.auth().createUser({
-            email: email,
-            password: password,
-            displayName: displayName,
+            email,
+            password,
+            displayName,
             emailVerified: true,
         });
-        // 4. Set Custom Claims for the new user
         await admin.auth().setCustomUserClaims(userRecord.uid, {
             role: "coach",
-            organizationId: organizationId
+            ownerId: context.auth.uid // optional, tie coach to creator
         });
-        // 5. Respond with success
+        await admin.firestore().collection('users').doc(userRecord.uid).set({
+            uid: userRecord.uid,
+            email,
+            username: coachUsername || null,
+            fullName: displayName,
+            role: 'coach',
+            ownerId: context.auth.uid,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log('createCoachUser success uid:', userRecord.uid);
         return { success: true, uid: userRecord.uid };
     }
-    catch (error) {
-        console.error('Error creating coach user:', error);
-        if (error.code === 'auth/email-already-exists') {
-            throw new functions.https.HttpsError('already-exists', 'The email address is already in use by another account.');
+    catch (err) {
+        console.error('createCoachUser error:', err);
+        // map auth errors nicely
+        if (err.code && err.code.startsWith('auth/')) {
+            throw new functions.https.HttpsError('already-exists', err.message);
         }
-        if (error.code === 'auth/invalid-password') {
-            throw new functions.https.HttpsError('invalid-argument', 'The password must be a string with at least 6 characters.');
-        }
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred while creating the user.');
+        throw new functions.https.HttpsError('internal', err.message || 'Internal error');
     }
 });
-exports.setOwnerClaim = functions.https.onCall(async (data, context) => {
-    // Check if the user is authenticated
+exports.setOwnerClaim = functions
+    .region("us-central1")
+    .https.onCall(async (_, context) => {
+    var _a;
+    console.log("setOwnerClaim called for user:", (_a = context.auth) === null || _a === void 0 ? void 0 : _a.uid);
     if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
-    }
-    const uid = context.auth.uid;
-    const user = await admin.auth().getUser(uid);
-    // This check is a failsafe. The owner should be the only one with this email.
-    if (user.email !== 'director@courtcommand.com') {
-        throw new functions.https.HttpsError('permission-denied', 'You do not have permission to perform this action.');
+        throw new functions.https.HttpsError("unauthenticated", "Must be authenticated");
     }
     try {
-        // Set custom claims
-        await admin.auth().setCustomUserClaims(uid, { role: 'owner', organizationId: 'mock-org-id-for-testing' });
-        return { success: true, message: 'Owner claim set successfully.' };
+        // Fetch user document from Firestore
+        const userDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
+        if (!userDoc.exists) {
+            console.log("User document not found, skipping claim setting");
+            return { success: true, message: "User document not found, no claims set" };
+        }
+        const userData = userDoc.data();
+        const userRole = userData === null || userData === void 0 ? void 0 : userData.role;
+        console.log("User role in Firestore:", userRole);
+        // Only set owner claims if the user's Firestore role is "owner"
+        if (userRole === "owner") {
+            await admin.auth().setCustomUserClaims(context.auth.uid, { role: "owner" });
+            console.log("Owner claim set successfully for:", context.auth.uid);
+            return { success: true, message: "Owner claim set successfully" };
+        }
+        else {
+            console.log("User is not an owner, skipping claim setting");
+            return { success: true, message: "User is not an owner, no claims set" };
+        }
     }
     catch (error) {
-        console.error('Error setting owner claim:', error);
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred.');
+        console.error("Error in setOwnerClaim:", error);
+        throw new functions.https.HttpsError("internal", error.message);
     }
 });
 //# sourceMappingURL=index.js.map

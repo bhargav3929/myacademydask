@@ -6,8 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
-import { auth, firestore, functions } from "@/lib/firebase";
-import { httpsCallable } from "firebase/functions";
+import { auth, firestore } from "@/lib/firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +50,9 @@ export function AddStadiumDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Initialize functions instance
+  const functions = getFunctions();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -100,6 +103,8 @@ export function AddStadiumDialog() {
     }
 
     try {
+        await auth.currentUser.getIdToken(true); // Force refresh token to get latest claims
+        
         const ownerUserDocRef = doc(firestore, "users", auth.currentUser.uid);
         const ownerUserDocSnap = await getDoc(ownerUserDocRef);
         if (!ownerUserDocSnap.exists()) {
