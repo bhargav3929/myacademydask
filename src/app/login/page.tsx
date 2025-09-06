@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { auth, firestore, app } from "@/lib/firebase";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ import Link from "next/link";
 import { MotionDiv } from "@/components/motion";
 
 // force region to match backend
-const functions = getFunctions(getApp(), "us-central1");
+const functions = getFunctions(app, "us-central1");
 
 const loginFormSchema = z.object({
   identifier: z.string().min(1, { message: "Please enter your email or username." }),
