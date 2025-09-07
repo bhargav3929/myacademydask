@@ -8,8 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, firestore, app } from "@/lib/firebase";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { auth, firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,9 +25,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Gamepad2 } from "lucide-react";
 import Link from "next/link";
 import { MotionDiv } from "@/components/motion";
-
-// force region to match backend
-const functions = getFunctions(app, "us-central1");
 
 const loginFormSchema = z.object({
   identifier: z.string().min(1, { message: "Please enter your email or username." }),
@@ -62,19 +58,25 @@ export default function LoginPage() {
     return querySnapshot.docs[0].data().email;
   };
 
-  const handleSuccessfulLogin = async (user: User, isNewOwner: boolean) => {
+  const handleSuccessfulLogin = async (user: User) => {
     console.log(`Handling successful login for user: ${user.email}`);
     setIsLoading(true);
 
     try {
-        if (isNewOwner) {
-            console.log("New owner detected, setting custom claim...");
-            const setOwnerClaim = httpsCallable(functions, "setOwnerClaim");
-            await setOwnerClaim();
-            console.log("`setOwnerClaim` function called. Forcing token refresh...");
-            await user.getIdToken(true); // This is the critical step!
-            console.log("Token refreshed.");
+        // Sync claims on every login for owners
+        if (user.email === OWNER_EMAIL) {
+            const token = await user.getIdToken();
+            const syncRoleUrl = 'https://us-central1-courtcommand.cloudfunctions.net/syncUserRole';
+            await fetch(syncRoleUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            await user.getIdToken(true); // Force refresh token
         }
+
 
         const finalTokenResult = await user.getIdTokenResult();
         const userRole = finalTokenResult.claims.role as string | undefined;
@@ -99,14 +101,12 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    let isNewOwner = false;
     try {
       let emailToLogin = await getEmailFromIdentifier(data.identifier);
 
       if (!emailToLogin) {
         if (data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
           console.log("Owner account not found. Creating new owner account.");
-          isNewOwner = true;
           const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
           
           const userDocRef = doc(firestore, "users", userCredential.user.uid);
@@ -120,14 +120,14 @@ export default function LoginPage() {
             createdAt: serverTimestamp(),
           });
           
-          await handleSuccessfulLogin(userCredential.user, isNewOwner);
+          await handleSuccessfulLogin(userCredential.user);
           return; // Exit after handling
         }
         throw new Error("Invalid credentials");
       }
 
       const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
-      await handleSuccessfulLogin(userCredential.user, false);
+      await handleSuccessfulLogin(userCredential.user);
 
     } catch (error: any) {
       console.error("Login onSubmit error:", error);

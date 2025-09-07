@@ -60,4 +60,10 @@ auth = getAuth(app);
 firestore = getFirestore(app);
 functions = getFunctions(app);
 
+// FOR DEBUGGING PURPOSES ONLY
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).auth = auth;
+  (window as any).firestore = firestore;
+}
+
 export { app, auth, firestore, functions, appCheck };

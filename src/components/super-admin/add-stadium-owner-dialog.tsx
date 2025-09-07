@@ -7,18 +7,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp, collection, writeBatch } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { auth, firestore, functions } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, ShieldQuestion } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 const formSchema = z.object({
   ownerName: z.string().min(2, "Owner name must be at least 2 characters."),
-  // The email will be derived from the username to simplify the form
   username: z.string().min(3, "Username must be at least 3 characters.").regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers, and underscores."),
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
@@ -49,45 +49,46 @@ export function AddStadiumOwnerDialog() {
         return;
     }
 
-    // Derive a unique email for Firebase Auth from the username
     const ownerEmail = `${values.username}@owner.courtcommand.com`;
 
     try {
-        // 1. Create the new owner's authentication account
         const userCredential = await createUserWithEmailAndPassword(auth, ownerEmail, values.password);
         const ownerUid = userCredential.user.uid;
         
         const batch = writeBatch(firestore);
         const timestamp = serverTimestamp();
 
-        // 2. Create the Owner's profile in the 'stadium_owners' collection
         const ownerDocRef = doc(collection(firestore, "stadium_owners"));
         batch.set(ownerDocRef, {
             ownerName: values.ownerName,
-            credentials: {
-                username: values.username,
-                // Do NOT store the password in Firestore
-            },
-            authUid: ownerUid, // Link to the auth user
+            credentials: { username: values.username },
+            authUid: ownerUid,
             status: "active",
             createdBy: superAdmin.uid,
             createdAt: timestamp,
         });
 
-        // 3. Create a corresponding user profile in the main 'users' collection
-        // This allows them to log in via the main login page
         const userDocRef = doc(firestore, "users", ownerUid);
+        const organizationId = ownerDocRef.id;
         batch.set(userDocRef, {
             uid: ownerUid,
             email: ownerEmail,
             username: values.username,
             fullName: values.ownerName,
             role: "owner",
-            organizationId: ownerDocRef.id, // The organization ID is the new stadium_owner doc ID
+            organizationId: organizationId,
             createdAt: timestamp,
         });
 
         await batch.commit();
+
+        // AFTER creating the user, call the new Cloud Function to set their custom claims
+        const grantOwnerRole = httpsCallable(functions, 'grantOwnerRole');
+        await grantOwnerRole({ 
+            targetUid: ownerUid, 
+            organizationId: organizationId 
+        });
+
 
         toast({
             title: "Success!",
@@ -102,6 +103,8 @@ export function AddStadiumOwnerDialog() {
         let errorMessage = "An unexpected error occurred.";
         if (error.code === "auth/email-already-in-use") {
             errorMessage = "This username is already taken. Please choose a different one.";
+        } else if (error.details && error.details.message) {
+            errorMessage = error.details.message;
         }
         toast({
             variant: "destructive",

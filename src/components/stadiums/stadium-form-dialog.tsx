@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
-import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -50,9 +49,6 @@ export function AddStadiumDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Initialize functions instance
-  const functions = getFunctions();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -96,16 +92,17 @@ export function AddStadiumDialog() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    if (!auth.currentUser) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
         toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to create a stadium." });
         setIsLoading(false);
         return;
     }
 
     try {
-        await auth.currentUser.getIdToken(true); // Force refresh token to get latest claims
+        const token = await currentUser.getIdToken(true); // Force refresh token to get latest claims
         
-        const ownerUserDocRef = doc(firestore, "users", auth.currentUser.uid);
+        const ownerUserDocRef = doc(firestore, "users", currentUser.uid);
         const ownerUserDocSnap = await getDoc(ownerUserDocRef);
         if (!ownerUserDocSnap.exists()) {
             throw new Error("Owner user profile not found.");
@@ -121,17 +118,24 @@ export function AddStadiumDialog() {
             return;
         }
 
-        const createCoachUser = httpsCallable(functions, 'createCoachUser');
-        const result = await createCoachUser({
-            email: values.coachEmail,
-            password: values.coachPassword,
-            displayName: values.coachFullName,
-            coachUsername: values.coachUsername,
+        const createCoachUserUrl = 'https://us-central1-courtcommand.cloudfunctions.net/createCoachUser';
+        const response = await fetch(createCoachUserUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                email: values.coachEmail,
+                password: values.coachPassword,
+                displayName: values.coachFullName,
+                coachUsername: values.coachUsername,
+            }),
         });
 
-        const resultData = result.data as { success: boolean, uid?: string, message?: string };
-        
-        if (!resultData.success || !resultData.uid) {
+        const resultData = await response.json();
+
+        if (!response.ok) {
             throw new Error(resultData.message || 'Failed to create coach user from backend.');
         }
         
@@ -158,15 +162,9 @@ export function AddStadiumDialog() {
         });
 
         const userDocRef = doc(firestore, "users", coachUid);
-        batch.set(userDocRef, {
-            uid: coachUid,
-            email: values.coachEmail,
-            username: values.coachUsername,
-            fullName: values.coachFullName,
-            role: "coach",
+        batch.update(userDocRef, { // Use update instead of set to avoid overwriting existing doc
             organizationId: organizationId,
             assignedStadiums: [stadiumDocRef.id],
-            createdAt: timestamp,
         });
 
         await batch.commit();

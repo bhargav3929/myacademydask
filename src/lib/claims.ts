@@ -1,19 +1,17 @@
 
-import { adminAuth } from "./firebase-admin";
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { functions } from './firebase'; // Adjust this import to your firebase initialization file
 
 /**
- * Sets custom claims for a user.
- *
- * @param {string} uid - The user ID.
- * @param {object} claims - The custom claims to set.
- * @returns {Promise<void>}
+ * Calls the setOwnerClaim Cloud Function to set the owner claim for the current user.
  */
-export async function setCustomUserClaims(uid: string, claims: object): Promise<void> {
+export async function setOwnerClaim(): Promise<any> {
   try {
-    await adminAuth.setCustomUserClaims(uid, claims);
-    console.log(`Custom claims set for user ${uid}`, claims);
+    const setOwnerClaimFunction = httpsCallable(functions, 'setOwnerClaim');
+    const result = await setOwnerClaimFunction();
+    return result.data;
   } catch (error) {
-    console.error(`Error setting custom claims for user ${uid}`, error);
+    console.error('Error calling setOwnerClaim function:', error);
     throw error;
   }
 }
