@@ -2,19 +2,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getCountFromServer, collectionGroup } from "firebase/firestore";
+import { collection, getCountFromServer, collectionGroup, getDocs, query } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Building, School } from "lucide-react";
 import { StatCard } from "../dashboard/stat-card";
 import { MotionDiv } from "../motion";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export function BasicAnalytics() {
+  const { currency } = useCurrency();
   const [stats, setStats] = useState({
     totalOwners: 0,
     totalStadiums: 0,
     totalStudents: 0,
+    totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -24,8 +24,9 @@ export function BasicAnalytics() {
         const ownersCol = collection(firestore, "stadium_owners");
         const stadiumsCol = collection(firestore, "stadiums");
         const studentsColGroup = collectionGroup(firestore, "students");
+        const paymentsColGroup = collectionGroup(firestore, "payments");
 
-        const [ownersSnapshot, stadiumsSnapshot, studentsSnapshot] = await Promise.all([
+        const [ownersSnapshot, stadiumsSnapshot, studentsSnapshot, paymentsSnapshot] = await Promise.all([
           getCountFromServer(ownersCol),
           getCountFromServer(stadiumsCol),
           getCountFromServer(studentsColGroup).catch(error => {
@@ -35,12 +36,22 @@ export function BasicAnalytics() {
             }
             throw error;
           }),
+          getDocs(query(paymentsColGroup)).catch(error => {
+            if (error instanceof Error && error.message.includes("requires a COLLECTION_GROUP_DESC index")) {
+               console.warn("Firestore index for 'payments' collection group is missing. Revenue will default to 0. Please create the index in Firebase Console for an accurate count.");
+               return { docs: [] };
+           }
+           throw error;
+         })
         ]);
+
+        const totalRevenue = paymentsSnapshot.docs.reduce((acc, doc) => acc + doc.data().amount, 0);
 
         setStats({
           totalOwners: ownersSnapshot.data().count,
           totalStadiums: stadiumsSnapshot.data().count,
           totalStudents: studentsSnapshot.data().count,
+          totalRevenue: totalRevenue,
         });
 
       } catch (error) {
@@ -52,6 +63,13 @@ export function BasicAnalytics() {
 
     fetchStats();
   }, []);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: currency,
+    }).format(amount);
+  };
 
   const analyticsCards = [
     {
@@ -75,6 +93,13 @@ export function BasicAnalytics() {
         trendPeriod: "Across all stadiums globally.",
         loading: loading
     },
+    {
+      title: "Total Revenue",
+      value: formatCurrency(stats.totalRevenue),
+      icon: "DollarSign" as const,
+      trendPeriod: "Total revenue from all stadiums.",
+      loading: loading
+  },
   ]
 
   return (
@@ -82,7 +107,7 @@ export function BasicAnalytics() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, staggerChildren: 0.1 }}
-        className="grid gap-6 md:grid-cols-3"
+        className="grid gap-6 md:grid-cols-4"
       >
         {analyticsCards.map((card, index) => (
             <MotionDiv key={index} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>

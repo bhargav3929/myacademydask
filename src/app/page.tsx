@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Particles } from '@/components/ui/particles';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import { renderCanvas } from "@/components/ui/canvas";
 
 const HeroContent = () => (
     <div className="relative z-10 flex flex-col items-center text-center">
@@ -60,9 +60,11 @@ export default function Home() {
   const [color, setColor] = useState("#ffffff")
 
   useEffect(() => {
-    // We can get the computed style of the primary color from the CSS variables
+    renderCanvas();
+  }, []);
+
+  useEffect(() => {
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-    // The value is in HSL format "H S% L%", we need to convert it to "hsl(H, S, L)"
     if (primaryColor) {
       setColor("#ffffff");
     }
@@ -71,6 +73,10 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col text-foreground bg-[#020617]">
+      <canvas
+        className="bg-skin-base pointer-events-none absolute inset-0 mx-auto"
+        id="canvas"
+      ></canvas>
        <header className="fixed top-0 z-50 w-full bg-transparent">
         <div className="container flex h-20 max-w-screen-2xl items-center justify-between mx-auto">
           <Link href="/" className="flex items-center gap-2.5">
@@ -108,4 +114,3 @@ export default function Home() {
     </div>
   );
 }
-

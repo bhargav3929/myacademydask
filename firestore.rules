@@ -26,62 +26,58 @@ service cloud.firestore {
     }
 
     // USERS:
-    // - Users can read/update their own profile.
-    // - Owners can read any user within their organization.
     match /users/{userId} {
        allow read: if isSignedIn() && 
                     (request.auth.uid == userId || isOwner(resource.data.organizationId));
       allow update: if isSignedIn() && request.auth.uid == userId;
-      // Create is handled by backend Cloud Function for coaches, or super admin for owners.
       allow create: if isSignedIn(); 
-      allow delete: if false; // Deletion should be handled by a backend process
+      allow delete: if false;
     }
 
     // ORGANIZATIONS:
-    // - Owners can update their own organization's document.
     match /organizations/{orgId} {
         allow read, update: if isSignedIn() && isOwner(orgId);
-        allow create, delete: if false; // Handled by Super Admin
+        allow create, delete: if false;
     }
 
     // STADIUMS:
-    // - Owners can manage stadiums within their organization.
-    // - Coaches can read stadium data for their organization.
     match /stadiums/{stadiumId} {
         allow read: if isSignedIn() && (isOwner(getOrgId()) || isCoach(getOrgId()));
         allow create, update: if isSignedIn() && isOwner(getOrgId());
-        allow delete: if false; // Soft delete by changing status instead
+        allow delete: if false;
 
-        // STUDENTS Subcollection
-        // - Owners can manage all students in their org's stadiums.
-        // - Coaches can manage students in their assigned stadium.
+        // STUDENTS Subcollection (Directly under stadium - for owners)
         match /students/{studentId} {
-            allow read, create, update, delete: if isSignedIn() && 
-                                                    (isOwner(getOrgId()) || isCoach(getOrgId()));
+            allow read, create, update, delete: if isSignedIn() && isOwner(getOrgId());
+        }
+
+        // COACHES Subcollection in a Stadium
+        match /coaches/{coachId} {
+             allow read, write: if false; // Only allow access to nested subcollections
+
+            // STUDENTS under a specific COACH
+            match /students/{studentId} {
+                allow read, create, update, delete: if isSignedIn() &&
+                                                        (isOwner(getOrgId()) || (isCoach(getOrgId()) && request.auth.uid == coachId));
+            }
         }
 
         // ATTENDANCE Subcollection
-        // - Owners can manage all attendance in their org's stadiums.
-        // - Coaches can manage attendance in their assigned stadium.
         match /attendance/{attendanceId} {
              allow read, create, update, delete: if isSignedIn() &&
                                                      (isOwner(getOrgId()) || isCoach(getOrgId()));
         }
     }
     
-    // ATTENDANCE SUBMISSIONS (for recent activity feed)
-    // - Any authenticated user in an org can create a submission record.
-    // - Only owners can read all submissions for their org.
+    // ATTENDANCE SUBMISSIONS
     match /attendance_submissions/{submissionId} {
         allow create: if isSignedIn();
         allow read: if isSignedIn() && isOwner(getOrgId());
         allow update, delete: if false;
     }
 
-    // Rules for Super Admin access
+    // SUPER ADMIN
     match /stadium_owners/{ownerId} {
-        // In a real app, you would check for a 'super_admin' role
-        // For now, allow any authenticated user for simplicity of testing.
         allow read, create, update, delete: if isSignedIn();
     }
   }

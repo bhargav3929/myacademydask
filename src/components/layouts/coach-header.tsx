@@ -1,20 +1,17 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { useAuth } from "@/contexts/auth-context";
 
 import {
   Bell,
   ChevronDown,
   Gamepad2,
-  User,
   LogOut,
   Settings,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,38 +24,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Skeleton } from "../ui/skeleton";
-import { EditCoachProfileDialog } from "../coach/edit-coach-profile-dialog";
-import { UserProfile } from "@/lib/types";
 
 export function CoachHeader() {
     const router = useRouter();
-    const [user, setUser] = useState<UserProfile | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-            if (currentUser) {
-                const userDocRef = doc(firestore, "users", currentUser.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    setUser({ id: userDocSnap.id, ...userDocSnap.data() } as UserProfile);
-                }
-            } else {
-                setUser(null);
-                router.push('/login');
-            }
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [router]);
+    const { authUser, signOut, loading } = useAuth();
 
     const handleLogout = async () => {
-        await signOut(auth);
-        router.push('/login');
+        await signOut();
     };
 
     const getInitials = (name: string) => {
+        if (!name) return "";
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
 
@@ -82,7 +58,13 @@ export function CoachHeader() {
             <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1 h-auto">
                <Avatar className="size-8">
                 <AvatarFallback>
-                    {loading ? <Skeleton className="size-8 rounded-full" /> : <User className="size-5" />}
+                    {loading ? (
+                        <Skeleton className="size-8 rounded-full" />
+                    ) : authUser ? (
+                        getInitials(authUser.name) ? getInitials(authUser.name) : <User className="size-5" />
+                    ) : (
+                        <User className="size-5" />
+                    )}
                 </AvatarFallback>
               </Avatar>
               {loading ? (
@@ -90,30 +72,23 @@ export function CoachHeader() {
                     <Skeleton className="h-4 w-20" />
                     <Skeleton className="h-3 w-28" />
                 </div>
-              ) : user ? (
+              ) : authUser && (
                  <div className="text-left hidden md:block">
-                    <p className="text-sm font-medium">{user.fullName}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="text-sm font-medium">{authUser.name || "Coach"}</p>
+                    <p className="text-xs text-muted-foreground">Coach</p>
                 </div>
-              ) : null}
+              )}
               <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-             {user && (
+             {!loading && authUser && (
                 <>
                     <DropdownMenuLabel>
-                        <p>{user.fullName}</p>
-                        <p className="text-xs text-muted-foreground font-normal">{user.email}</p>
+                        <p>{authUser.name || "Coach"}</p>
+                        <p className="text-xs text-muted-foreground font-normal">{authUser.email || "..."}</p>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <EditCoachProfileDialog user={user} setUser={setUser}>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Settings className="mr-2 size-4" />
-                            <span>Profile</span>
-                        </DropdownMenuItem>
-                    </EditCoachProfileDialog>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="mr-2 size-4" />

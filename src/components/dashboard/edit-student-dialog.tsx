@@ -29,8 +29,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "../ui/scroll-area";
-import { Avatar, AvatarFallback } from "../ui/avatar";
 
 const formSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
@@ -44,10 +42,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface EditStudentDialogProps {
     student: Student;
+    stadiumId: string;
+    onStudentUpdated: () => void;
     children: React.ReactNode;
 }
 
-export function EditStudentDialog({ student, children }: EditStudentDialogProps) {
+export function EditStudentDialog({ student, stadiumId, onStudentUpdated, children }: EditStudentDialogProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,9 +66,9 @@ export function EditStudentDialog({ student, children }: EditStudentDialogProps)
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      const studentDocRef = doc(firestore, `stadiums/${student.stadiumId}/students`, student.id);
+      const studentDocRef = doc(firestore, `stadiums/${stadiumId}/students`, student.id);
       await updateDoc(studentDocRef, values);
-
+      onStudentUpdated();
       toast({
         title: "Success!",
         description: `Student "${values.fullName}" has been updated.`,
@@ -193,4 +193,3 @@ export function EditStudentDialog({ student, children }: EditStudentDialogProps)
     </Dialog>
   );
 }
-

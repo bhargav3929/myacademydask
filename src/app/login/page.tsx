@@ -1,198 +1,136 @@
-
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from "firebase/auth";
-import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
-
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { Gamepad2 } from "lucide-react";
-import Link from "next/link";
-import { MotionDiv } from "@/components/motion";
-
-const loginFormSchema = z.object({
-  identifier: z.string().min(1, { message: "Please enter your email or username." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-});
-
-type LoginFormValues = z.infer<typeof loginFormSchema>;
-
-const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
-const OWNER_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL || "director@courtcommand.com";
-const OWNER_USERNAME = "admin";
-const OWNER_PASSWORD = "admin123";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { SignInCard } from "@/components/ui/sign-in-card";
+import { useRouter } from "next/navigation";
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 
 export default function LoginPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginFormSchema),
-    defaultValues: { identifier: "", password: "" },
-  });
-
-  const getEmailFromIdentifier = async (identifier: string): Promise<string | null> => {
-    if (z.string().email().safeParse(identifier).success) return identifier;
-    if (identifier.toLowerCase() === OWNER_USERNAME) return OWNER_EMAIL;
-    const usersRef = collection(firestore, "users");
-    const q = query(usersRef, where("username", "==", identifier));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) return null;
-    return querySnapshot.docs[0].data().email;
-  };
-
-  const handleSuccessfulLogin = async (user: User) => {
-    console.log(`Handling successful login for user: ${user.email}`);
-    setIsLoading(true);
-
+  const getEmailFromUsername = async (username: string): Promise<string | null> => {
     try {
-        // Sync claims on every login for owners
-        if (user.email === OWNER_EMAIL) {
-            const token = await user.getIdToken();
-            const syncRoleUrl = 'https://us-central1-courtcommand.cloudfunctions.net/syncUserRole';
-            await fetch(syncRoleUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            await user.getIdToken(true); // Force refresh token
-        }
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", username));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        console.error("Login Error: No user found with the provided username.");
+        return null;
+      }
+      
+      const userData = querySnapshot.docs[0].data();
+      return userData.email as string;
 
-
-        const finalTokenResult = await user.getIdTokenResult();
-        const userRole = finalTokenResult.claims.role as string | undefined;
-
-        console.log(`Final user role for redirection is: ${userRole}`);
-        toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
-        
-        const targetUrl = userRole === 'coach' ? '/coach/dashboard' : '/dashboard';
-        window.location.href = targetUrl; // Use full page reload to ensure all state is fresh
-
-    } catch (error: any) {
-        console.error("Error during login finalization:", error);
-        toast({
-            variant: "destructive",
-            title: "Login Finalization Failed",
-            description: error.message || "An unexpected error occurred during role verification.",
-        });
-        setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching user by username:", error);
+      return null;
     }
   };
 
-
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: { emailOrUsername: string, password: string }) => {
     setIsLoading(true);
+    let email = data.emailOrUsername;
+
     try {
-      let emailToLogin = await getEmailFromIdentifier(data.identifier);
-
-      if (!emailToLogin) {
-        if (data.identifier.toLowerCase() === OWNER_USERNAME && data.password === OWNER_PASSWORD) {
-          console.log("Owner account not found. Creating new owner account.");
-          const userCredential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, data.password);
-          
-          const userDocRef = doc(firestore, "users", userCredential.user.uid);
-          await setDoc(userDocRef, {
-            uid: userCredential.user.uid,
-            email: OWNER_EMAIL,
-            username: OWNER_USERNAME,
-            fullName: "Academy Director",
-            role: "owner",
-            organizationId: MOCK_ORGANIZATION_ID,
-            createdAt: serverTimestamp(),
-          });
-          
-          await handleSuccessfulLogin(userCredential.user);
-          return; // Exit after handling
+        if (!data.emailOrUsername.includes('@')) {
+          const emailFromDb = await getEmailFromUsername(data.emailOrUsername);
+          if (!emailFromDb) {
+            toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: "Invalid username or password.",
+            });
+            setIsLoading(false);
+            return;
+          }
+          email = emailFromDb;
         }
-        throw new Error("Invalid credentials");
-      }
+        
+        const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
+        const user = userCredential.user;
 
-      const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, data.password);
-      await handleSuccessfulLogin(userCredential.user);
+        // 1. Force token refresh to get latest claims (including role from syncUserRole)
+        const idToken = await user.getIdToken(true);
+
+        // 2. Call syncUserRole Cloud Function to ensure custom claims are set/updated
+        const syncUserRoleFn = httpsCallable(functions, 'syncUserRole');
+        const syncResult: any = await syncUserRoleFn(); // No data needed for syncUserRole function
+
+        if (syncResult.data.error) {
+          toast({
+              variant: "destructive",
+              title: "Login Failed",
+              description: syncResult.data.message || "Failed to sync user role.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const role = syncResult.data.role;
+
+        // 3. Call API route to create session cookie
+        const sessionResponse = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idToken: idToken }),
+        });
+
+        if (!sessionResponse.ok) {
+            const errorData = await sessionResponse.json();
+            throw new Error(errorData.error || 'Failed to establish session.');
+        }
+
+        // 4. Redirect based on the role obtained from syncResult
+        let targetUrl = '/dashboard'; // Default for owner
+        if (role === 'coach') targetUrl = '/coach/dashboard';
+        if (role === 'super-admin') targetUrl = '/super-admin/dashboard';
+
+        toast({
+            title: "Login Successful",
+            description: "Redirecting...",
+        });
+        
+        // Important: Use window.location.assign to force a full page reload
+        // This ensures the middleware runs with the newly set session cookie.
+        window.location.assign(targetUrl);
 
     } catch (error: any) {
-      console.error("Login onSubmit error:", error);
-      let errorMessage = "Invalid credentials. Please check your username and password.";
-      if (error.code !== 'auth/wrong-password' && error.code !== 'auth/user-not-found' && error.message) {
-        errorMessage = error.message;
-      }
+      console.error("Login Failed:", error);
       toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: errorMessage,
+          variant: "destructive",
+          title: "Login Failed",
+          description: error.message || "Invalid username or password.",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary/40 p-4">
-      <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <Card className="w-full max-w-md shadow-2xl">
-          <CardHeader className="text-center">
-            <Link href="/" className="flex items-center gap-2.5 justify-center mb-4">
-              <Gamepad2 className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold">CourtCommand</span>
-            </Link>
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>Enter your credentials to sign in to your account.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="identifier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email or Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="name@example.com or your_username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing In..." : "Sign In"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </MotionDiv>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary/10 to-background" />
+        <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            }}
+        />
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-primary/5 blur-[80px]" />
+      </div>
+      <div className="z-10">
+       <SignInCard onSubmit={onSubmit} isLoading={isLoading} />
+      </div>
     </div>
   );
 }

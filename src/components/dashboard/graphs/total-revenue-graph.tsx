@@ -11,10 +11,11 @@ import { format, startOfToday, eachDayOfInterval, subDays, isWithinInterval, sta
 import { Student } from "@/lib/types";
 import { Button } from "../../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
-import { CalendarIcon, DollarSign, SlidersHorizontal } from "lucide-react";
+import { CalendarIcon, TrendingUp, SlidersHorizontal } from "lucide-react";
 import { Calendar } from "../../ui/calendar";
 import { DateRange } from "react-day-picker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useCurrency, Currency } from "@/contexts/CurrencyContext";
 
 interface ChartData {
   name: string;
@@ -22,8 +23,17 @@ interface ChartData {
 }
 type TimeFilter = "weekly" | "monthly" | "last_30_days" | "custom";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const currencySymbols: { [key in Currency]: string } = {
+    USD: '$',
+    INR: '₹',
+    EUR: '€',
+    GBP: '£',
+    AED: 'د.إ',
+};
+
+const CustomTooltip = ({ active, payload, label, currency }: any) => {
   if (active && payload && payload.length) {
+    const locale = currency === 'INR' ? 'en-IN' : 'en-US';
     return (
       <div className="rounded-lg border bg-background/95 p-2 shadow-lg backdrop-blur-sm">
         <p className="font-bold text-base mb-1">{label}</p>
@@ -32,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "hsl(var(--chart-3))" }} />
             <span className="text-sm text-muted-foreground">Revenue:</span>
             <span className="text-sm font-bold">
-                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payload[0].value)}
+                {new Intl.NumberFormat(locale, { style: 'currency', currency }).format(payload[0].value)}
             </span>
           </div>
         </div>
@@ -52,6 +62,7 @@ export function TotalRevenueGraph({ organizationId }: { organizationId: string |
     to: new Date(),
   });
   const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
+  const { currency } = useCurrency();
 
 
   useEffect(() => {
@@ -158,7 +169,7 @@ export function TotalRevenueGraph({ organizationId }: { organizationId: string |
         <div className="flex flex-col md:flex-row justify-between md:items-start gap-4">
             <div className="flex-1">
                 <CardTitle className="flex items-center gap-3 text-2xl">
-                    <DollarSign className="size-7 text-primary" />
+                    <TrendingUp className="size-7 text-primary" />
                     Total Revenue
                 </CardTitle>
                 <CardDescription className="hidden md:block">Total revenue from new student admissions {getFilterPeriodText()}</CardDescription>
@@ -266,13 +277,12 @@ export function TotalRevenueGraph({ organizationId }: { organizationId: string |
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                allowDecimals={false}
+                tickFormatter={(value) => `${currencySymbols[currency]}${Number(value) / 1000}k`}
                 width={45}
               />
               <Tooltip
                 cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1.5, strokeDasharray: "4 4" }}
-                content={<CustomTooltip />}
+                content={<CustomTooltip currency={currency} />}
                 wrapperStyle={{ outline: 'none' }}
               />
               <Area 

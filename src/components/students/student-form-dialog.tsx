@@ -66,6 +66,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       fullName: "",
       status: 'active',
@@ -321,7 +322,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={!form.formState.isValid || isLoading}>
                 {isLoading ? "Saving..." : "Add Student"}
               </Button>
             </DialogFooter>
@@ -331,5 +332,3 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
     </Dialog>
   );
 }
-
-    

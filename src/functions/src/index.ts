@@ -1,72 +1,54 @@
 
-import { onRequest } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import * as cors from "cors";
-
-const corsHandler = cors({ origin: true });
 
 admin.initializeApp();
 
 // Allows a Super Admin to grant Owner role to a target user
-export const grantOwnerRole = onRequest(
+export const grantOwnerRole = onCall(
   { region: "us-central1" },
-  async (req, res) => {
-    corsHandler(req, res, async () => {
-      const tokenId = req.headers.authorization?.split("Bearer ")[1];
-      if (!tokenId) {
-        res.status(401).send({ error: "Unauthorized", message: "No token provided." });
-        return;
-      }
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "You must be logged in to call this function.");
+    }
 
-      try {
-        const decodedToken = await admin.auth().verifyIdToken(tokenId);
-        const callerRole = decodedToken.role;
+    const callerRole = request.auth.token.role;
+    if (callerRole !== "super-admin") {
+      throw new HttpsError("permission-denied", "Only super-admins can grant owner roles.");
+    }
 
-        if (callerRole !== "super-admin") {
-          res.status(403).send({ error: "Forbidden", message: "Only super-admins can grant owner roles." });
-          return;
-        }
+    const { targetUid, organizationId } = request.data;
+    if (!targetUid || !organizationId) {
+      throw new HttpsError("invalid-argument", "Missing required fields: targetUid and organizationId.");
+    }
 
-        const { targetUid, organizationId } = req.body;
-        if (!targetUid || !organizationId) {
-          res.status(400).send({ error: "Bad Request", message: "Missing required fields: targetUid and organizationId." });
-          return;
-        }
+    try {
+      await admin.auth().setCustomUserClaims(targetUid, {
+        role: "owner",
+        organizationId: organizationId,
+      });
 
-        await admin.auth().setCustomUserClaims(targetUid, {
-          role: "owner",
-          organizationId: organizationId,
-        });
-
-        res.status(200).send({ success: true, message: `Owner role granted to user ${targetUid}.` });
-
-      } catch (err: any) {
-        console.error("Error in grantOwnerRole:", err);
-        res.status(500).send({ error: "Internal Server Error", message: err.message || "An internal error occurred." });
-      }
-    });
+      return { success: true, message: `Owner role granted to user ${targetUid}.` };
+    } catch (err: any) {
+      console.error("Error in grantOwnerRole:", err);
+      throw new HttpsError("internal", err.message || "An internal error occurred.");
+    }
   }
 );
 
 // Callable function to sync a user's role from Firestore to their Auth token claims
-export const syncUserRole = onRequest(
+export const syncUserRole = onCall(
   { region: "us-central1" },
-  async (req, res) => {
-    corsHandler(req, res, async () => {
-      const tokenId = req.headers.authorization?.split('Bearer ')[1];
-      if (!tokenId) {
-        res.status(401).send({ error: 'Unauthorized', message: 'No token provided.' });
-        return;
-      }
+  async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be logged in to call this function.");
+    }
+    const uid = request.auth.uid;
 
-      try {
-        const decodedToken = await admin.auth().verifyIdToken(tokenId);
-        const uid = decodedToken.uid;
-
+    try {
         const userDoc = await admin.firestore().collection('users').doc(uid).get();
         if (!userDoc.exists) {
-          res.status(404).send({ error: 'Not Found', message: 'User document not found.' });
-          return;
+            throw new HttpsError("not-found", "User document not found.");
         }
 
         const { role, organizationId } = userDoc.data()!;
@@ -80,54 +62,43 @@ export const syncUserRole = onRequest(
 
             await admin.auth().setCustomUserClaims(uid, claims);
             console.log(`Claims successfully set for user ${uid}:`, claims);
-            res.status(200).send({ success: true, message: `Role '${role}' synced to custom claims.` });
+            return { success: true, message: `Role '${role}' synced to custom claims.` };
         } else {
-          console.log(`User ${uid} role ('${role}') requires no special claims.`);
-          res.status(200).send({ success: true, message: "No claims to set." });
+            console.log(`User ${uid} role ('${role}') requires no special claims.`);
+            return { success: true, message: "No claims to set." };
         }
-      } catch (error: any) {
+    } catch (error: any) {
         console.error("Error in syncUserRole:", error);
-        res.status(500).send({ error: 'Internal Server Error', message: error.message });
-      }
-    });
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        throw new HttpsError("internal", error.message || "An internal error occurred.");
+    }
   }
 );
 
 
-export const createCoachUser = onRequest(
+export const createCoachUser = onCall(
   { region: "us-central1" },
-  async (req, res) => {
-    corsHandler(req, res, async () => {
-      // 1. Authentication and Authorization Check
-      const tokenId = req.headers.authorization?.split("Bearer ")[1];
-      if (!tokenId) {
-        res.status(401).send({ error: "Unauthorized", message: "No token provided." });
-        return;
-      }
+  async (request) => {
+    // 1. Authentication and Authorization Check
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be logged in to call this function.");
+    }
+    const decodedToken = request.auth.token;
+    const role = (decodedToken.role) || null;
+    if (role !== "owner") {
+        throw new HttpsError("permission-denied", "Only owners can create coach users.");
+    }
 
-      let decodedToken;
-      try {
-        decodedToken = await admin.auth().verifyIdToken(tokenId);
-      } catch (error) {
-        res.status(401).send({ error: "Unauthorized", message: "Invalid token." });
-        return;
-      }
+    // 2. Input validation
+    const { email, password, displayName, coachUsername } = request.data;
+    if (!email || !password || !displayName) {
+        throw new HttpsError("invalid-argument", "Missing required fields: email, password, displayName.");
+    }
 
-      const role = (decodedToken.role) || null;
-      if (role !== "owner") {
-        res.status(403).send({ error: "Forbidden", message: "Only owners can create coach users." });
-        return;
-      }
-
-      // 2. Input validation
-      const { email, password, displayName, coachUsername } = req.body;
-      if (!email || !password || !displayName) {
-        res.status(400).send({ error: "Bad Request", message: "Missing required fields." });
-        return;
-      }
-
-      // 3. Logic
-      try {
+    // 3. Logic
+    try {
         const userRecord = await admin.auth().createUser({
           email,
           password,
@@ -151,15 +122,14 @@ export const createCoachUser = onRequest(
         });
 
         console.log("createCoachUser success uid:", userRecord.uid);
-        res.status(200).send({ success: true, uid: userRecord.uid });
-      } catch (err: any) {
+        return { success: true, uid: userRecord.uid };
+    } catch (err: any) {
         console.error("createCoachUser error:", err);
         if (err.code && err.code.startsWith("auth/")) {
-            res.status(409).send({ error: "Conflict", message: err.message });
+            throw new HttpsError("already-exists", err.message, err.code);
         } else {
-            res.status(500).send({ error: "Internal Server Error", message: err.message || "Internal error" });
+            throw new HttpsError("internal", err.message || "Internal error");
         }
-      }
-    });
+    }
   }
 );

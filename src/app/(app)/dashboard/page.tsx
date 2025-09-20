@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { collection, query, where, onSnapshot, getDocs, limit, orderBy, doc, getDoc, collectionGroup, Timestamp } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
+import { useAuth } from "@/contexts/auth-context";
 import { MotionDiv } from "@/components/motion";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { NewAdmissions } from "@/components/dashboard/new-admissions";
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { startOfToday, startOfYesterday, endOfYesterday, startOfWeek, endOfWeek, subMonths, format, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, SlidersHorizontal } from "lucide-react";
+import { CalendarIcon, SlidersHorizontal, PlusIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import type { DateRange } from "react-day-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,6 +25,8 @@ import { NewStudentsGraph } from "@/components/dashboard/graphs/new-students-gra
 import { TotalRevenueGraph } from "@/components/dashboard/graphs/total-revenue-graph";
 import { ActiveStadiumsList } from "@/components/dashboard/graphs/active-stadiums-list";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useCurrency, Currency } from "@/contexts/CurrencyContext";
+import { AddStadiumDialog } from "@/components/stadiums/stadium-form-dialog";
 
 type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all" | "custom";
 
@@ -32,15 +34,19 @@ export default function DashboardPage() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalStudentsFiltered, setTotalStudentsFiltered] = useState(0); 
+  const [totalRevenueFiltered, setTotalRevenueFiltered] = useState(0); 
   const [recentAdmissions, setRecentAdmissions] = useState<Student[]>([]);
   const [directorName, setDirectorName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true); 
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [activeStadiums, setActiveStadiums] = useState(0);
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
-  const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
+  
+  const [mobileCustomPopoverOpen, setMobileCustomPopoverOpen] = useState(false);
+
+  const [isCreateStadiumOpen, setCreateStadiumOpen] = useState(false);
+  const { currency } = useCurrency();
 
   const filterStudentsByDate = useCallback((students: Student[], filter: TimeFilter, dateRange?: DateRange) => {
     const now = new Date();
@@ -50,6 +56,7 @@ export default function DashboardPage() {
     switch (filter) {
         case "today":
             startTime = startOfToday();
+            endTime = endOfDay(now);
             break;
         case "yesterday":
             startTime = startOfYesterday();
@@ -57,9 +64,11 @@ export default function DashboardPage() {
             break;
         case "weekly":
             startTime = startOfWeek(now);
+            endTime = endOfDay(now);
             break;
         case "monthly":
             startTime = subMonths(now, 1);
+            endTime = endOfDay(now);
             break;
         case "custom":
             if (dateRange?.from) {
@@ -68,25 +77,23 @@ export default function DashboardPage() {
             }
             break;
         case "all":
-            return students;
+            return students; 
         default:
             return students;
     }
+
      if (startTime) {
          return students.filter(student => {
             const joinDate = student.joinDate.toDate();
-            if (endTime) {
-                return joinDate >= startTime! && joinDate <= endTime;
-            }
-            return joinDate >= startTime!;
+            return joinDate >= startTime! && (endTime ? joinDate <= endTime : true);
          });
      }
-     return students;
+     return students; 
   }, []);
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
-      if (user && !directorName) { // Only set if directorName is not already set
+      if (user && !directorName) { 
         const userDocRef = doc(firestore, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
@@ -98,16 +105,14 @@ export default function DashboardPage() {
           }
         }
       }
-      // No 'else' block to prevent clearing state on auth changes
     });
     return () => unsubscribeAuth();
-  }, [directorName]); // Dependency on directorName to prevent re-running after it's set
-
+  }, [directorName]);
 
   useEffect(() => {
     if (!organizationId) return;
 
-    setIsLoading(true);
+    setIsLoadingInitialData(true);
     const studentsQuery = query(
         collectionGroup(firestore, "students"),
         where("organizationId", "==", organizationId)
@@ -120,16 +125,10 @@ export default function DashboardPage() {
           return { id: doc.id, stadiumId, ...doc.data() } as Student;
       });
       setAllStudents(studentsData);
-      
-      const filtered = filterStudentsByDate(studentsData, timeFilter, customDateRange);
-      setFilteredStudents(filtered);
-
-      setTotalStudents(studentsData.length);
-      
-      setIsLoading(false);
+      setIsLoadingInitialData(false);
     }, error => {
-      console.error("Error fetching students:", error);
-      setIsLoading(false);
+      console.error("Error fetching all students:", error);
+      setIsLoadingInitialData(false);
     });
 
     const stadiumsQuery = query(
@@ -145,20 +144,27 @@ export default function DashboardPage() {
         unsubscribeStudents();
         unsubscribeStadiums();
     };
-  }, [organizationId, timeFilter, filterStudentsByDate, customDateRange]);
+  }, [organizationId]); 
 
   useEffect(() => {
-    const revenue = filteredStudents.reduce((acc, student) => acc + (student.fees || 0), 0);
-    setTotalRevenue(revenue);
+    if (isLoadingInitialData && allStudents.length === 0 && organizationId) {
+      return; 
+    }
+
+    const filtered = filterStudentsByDate(allStudents, timeFilter, customDateRange);
+    setFilteredStudents(filtered);
+    setTotalStudentsFiltered(filtered.length);
+
+    const revenue = filtered.reduce((acc, student) => acc + (student.fees || 0), 0);
+    setTotalRevenueFiltered(revenue);
     
     setRecentAdmissions(
-        [...filteredStudents]
+        [...filtered]
         .sort((a,b) => b.joinDate.toMillis() - a.joinDate.toMillis())
         .slice(0, 5)
     );
 
-  }, [filteredStudents]);
-
+  }, [allStudents, timeFilter, customDateRange, filterStudentsByDate, organizationId, isLoadingInitialData]); 
 
   const getFilterPeriodText = () => {
     switch (timeFilter) {
@@ -180,11 +186,10 @@ export default function DashboardPage() {
 
   const handleFilterClick = (filter: TimeFilter) => {
     setTimeFilter(filter);
-    if (filter === 'custom') {
-      setCustomPopoverOpen(true);
+    if (filter !== 'custom') {
+      setCustomDateRange(undefined);
     }
   };
-
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -210,10 +215,21 @@ export default function DashboardPage() {
     },
   };
 
-  const formattedRevenue = new Intl.NumberFormat('en-US', {
+  const getLocaleForCurrency = (c: Currency) => {
+    const map: { [key in Currency]: string } = {
+        USD: 'en-US',
+        INR: 'en-IN',
+        EUR: 'de-DE',
+        GBP: 'en-GB',
+        AED: 'ar-AE'
+    };
+    return map[c];
+  }
+
+  const formattedRevenue = new Intl.NumberFormat(getLocaleForCurrency(currency), {
     style: 'currency',
-    currency: 'USD',
-  }).format(totalRevenue);
+    currency: currency,
+  }).format(totalRevenueFiltered);
 
   return (
     <MotionDiv
@@ -229,7 +245,7 @@ export default function DashboardPage() {
                     <h1 className="text-xl md:text-2xl font-bold tracking-tight flex-shrink-0">
                         Welcome Back,
                     </h1>
-                    {isLoading || !directorName ? (
+                    {isLoadingInitialData || !directorName ? (
                         <Skeleton className="h-8 w-48" />
                     ) : (
                         <AnimatedText 
@@ -241,29 +257,47 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Desktop Filters */}
-            <div className="hidden md:flex items-center gap-1.5 flex-wrap justify-end rounded-full border bg-card p-1">
-                {(["today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+            <div className="flex items-center gap-2">
+                <Dialog open={isCreateStadiumOpen} onOpenChange={setCreateStadiumOpen}>
+                    <DialogTrigger asChild>
+                         <Button>
+                            <PlusIcon className="mr-2 h-4 w-4" />
+                            Create Stadium
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl w-full mx-4 sm:mx-auto">
+                        <DialogHeader>
+                        <DialogTitle>Create a New Stadium & Assign a Coach</DialogTitle>
+                        <DialogDescription>
+                            Fill in the details below to add a new stadium and create a new coach account.
+                        </DialogDescription>
+                        </DialogHeader>
+                        <AddStadiumDialog closeDialog={() => setCreateStadiumOpen(false)} />
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </div>
+      </MotionDiv>
+
+      <MotionDiv variants={itemVariants} className="flex justify-end">
+         {/* Desktop Filters - Uncontrolled Popover */}
+         <div className="hidden md:flex items-center gap-1.5 flex-wrap rounded-full border bg-card p-1">
+                {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
                     <Button 
                         key={filter} 
                         variant={timeFilter === filter ? 'secondary' : 'ghost'} 
                         className="rounded-full capitalize text-sm h-8 px-3"
-                        onClick={() => setTimeFilter(filter)}
+                        onClick={() => handleFilterClick(filter)} 
                     >
                         {filter}
                     </Button>
                 ))}
-                <Popover open={customPopoverOpen} onOpenChange={setCustomPopoverOpen}>
+                <Popover>
                     <PopoverTrigger asChild>
                         <Button
                             variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
                             className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
-                            onClick={() => {
-                                setTimeFilter('custom');
-                                if (timeFilter !== 'custom') {
-                                    setCustomDateRange(undefined);
-                                }
-                            }}
+                            onClick={() => setTimeFilter('custom')}
                         >
                             Custom
                             <CalendarIcon className="size-3.5 text-muted-foreground" />
@@ -271,19 +305,19 @@ export default function DashboardPage() {
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 mt-2" align="end">
                         <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={customDateRange?.from}
-                        selected={customDateRange}
-                        onSelect={setCustomDateRange}
-                        numberOfMonths={2}
+                            initialFocus
+                            mode="range"
+                            defaultMonth={customDateRange?.from}
+                            selected={customDateRange}
+                            onSelect={setCustomDateRange}
+                            numberOfMonths={2}
                         />
                     </PopoverContent>
                 </Popover>
             </div>
 
-            {/* Mobile Filters */}
-            <div className="md:hidden self-end">
+            {/* Mobile Filters - Controlled Popover */}
+            <div className="md:hidden">
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -292,39 +326,43 @@ export default function DashboardPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                         {(["today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+                         {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
                             <DropdownMenuItem key={filter} onSelect={() => handleFilterClick(filter)} className="capitalize">
                                 {filter}
                             </DropdownMenuItem>
                         ))}
                          <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleFilterClick('custom')}>
+                        <DropdownMenuItem 
+                            onSelect={() => {
+                                setTimeFilter('custom');
+                                setMobileCustomPopoverOpen(true);
+                            }}
+                        >
                              <CalendarIcon className="mr-2 size-4" /> Custom Range
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                 <Popover open={customPopoverOpen} onOpenChange={setCustomPopoverOpen}>
+                 <Popover open={mobileCustomPopoverOpen} onOpenChange={setMobileCustomPopoverOpen}>
                     <PopoverTrigger asChild>
-                        <span></span>
+                        <span />
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 mt-2" align="end">
                         <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={customDateRange?.from}
-                        selected={customDateRange}
-                        onSelect={(range) => {
-                            setCustomDateRange(range);
-                            if(range?.from) {
-                                setCustomPopoverOpen(false);
-                            }
-                        }}
-                        numberOfMonths={1}
+                            initialFocus
+                            mode="range"
+                            defaultMonth={customDateRange?.from}
+                            selected={customDateRange}
+                            onSelect={(range) => {
+                                setCustomDateRange(range);
+                                if (range?.from) {
+                                    setMobileCustomPopoverOpen(false);
+                                }
+                            }}
+                            numberOfMonths={1}
                         />
                     </PopoverContent>
                 </Popover>
             </div>
-        </div>
       </MotionDiv>
       
       <MotionDiv
@@ -337,7 +375,7 @@ export default function DashboardPage() {
                     <div className="cursor-pointer">
                         <StatCard
                             title="Total Students"
-                            value={totalStudents.toString()}
+                            value={totalStudentsFiltered.toString()}
                             icon="Users"
                             trendPeriod="Across all stadiums"
                             primary

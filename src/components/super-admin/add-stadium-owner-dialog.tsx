@@ -25,6 +25,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const grantOwnerRole = httpsCallable(functions, 'grantOwnerRole');
+
 export function AddStadiumOwnerDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -37,7 +39,7 @@ export function AddStadiumOwnerDialog() {
       username: "",
       password: ""
     },
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const onSubmit = async (values: FormValues) => {
@@ -82,8 +84,6 @@ export function AddStadiumOwnerDialog() {
 
         await batch.commit();
 
-        // AFTER creating the user, call the new Cloud Function to set their custom claims
-        const grantOwnerRole = httpsCallable(functions, 'grantOwnerRole');
         await grantOwnerRole({ 
             targetUid: ownerUid, 
             organizationId: organizationId 
@@ -103,8 +103,8 @@ export function AddStadiumOwnerDialog() {
         let errorMessage = "An unexpected error occurred.";
         if (error.code === "auth/email-already-in-use") {
             errorMessage = "This username is already taken. Please choose a different one.";
-        } else if (error.details && error.details.message) {
-            errorMessage = error.details.message;
+        } else if (error.message) {
+            errorMessage = error.message;
         }
         toast({
             variant: "destructive",
@@ -181,7 +181,7 @@ export function AddStadiumOwnerDialog() {
             
             <DialogFooter className="pt-4">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isLoading || !form.formState.isValid}>
+                <Button type="submit" disabled={!form.formState.isValid || isLoading}>
                     {isLoading ? "Creating Account..." : "Create Owner Account"}
                 </Button>
             </DialogFooter>

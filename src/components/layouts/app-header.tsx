@@ -2,11 +2,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { useAuth } from "@/contexts/auth-context";
 
 import {
   Bell,
@@ -41,56 +39,43 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { NavBar } from "../ui/tubelight-navbar";
-
-interface UserProfile {
-    fullName: string;
-    email: string;
-}
+import { Skeleton } from "../ui/skeleton";
 
 export function AppHeader() {
-  const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const { authUser, signOut, loading } = useAuth();
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-        if (currentUser) {
-            // --- Step 1: Log Claims ---
-            const idTokenResult = await currentUser.getIdTokenResult();
-            console.log("--- User Token Claims ---", idTokenResult.claims);
-            // -------------------------
-
-            const userDocRef = doc(firestore, "users", currentUser.uid);
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                if (userData.role === 'owner') {
-                    setUser(userData as UserProfile);
-                }
-            } else {
-                 setUser({ fullName: "Academy Director", email: currentUser.email || ""});
-            }
-        }
-    });
-    return () => unsubscribe();
-  }, []);
-
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
+    await signOut();
   };
 
-  const navItems = [
-    { name: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  const getDashboardUrl = () => {
+    if (!authUser) return "/dashboard";
+    return authUser.role === 'coach' ? '/coach/dashboard' : '/dashboard';
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
+  const ownerNavItems = [
+    { name: "Dashboard", url: getDashboardUrl(), icon: LayoutDashboard },
     { name: "Stadiums", url: "/stadiums", icon: Building },
     { name: "Students", url: "/students", icon: Users },
     { name: "Reports", url: "/reports", icon: FileText },
     { name: "Settings", url: "/settings", icon: Settings },
   ];
+
+  const coachNavItems = [
+    { name: "Dashboard", url: getDashboardUrl(), icon: LayoutDashboard },
+    { name: "Settings", url: "/settings", icon: Settings },
+  ];
+
+  const navItems = authUser?.role === 'coach' ? coachNavItems : ownerNavItems;
 
   return (
     <>
@@ -106,18 +91,18 @@ export function AppHeader() {
         </div>
         
         {/* Centered navigation */}
-        <div className="flex justify-center">
-            <NavBar items={navItems} />
+        <div className="hidden md:flex justify-center">
+           {authUser && <NavBar items={navItems} />}
         </div>
 
-        {/* Right section (hidden on mobile) */}
-        <div className="hidden md:flex justify-end">
+        {/* Right section */}
+        <div className="flex justify-end">
           <div className="flex items-center gap-2 bg-background/5 border border-border backdrop-blur-lg p-1 rounded-full shadow-lg">
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full hidden md:flex">
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full hidden md:flex">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Toggle notifications</span>
             </Button>
@@ -127,7 +112,13 @@ export function AppHeader() {
                     <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
                       <Avatar className="size-8">
                         <AvatarFallback>
-                          <User className="size-5" />
+                            {loading ? (
+                                <Skeleton className="size-8 rounded-full" />
+                            ) : authUser ? (
+                                getInitials(authUser.name) ? getInitials(authUser.name) : <User className="size-5" />
+                            ) : (
+                                <User className="size-5" />
+                            )}
                         </AvatarFallback>
                       </Avatar>
                       <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
@@ -135,22 +126,36 @@ export function AppHeader() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <p>{user?.fullName || "Academy Director"}</p>
-                      <p className="text-xs text-muted-foreground font-normal">{user?.email || "..."}</p>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <AlertDialogTrigger asChild>
-                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <LifeBuoy className="mr-2 h-4 w-4" />
-                            Support
-                        </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                    </DropdownMenuItem>
+                    {loading ? (
+                        <div className="p-2 space-y-2">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-full" />
+                        </div>
+                    ) : authUser && (
+                        <>
+                            <DropdownMenuLabel>
+                              <p>{authUser.name || "User"}</p>
+                              <p className="text-xs text-muted-foreground font-normal">{authUser.email || "..."}</p>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => router.push('/settings')}>
+                                <Settings className="mr-2 h-4 w-4" />
+                                Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <AlertDialogTrigger asChild>
+                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                    <LifeBuoy className="mr-2 h-4 w-4" />
+                                    Support
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleLogout}>
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Logout
+                            </DropdownMenuItem>
+                        </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <AlertDialogContent>
@@ -174,5 +179,3 @@ export function AppHeader() {
     </>
   );
 }
-
-    

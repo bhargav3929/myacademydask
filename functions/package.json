@@ -9,7 +9,8 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "predeploy": "npm run build"
+    "lint": "eslint --ext .ts . --fix",
+    "predeploy": "npm run lint && npm run build"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -18,6 +19,11 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
+    "eslint": "^8.42.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.32.0",
     "firebase-functions-test": "^3.3.0",
     "typescript": "^5"
   },

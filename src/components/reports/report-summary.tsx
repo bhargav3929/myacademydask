@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ListChecks, TrendingUp, DollarSign, CalendarDays, BarChart, Users, Star, AlertTriangle, UserX } from "lucide-react";
 import type { ReportSummaryData, RevenueData } from "./report-types";
+import { useCurrency, Currency } from "@/contexts/CurrencyContext";
 
 interface ReportSummaryProps {
   summary: ReportSummaryData | null;
@@ -24,7 +25,25 @@ const StatCard = ({ icon: Icon, title, value, color }: { icon: React.ElementType
 );
 
 export function ReportSummary({ summary, revenue }: ReportSummaryProps) {
+    const { currency } = useCurrency();
+
     if (!summary || !revenue) return null;
+
+    const getLocaleForCurrency = (c: Currency) => {
+        const map: { [key in Currency]: string } = {
+            USD: 'en-US',
+            INR: 'en-IN',
+            EUR: 'de-DE',
+            GBP: 'en-GB',
+            AED: 'ar-AE'
+        };
+        return map[c];
+    }
+
+    const formattedRevenue = new Intl.NumberFormat(getLocaleForCurrency(currency), {
+        style: 'currency',
+        currency: currency,
+    }).format(revenue.totalRevenue);
 
   return (
     <Card className="lg:col-span-2">
@@ -39,7 +58,7 @@ export function ReportSummary({ summary, revenue }: ReportSummaryProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <StatCard icon={Users} title="Total Students" value={summary.totalStudents} />
             <StatCard icon={BarChart} title="Avg. Attendance" value={`${summary.averageAttendance}%`} />
-            <StatCard icon={DollarSign} title="Total Revenue" value={`$${revenue.totalRevenue.toLocaleString()}`} color="text-green-600" />
+            <StatCard icon={DollarSign} title="Total Revenue" value={formattedRevenue} color="text-green-600" />
             <StatCard icon={TrendingUp} title="Revenue Growth" value={`${revenue.growth}%`} color={revenue.growth > 0 ? "text-green-600" : "text-red-600"} />
         </div>
         <div>

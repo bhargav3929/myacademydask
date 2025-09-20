@@ -44,8 +44,7 @@ export function SuperAdminHeader() {
     
     const navItems = [
         { name: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
-        // { name: "Owners", href: "/super-admin/owners", icon: User },
-        // { name: "Settings", href: "/super-admin/settings", icon: Settings },
+        { name: "Settings", href: "/super-admin/settings", icon: Settings },
     ];
 
   return (

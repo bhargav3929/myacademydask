@@ -5,8 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { doc, setDoc, serverTimestamp, getDocs, collection, query, where, writeBatch, getDoc } from "firebase/firestore";
-import { auth, firestore } from "@/lib/firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +43,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-
 export function AddStadiumDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -61,133 +59,47 @@ export function AddStadiumDialog() {
       coachUsername: "",
       coachPassword: ""
     },
-    mode: "onBlur",
+    mode: "onChange",
   });
-
-  const checkEmailExistsOnClient = async (email: string) => {
-    if (!email) return false;
-    const q = query(collection(firestore, "users"), where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
-  };
-
-  const checkStadiumNameExists = async (name: string, organizationId: string) => {
-    if (!name || !organizationId) return false;
-    const q = query(
-        collection(firestore, "stadiums"), 
-        where("name", "==", name), 
-        where("organizationId", "==", organizationId)
-    );
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
-  }
-   const checkUsernameExists = async (username: string) => {
-    if (!username) return false;
-    const q = query(collection(firestore, "users"), where("username", "==", username));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
-  }
-
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to create a stadium." });
-        setIsLoading(false);
-        return;
-    }
-
     try {
-        const token = await currentUser.getIdToken(true); // Force refresh token to get latest claims
-        
-        const ownerUserDocRef = doc(firestore, "users", currentUser.uid);
-        const ownerUserDocSnap = await getDoc(ownerUserDocRef);
-        if (!ownerUserDocSnap.exists()) {
-            throw new Error("Owner user profile not found.");
-        }
-        const organizationId = ownerUserDocSnap.data().organizationId;
-        if (!organizationId) {
-            throw new Error("Organization ID is missing from owner profile.");
-        }
+      const functions = getFunctions();
+      const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
+      
+      const response = await createStadiumAndCoach(values);
+      const result = response.data as { success?: boolean; error?: string; message?: string; field?: string; };
 
-        if (await checkStadiumNameExists(values.stadiumName, organizationId)) {
-            form.setError("stadiumName", { type: "manual", message: "A stadium with this name already exists in your organization."});
-            setIsLoading(false);
-            return;
-        }
-
-        const createCoachUserUrl = 'https://us-central1-courtcommand.cloudfunctions.net/createCoachUser';
-        const response = await fetch(createCoachUserUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                email: values.coachEmail,
-                password: values.coachPassword,
-                displayName: values.coachFullName,
-                coachUsername: values.coachUsername,
-            }),
-        });
-
-        const resultData = await response.json();
-
-        if (!response.ok) {
-            throw new Error(resultData.message || 'Failed to create coach user from backend.');
-        }
-        
-        const coachUid = resultData.uid;
-        
-        const batch = writeBatch(firestore);
-        const timestamp = serverTimestamp();
-
-        const stadiumDocRef = doc(collection(firestore, "stadiums"));
-        batch.set(stadiumDocRef, {
-            name: values.stadiumName,
-            location: values.location,
-            organizationId: organizationId,
-            assignedCoachId: coachUid,
-            coachDetails: {
-                name: values.coachFullName,
-                email: values.coachEmail,
-                username: values.coachUsername,
-                phone: values.coachPhone,
-            },
-            status: "active",
-            createdAt: timestamp,
-            updatedAt: timestamp,
-        });
-
-        const userDocRef = doc(firestore, "users", coachUid);
-        batch.update(userDocRef, { // Use update instead of set to avoid overwriting existing doc
-            organizationId: organizationId,
-            assignedStadiums: [stadiumDocRef.id],
-        });
-
-        await batch.commit();
-
+      if (result.success) {
         toast({
-            title: "Success!",
-            description: `Stadium "${values.stadiumName}" created and assigned to ${values.coachFullName}.`,
+          title: "Success!",
+          description: result.message,
         });
-
         form.reset();
         setOpen(false);
-
+      } else {
+        // Handle specific field errors returned from the backend
+        if (result.field && (result.field === 'stadiumName' || result.field === 'coachEmail' || result.field === 'coachUsername')) {
+          form.setError(result.field as keyof FormValues, { 
+            type: "manual", 
+            message: result.message 
+          });
+        } else {
+          // Handle generic errors
+          throw new Error(result.message || "An unknown error occurred.");
+        }
+      }
     } catch (error: any) {
-        console.error("Stadium creation failed:", error);
-        let errorMessage = error.message || "An unexpected error occurred. Please try again.";
-        
-        toast({
-            variant: "destructive",
-            title: "Creation Failed",
-            description: errorMessage,
-        });
+      console.error("Stadium creation failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Creation Failed",
+        description: error.message || "An unexpected error occurred. Please try again.",
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -216,10 +128,7 @@ export function AddStadiumDialog() {
                     <FormItem>
                     <FormLabel>Stadium Name</FormLabel>
                     <FormControl>
-                        <Input 
-                        placeholder="e.g., Champions Arena" 
-                        {...field} 
-                        />
+                        <Input placeholder="e.g., Champions Arena" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -267,19 +176,7 @@ export function AddStadiumDialog() {
                     <FormItem>
                     <FormLabel>Coach's Email</FormLabel>
                     <FormControl>
-                        <Input 
-                        type="email" 
-                        placeholder="coach@example.com" 
-                        {...field}
-                        readOnly
-                        onFocus={(e) => e.target.removeAttribute('readonly')}
-                        onBlur={async (e) => {
-                            field.onBlur();
-                            if(e.target.value && await checkEmailExistsOnClient(e.target.value)) {
-                                form.setError("coachEmail", { type: "manual", message: "This email is already in use."});
-                            }
-                        }}
-                        />
+                        <Input type="email" placeholder="coach@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -292,18 +189,7 @@ export function AddStadiumDialog() {
                         <FormItem>
                         <FormLabel>Coach's Username</FormLabel>
                         <FormControl>
-                            <Input 
-                            placeholder="e.g., john_smith_1" 
-                            {...field}
-                            readOnly
-                            onFocus={(e) => e.target.removeAttribute('readonly')}
-                            onBlur={async (e) => {
-                                field.onBlur();
-                                if(e.target.value && await checkUsernameExists(e.target.value)) {
-                                    form.setError("coachUsername", { type: "manual", message: "This username is already taken."});
-                                }
-                            }}
-                             />
+                            <Input placeholder="e.g., john_smith_1" {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -325,7 +211,7 @@ export function AddStadiumDialog() {
                 
                 <DialogFooter className="pt-4 !justify-between">
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={isLoading || !form.formState.isValid}>
+                    <Button type="submit" disabled={!form.formState.isValid || isLoading}>
                         {isLoading ? "Creating..." : "Create Stadium"}
                     </Button>
                 </DialogFooter>

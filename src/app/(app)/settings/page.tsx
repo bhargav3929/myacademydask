@@ -6,8 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
-import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { firestore, auth } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MotionDiv } from "@/components/motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RainbowButton } from "@/components/ui/rainbow-button";
+import { AlertTriangle } from "lucide-react";
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, {
@@ -48,6 +50,7 @@ const MOCK_ORGANIZATION_ID = "mock-org-id-for-testing";
 
 export default function SettingsPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
 
     const profileForm = useForm<ProfileFormValues>({
@@ -152,6 +155,20 @@ export default function SettingsPage() {
         });
     }
   }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: "Signed Out", description: "You have been successfully signed out." });
+      router.push("/");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Sign Out Failed",
+        description: "Could not sign you out. Please try again.",
+      });
+    }
+  };
   
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -311,6 +328,30 @@ export default function SettingsPage() {
                         </CardFooter>
                     </form>
                 </Form>
+            </Card>
+        </MotionDiv>
+        
+        <MotionDiv variants={itemVariants}>
+            <Card className="border-destructive/50">
+                <CardHeader>
+                    <div className="flex items-center gap-3">
+                        <AlertTriangle className="size-6 text-destructive" />
+                        <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                    </div>
+                    <CardDescription>
+                        These actions are permanent and cannot be undone.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                   <p className="text-sm text-muted-foreground">
+                        Signing out will end your current session. You will need to log in again to access your dashboard.
+                   </p>
+                </CardContent>
+                <CardFooter className="border-t px-6 py-4">
+                    <Button variant="destructive" onClick={handleSignOut}>
+                        Sign Out
+                    </Button>
+                </CardFooter>
             </Card>
         </MotionDiv>
     </MotionDiv>

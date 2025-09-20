@@ -10,7 +10,7 @@ export interface UserProfile {
   username: string;
   fullName: string;
   organizationId: string;
-  role: "owner" | "coach";
+  role: "owner" | "coach" | "super-admin";
   assignedStadiums: string[]; 
   createdAt: Timestamp;
   lastLoginAt?: Timestamp;

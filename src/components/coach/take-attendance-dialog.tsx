@@ -60,7 +60,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
   useEffect(() => {
     if (selectedBatch) {
       setStudentsInBatch(
-        allStudents.filter((student) => student.batch === selectedBatch)
+        allStudents.filter((student) => student.batch === selectedBatch && student.status !== 'inactive')
       );
     } else {
       setStudentsInBatch([]);
