@@ -14,7 +14,6 @@ import {
   Users,
   Search,
   LayoutDashboard,
-  Gamepad2,
   FileText,
   LifeBuoy,
   LogOut,
@@ -43,7 +42,7 @@ import {
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { NavBar } from "../ui/tubelight-navbar";
 import { Skeleton } from "../ui/skeleton";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
 export function OwnerHeader() {
   const router = useRouter();
@@ -84,10 +83,10 @@ export function OwnerHeader() {
       <header className="fixed top-0 left-0 right-0 z-30 flex h-20 items-center justify-between px-4 md:px-6 md:grid md:grid-cols-3">
         {/* Left section */}
         <div className="flex justify-start">
-          <div className="flex items-center gap-3 bg-background/5 border border-border backdrop-blur-lg p-2 rounded-full shadow-lg">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Gamepad2 className="size-7 text-primary" />
-              <span className="text-lg font-bold hidden sm:inline-block">CourtCommand</span>
+          <div className="flex items-center bg-background/5 border border-border backdrop-blur-lg p-2 rounded-full shadow-lg">
+            <Link href="/" className="flex items-center">
+              <img src="/Untitled design - 2025-09-27T235120.489.png" alt="Myacademydesk Logo" className="h-8 w-10" />
+              <span className="text-lg font-bold hidden sm:inline-block">Myacademydesk</span>
             </Link>
           </div>
         </div>
@@ -107,17 +106,19 @@ export function OwnerHeader() {
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right">
+              <SheetContent side="bottom" className="w-full rounded-t-lg">
                 <div className="grid gap-4 py-6">
+                    <p className="text-lg font-bold text-center">Menu</p>
                   {navItems.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.url}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.name}
-                    </Link>
+                    <SheetClose asChild key={item.name}>
+                        <Link
+                          href={item.url}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.name}
+                        </Link>
+                    </SheetClose>
                   ))}
                 </div>
               </SheetContent>

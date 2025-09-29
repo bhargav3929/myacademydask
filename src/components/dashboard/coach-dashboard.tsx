@@ -71,7 +71,7 @@ export function CoachDashboard() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-8"
+            className="space-y-8 pt-16 md:pt-20"
         >
             <MotionDiv variants={itemVariants}>
                  <div className="flex items-center gap-2">

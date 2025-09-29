@@ -191,30 +191,6 @@ export default function DashboardPage() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-      },
-    },
-  };
-
   const getLocaleForCurrency = (c: Currency) => {
     const map: { [key in Currency]: string } = {
         USD: 'en-US',
@@ -233,12 +209,12 @@ export default function DashboardPage() {
 
   return (
     <MotionDiv
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex flex-col gap-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-4"
     >
-      <MotionDiv variants={itemVariants}>
+      <div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-0.5 self-start">
                 <div className="flex items-center gap-2">
@@ -277,9 +253,9 @@ export default function DashboardPage() {
                 </Dialog>
             </div>
         </div>
-      </MotionDiv>
+      </div>
 
-      <MotionDiv variants={itemVariants} className="flex justify-end">
+      <div className="flex justify-end">
          {/* Desktop Filters - Uncontrolled Popover */}
          <div className="hidden md:flex items-center gap-1.5 flex-wrap rounded-full border bg-card p-1">
                 {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
@@ -363,13 +339,12 @@ export default function DashboardPage() {
                     </PopoverContent>
                 </Popover>
             </div>
-      </MotionDiv>
+      </div>
       
-      <MotionDiv
-        variants={containerVariants}
+      <div
         className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
       >
-        <MotionDiv variants={itemVariants}>
+        <div>
             <Dialog>
                 <DialogTrigger asChild>
                     <div className="cursor-pointer">
@@ -390,8 +365,8 @@ export default function DashboardPage() {
                     <TotalStudentsGraph organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
-        </MotionDiv>
-        <MotionDiv variants={itemVariants}>
+        </div>
+        <div>
              <Dialog>
                 <DialogTrigger asChild>
                     <div className="cursor-pointer">
@@ -411,8 +386,8 @@ export default function DashboardPage() {
                     <NewStudentsGraph organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
-        </MotionDiv>
-        <MotionDiv variants={itemVariants}>
+        </div>
+        <div>
             <Dialog>
                 <DialogTrigger asChild>
                     <div className="cursor-pointer">
@@ -432,8 +407,8 @@ export default function DashboardPage() {
                     <TotalRevenueGraph organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
-        </MotionDiv>
-         <MotionDiv variants={itemVariants}>
+        </div>
+         <div>
             <Dialog>
                 <DialogTrigger asChild>
                     <div className="cursor-pointer">
@@ -453,21 +428,21 @@ export default function DashboardPage() {
                     <ActiveStadiumsList organizationId={organizationId} />
                 </DialogContent>
             </Dialog>
-        </MotionDiv>
-      </MotionDiv>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <MotionDiv variants={itemVariants} className="lg:col-span-3">
-            <AttendanceGraph organizationId={organizationId} />
-        </MotionDiv>
-         <MotionDiv variants={itemVariants} className="lg:col-span-1">
-            <RecentActivity organizationId={organizationId} />
-        </MotionDiv>
+        </div>
       </div>
 
-       <MotionDiv variants={itemVariants}>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+        <div className="lg:col-span-3">
+            <AttendanceGraph organizationId={organizationId} />
+        </div>
+         <div className="lg:col-span-1">
+            <RecentActivity organizationId={organizationId} />
+        </div>
+      </div>
+
+       <div>
           <NewAdmissions data={recentAdmissions} />
-        </MotionDiv>
+        </div>
     </MotionDiv>
   );
 }
