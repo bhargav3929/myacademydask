@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc, orderBy, onSnapshot, Timestamp, collectionGroup } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, onSnapshot, Timestamp } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Stadium, Attendance, Student } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarIcon, FileText, Download } from "lucide-react";
+import { CalendarIcon, Download } from "lucide-react";
 import { format, startOfMonth, eachDayOfInterval, subMonths, endOfMonth } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,6 @@ export function ReportsClient() {
   const { toast } = useToast();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
-  const [coaches, setCoaches] = useState<Record<string, string>>({});
   const [selectedStadium, setSelectedStadium] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -71,23 +70,8 @@ export function ReportsClient() {
       setLoading(false);
     });
     
-    const coachesQuery = query(
-        collection(firestore, "users"),
-        where("organizationId", "==", organizationId),
-        where("role", "==", "coach")
-    );
-    const unsubscribeCoaches = onSnapshot(coachesQuery, (snapshot) => {
-        const coachesMap: Record<string, string> = {};
-        snapshot.forEach(doc => {
-            coachesMap[doc.id] = doc.data().fullName;
-        });
-        setCoaches(coachesMap);
-    });
-
-
     return () => {
         unsubscribeStadiums();
-        unsubscribeCoaches();
     };
   }, [organizationId]);
   
@@ -147,13 +131,12 @@ export function ReportsClient() {
     const highestRevenueDay = Object.entries(revenueByDay).reduce((max, entry) => entry[1] > max.amount ? { date: entry[0], amount: entry[1] } : max, { date: '', amount: 0 });
 
     // Previous month revenue for growth calculation
-    const prevMonthStart = subMonths(range.from!, 1);
-    const prevMonthEnd = subMonths(range.to!, 1);
+    const prevMonthDate = subMonths(range.from!, 1);
+    const prevMonthStart = startOfMonth(prevMonthDate);
+    const prevMonthEnd = endOfMonth(prevMonthDate);
 
     const prevMonthStudentsQuery = query(
-        collectionGroup(firestore, "students"), 
-        where("organizationId", "==", organizationId),
-        where("stadiumId", "==", selectedStadium),
+        collection(firestore, `stadiums/${selectedStadium}/students`),
         where("joinDate", ">=", Timestamp.fromDate(prevMonthStart)),
         where("joinDate", "<=", Timestamp.fromDate(prevMonthEnd))
     );
@@ -215,14 +198,6 @@ export function ReportsClient() {
       const attendanceSnapshot = await getDocs(attendanceQuery);
       const attendanceData = attendanceSnapshot.docs.map(doc => doc.data() as ReportData);
       
-      const allStudentsInOrgQuery = query(
-        collectionGroup(firestore, "students"), 
-        where("organizationId", "==", organizationId)
-      );
-      const allStudentsSnapshot = await getDocs(allStudentsInOrgQuery);
-      const allStudentsData = allStudentsSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Student));
-
-
       if (studentsData.length === 0) {
         toast({ title: "No Students Found", description: "There are no students enrolled in this stadium to generate a report for." });
         setProcessedReport({ dates: [], studentData: [], summary: { totalStudents: 0, averageAttendance: 0, alwaysPresent: [], below60Attendance: [], zeroAttendance: [] } });
@@ -232,7 +207,7 @@ export function ReportsClient() {
         return;
       }
 
-      const { report, joiners, revenue } = await processDataForReport(allStudentsData.filter(s => s.stadiumId === selectedStadium), attendanceData, dateRange);
+      const { report, joiners, revenue } = await processDataForReport(studentsData, attendanceData, dateRange);
       
       setProcessedReport(report);
       setNewJoiners(joiners);

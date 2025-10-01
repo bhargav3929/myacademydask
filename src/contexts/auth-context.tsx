@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (authUser.role === 'super-admin' && !isSuperAdminPath && pathname !== '/super-admin/login') {
             router.replace('/super-admin/dashboard');
-        } else if (authUser.role === 'coach' && !isCoachPath && pathname !== '/login') { // Allow login for coach
+        } else if (authUser.role === 'coach' && !isCoachPath) { // Corrected Logic
             router.replace('/coach/dashboard');
         } else if (authUser.role === 'owner' && (isCoachPath || isSuperAdminPath)) {
             router.replace('/dashboard');

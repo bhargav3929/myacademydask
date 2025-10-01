@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { collection, addDoc, serverTimestamp, doc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc, Timestamp, updateDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
@@ -35,14 +34,12 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle } from "lucide-react";
-import { Stadium, StudentBatches } from "@/lib/types";
+import { Stadium, Student, StudentBatches } from "@/lib/types";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
-import { RainbowButton } from "../ui/rainbow-button";
 
 const studentBatches: StudentBatches[] = ["First Batch", "Second Batch", "Third Batch", "Fourth Batch"];
 
@@ -59,70 +56,96 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
+interface StudentFormDialogProps {
+  stadiums: Stadium[];
+  studentToEdit?: Student;
+  children: React.ReactNode; 
+  onFormSubmit?: () => void; 
+}
+
+export function StudentFormDialog({ stadiums, studentToEdit, children, onFormSubmit }: StudentFormDialogProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const isEditMode = !!studentToEdit;
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
-    defaultValues: {
-      fullName: "",
-      status: 'active',
-      age: 0,
-      contact: "",
-      fees: 0,
-      stadiumId: stadiums.length === 1 ? stadiums[0].id : undefined,
-      batch: undefined,
-      joinDate: new Date(),
-    },
   });
   
   useEffect(() => {
-    if (stadiums.length === 1) {
-        form.setValue("stadiumId", stadiums[0].id);
+    if (open) {
+      const defaultValues = isEditMode && studentToEdit ? {
+        ...studentToEdit,
+        stadiumId: studentToEdit.stadiumId, 
+        joinDate: studentToEdit.joinDate?.toDate ? studentToEdit.joinDate.toDate() : new Date(),
+      } : {
+        fullName: "",
+        status: 'active',
+        age: 0,
+        contact: "",
+        fees: 0,
+        stadiumId: stadiums.length === 1 ? stadiums[0].id : undefined,
+        batch: undefined,
+        joinDate: new Date(),
+      };
+      form.reset(defaultValues as any); 
     }
-  }, [stadiums, form]);
+  }, [open, isEditMode, studentToEdit, form, stadiums]);
 
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
-      const stadiumDocRef = doc(firestore, "stadiums", values.stadiumId);
-      const stadiumDocSnap = await getDoc(stadiumDocRef);
-
-      if (!stadiumDocSnap.exists()) {
-        throw new Error("Selected stadium not found in database.");
+      const finalStadiumId = values.stadiumId;
+      if (!finalStadiumId) {
+        throw new Error("Stadium ID is missing.");
       }
-      const selectedStadium = stadiumDocSnap.data() as Stadium;
-      
-      const studentCollectionRef = collection(firestore, `stadiums/${values.stadiumId}/students`);
-      await addDoc(studentCollectionRef, {
-        fullName: values.fullName,
-        age: values.age,
-        batch: values.batch,
-        contact: values.contact || "",
-        organizationId: selectedStadium.organizationId, // Inherit organizationId from the stadium
-        joinDate: Timestamp.fromDate(values.joinDate),
-        status: values.status,
-        fees: values.fees,
-        createdAt: serverTimestamp(),
-      });
 
-      toast({
-        title: "Success!",
-        description: `Student "${values.fullName}" has been added.`,
-      });
-      form.reset();
+      const dataToSave = {
+        ...values,
+        joinDate: Timestamp.fromDate(values.joinDate),
+        contact: values.contact || "",
+      };
+
+      if (isEditMode && studentToEdit) {
+        const studentDocRef = doc(firestore, `stadiums/${finalStadiumId}/students`, studentToEdit.id);
+        await updateDoc(studentDocRef, dataToSave);
+        toast({
+          title: "Success!",
+          description: `Student "${values.fullName}" has been updated.`,
+        });
+      } else {
+        const stadiumDocRef = doc(firestore, "stadiums", finalStadiumId);
+        const stadiumDocSnap = await getDoc(stadiumDocRef);
+        if (!stadiumDocSnap.exists()) {
+          throw new Error("Selected stadium not found in database.");
+        }
+        const selectedStadium = stadiumDocSnap.data() as Stadium;
+        
+        const studentCollectionRef = collection(firestore, `stadiums/${finalStadiumId}/students`);
+        await addDoc(studentCollectionRef, {
+          ...dataToSave,
+          organizationId: selectedStadium.organizationId,
+          createdAt: serverTimestamp(),
+        });
+        toast({
+          title: "Success!",
+          description: `Student "${values.fullName}" has been added.`,
+        });
+      }
+
+      onFormSubmit?.();
       setOpen(false);
 
     } catch (error: any) {
-      console.error("Error adding student:", error);
+      console.error("Error saving student:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not add student. Please try again.",
+        description: error.message || "Could not save student. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -131,17 +154,14 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <RainbowButton>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Student
-        </RainbowButton>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Add New Student</DialogTitle>
+          <DialogTitle>{isEditMode ? "Edit Student Details" : "Add New Student"}</DialogTitle>
           <DialogDescription>
-            Fill in the details to enroll a new student in your academy.
+            {isEditMode 
+              ? `Update the details for ${studentToEdit.fullName}.`
+              : "Fill in the details to enroll a new student in your academy."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -212,9 +232,9 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Assign to Stadium</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl>
-                            <SelectTrigger disabled={stadiums.length === 1}>
+                            <SelectTrigger disabled={stadiums.length <= 1}>
                                 <SelectValue placeholder="Select a stadium" />
                             </SelectTrigger>
                             </FormControl>
@@ -234,7 +254,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Assign to Batch</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a batch" />
@@ -302,7 +322,7 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
@@ -320,10 +340,10 @@ export function AddStudentDialog({ stadiums }: { stadiums: Stadium[] }) {
                 />
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={!form.formState.isValid || isLoading}>
-                {isLoading ? "Saving..." : "Add Student"}
+              <Button type="submit" disabled={(!form.formState.isDirty && isEditMode) || !form.formState.isValid || isLoading}>
+                {isLoading ? "Saving..." : (isEditMode ? "Save Changes" : "Add Student")}
               </Button>
             </DialogFooter>
           </form>

@@ -211,7 +211,7 @@ export function AddStadiumDialog() {
                 
                 <DialogFooter className="pt-4 !justify-between">
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={!form.formState.isValid || isLoading}>
+                    <Button type="submit" disabled={isLoading}>
                         {isLoading ? "Creating..." : "Create Stadium"}
                     </Button>
                 </DialogFooter>

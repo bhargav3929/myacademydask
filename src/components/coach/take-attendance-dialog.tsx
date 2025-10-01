@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -58,7 +57,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (selectedBatch) {
+    if (selectedBatch && Array.isArray(allStudents)) {
       setStudentsInBatch(
         allStudents.filter((student) => student.batch === selectedBatch && student.status !== 'inactive')
       );

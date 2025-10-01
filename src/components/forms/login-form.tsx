@@ -45,7 +45,6 @@ export function LoginForm() {
     setIsLoading(true);
     let email = values.emailOrUsername;
 
-    // Check if the input is likely a username (i.e., doesn't contain "@")
     if (!email.includes("@")) {
       try {
         const usersRef = collection(firestore, "users");
@@ -62,7 +61,6 @@ export function LoginForm() {
           return;
         }
 
-        // Get the email from the found user document
         email = querySnapshot.docs[0].data().email;
       } catch (error) {
         console.error("Username Lookup Error:", error);
@@ -77,21 +75,48 @@ export function LoginForm() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, values.password);
+      const user = userCredential.user;
+
+      if (!user) {
+        throw new Error("Authentication failed, user object is null.");
+      }
+      
+      const idToken = await user.getIdToken();
+
+      const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Server-side session error:", errorData);
+          throw new Error('Failed to create session cookie.');
+      }
+      
       toast({
         title: "Login Successful",
-        description: "You have been successfully logged in.",
+        description: "You have been successfully logged in. Redirecting...",
       });
-      // The auth context will handle redirection
+
     } catch (error: any) {
-      console.error("Login Error:", error);
+      console.error("Login Process Error:", error);
+      
+      let description = "An unexpected error occurred. Please try again.";
+      if (error.code === "auth/invalid-credential") {
+        description = "Invalid credentials. Please try again.";
+      } else if (error.message === 'Failed to create session cookie.') {
+        description = "There was an issue creating your session on the server. Please try again.";
+      }
+
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description:
-          error.code === "auth/invalid-credential"
-            ? "Invalid credentials. Please try again."
-            : "An unexpected error occurred. Please try again.",
+        description: description,
       });
     } finally {
       setIsLoading(false);

@@ -1,46 +1,85 @@
 
 "use client";
-import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+
+import { useEffect, useState, useCallback } from "react";
+import { doc, getDoc, collection, query, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { auth, firestore } from "@/lib/firebase";
 import { AttendanceTracker } from "@/components/coach/attendance-tracker";
 import { StudentManagement } from "@/components/coach/student-management";
 import { MotionDiv } from "@/components/motion";
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserProfile } from "@/lib/types";
+import { UserProfile, Stadium, Student } from "@/lib/types";
 
 export function CoachDashboard() {
     const [user, setUser] = useState<UserProfile | null>(null);
-    const [stadiumName, setStadiumName] = useState<string>("");
+    const [stadium, setStadium] = useState<Stadium | null>(null);
+    const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchStudents = useCallback((stadiumId: string): Unsubscribe => {
+        const studentsCollectionRef = collection(
+          firestore,
+          `stadiums/${stadiumId}/students`
+        );
+        return onSnapshot(studentsCollectionRef, (querySnapshot) => {
+            const studentsList = querySnapshot.docs.map(
+              (doc) => ({ id: doc.id, ...doc.data() } as Student)
+            );
+            setStudents(studentsList);
+        }, (error) => {
+            console.error("Error fetching students in real-time:", error);
+        });
+    }, []);
+
+
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+        let studentsUnsubscribe: Unsubscribe | null = null;
+
+        const unsubscribeAuth = auth.onAuthStateChanged(async (currentUser) => {
+            setLoading(true);
             if (currentUser) {
                 const userDocRef = doc(firestore, "users", currentUser.uid);
                 const userDocSnap = await getDoc(userDocRef);
+
                 if (userDocSnap.exists()) {
                     const userData = { id: userDocSnap.id, ...userDocSnap.data() } as UserProfile;
                     setUser(userData);
 
-                    if (userData.assignedStadiums && userData.assignedStadiums.length > 0) {
-                        const stadiumId = userData.assignedStadiums[0];
+                    const stadiumId = userData.assignedStadiums?.[0];
+                    if (stadiumId) {
                         const stadiumDocRef = doc(firestore, "stadiums", stadiumId);
                         const stadiumDocSnap = await getDoc(stadiumDocRef);
+
                         if (stadiumDocSnap.exists()) {
-                            setStadiumName(stadiumDocSnap.data().name);
+                            const stadiumData = { id: stadiumDocSnap.id, ...stadiumDocSnap.data() } as Stadium;
+                            setStadium(stadiumData);
+                            
+                            if (studentsUnsubscribe) {
+                                studentsUnsubscribe();
+                            }
+                            studentsUnsubscribe = fetchStudents(stadiumId);
+
                         }
                     }
+                } else {
+                     setUser(null);
                 }
             } else {
                 setUser(null);
+                setStadium(null);
+                setStudents([]);
             }
             setLoading(false);
         });
 
-        return () => unsubscribe();
-    }, []);
+        return () => {
+            unsubscribeAuth();
+            if (studentsUnsubscribe) {
+                studentsUnsubscribe();
+            }
+        };
+    }, [fetchStudents]);
 
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -66,8 +105,18 @@ export function CoachDashboard() {
         },
     };
 
+    const handleRefreshStudents = useCallback(() => {
+        if (stadium) {
+           const unsubscribe = fetchStudents(stadium.id);
+           // Immediately unsubscribe to just fetch once.
+           unsubscribe();
+        }
+    }, [stadium, fetchStudents]);
+    
+    const allStadiums = stadium ? [stadium] : [];
+
     return (
-        <MotionDiv 
+        <MotionDiv
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -81,29 +130,45 @@ export function CoachDashboard() {
                     {loading || !user ? (
                         <Skeleton className="h-8 w-48" />
                     ) : (
-                        <AnimatedText 
-                            text={`${user.fullName}! 👋`} 
+                        <AnimatedText
+                            text={`${user.fullName}! 👋`}
                             textClassName="text-xl md:text-2xl font-bold tracking-tight text-primary"
                             underlineClassName="text-primary/50"
                         />
                     )}
                 </div>
                 <p className="text-muted-foreground mt-1">
-                    {stadiumName 
-                        ? `You are responsible for managing the ${stadiumName} stadium.`
-                        : "Manage student attendance and enrollment for your assigned stadium."
+                    {stadium
+                        ? `You are responsible for managing the ${stadium.name} stadium.`
+                        : loading ? "Loading your stadium details..." : "Manage student attendance and enrollment for your assigned stadium."
                     }
                 </p>
             </MotionDiv>
 
             <MotionDiv variants={itemVariants}>
-                <AttendanceTracker />
+                <AttendanceTracker 
+                    stadium={stadium} 
+                    students={students} 
+                    loading={loading} 
+                    onFormSubmit={handleRefreshStudents} 
+                    allStadiums={allStadiums}
+                    coachId={user?.id}
+                    refreshStudents={handleRefreshStudents}
+                />
             </MotionDiv>
 
             <MotionDiv variants={itemVariants}>
-                <StudentManagement />
+                <StudentManagement
+                    students={students}
+                    stadiumId={stadium?.id}
+                    allStadiums={allStadiums}
+                    coachId={user?.id}
+                    refreshStudents={handleRefreshStudents}
+                    loading={loading}
+                />
             </MotionDiv>
 
         </MotionDiv>
     )
 }
+

@@ -1,71 +1,46 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
-import { useAuth } from "@/contexts/auth-context";
 import { StudentsTable } from "./students-table"; 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Student } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Student, Stadium } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function StudentManagement() {
-  const { user } = useAuth();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [stadiumId, setStadiumId] = useState<string | null>(null);
+interface StudentManagementProps {
+  students: Student[];
+  stadiumId: string | null | undefined;
+  allStadiums: Stadium[];
+  coachId: string | null | undefined;
+  refreshStudents: () => void;
+  loading: boolean;
+}
 
-  useEffect(() => {
-    const fetchCoachData = async () => {
-      if (user) {
-        const coachDocRef = doc(firestore, "users", user.uid);
-        const coachDocSnap = await getDoc(coachDocRef);
-        if (coachDocSnap.exists()) {
-          const coachData = coachDocSnap.data();
-          if (coachData && coachData.assignedStadiums && coachData.assignedStadiums.length > 0) {
-            setStadiumId(coachData.assignedStadiums[0]);
-          }
-        }
-      }
-    };
-    fetchCoachData();
-  }, [user]);
-
-  const fetchStudents = useCallback(async () => {
-    if (!user || !stadiumId) return;
-    
-    const studentsCollectionRef = collection(
-      firestore,
-      `stadiums/${stadiumId}/students`
-    );
-    
-    const querySnapshot = await getDocs(studentsCollectionRef);
-    const studentsList = querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as Student)
-    );
-    setStudents(studentsList);
-  }, [user, stadiumId]);
-
-  useEffect(() => {
-    if (stadiumId) {
-        fetchStudents();
-    }
-  }, [stadiumId, fetchStudents]);
-
+export function StudentManagement({ students, stadiumId, allStadiums, coachId, refreshStudents, loading }: StudentManagementProps) {
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Student List</CardTitle>
+          <CardTitle>Student Roster</CardTitle>
+           <CardDescription>View, edit, or manage the students enrolled in your stadium.</CardDescription>
         </CardHeader>
         <CardContent>
-            {stadiumId && user && (
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : stadiumId && coachId ? (
                 <StudentsTable
-                students={students}
-                stadiumId={stadiumId}
-                coachId={user.uid}
-                refreshStudents={fetchStudents}
+                  students={students}
+                  stadiumId={stadiumId}
+                  allStadiums={allStadiums}
+                  coachId={coachId}
+                  refreshStudents={refreshStudents}
                 />
+            ) : (
+              <p className="text-muted-foreground text-center py-8">Your student roster will appear here once your details are loaded.</p>
             )}
         </CardContent>
       </Card>

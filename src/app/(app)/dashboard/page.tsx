@@ -27,6 +27,7 @@ import { ActiveStadiumsList } from "@/components/dashboard/graphs/active-stadium
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useCurrency, Currency } from "@/contexts/CurrencyContext";
 import { AddStadiumDialog } from "@/components/stadiums/stadium-form-dialog";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 type TimeFilter = "today" | "yesterday" | "weekly" | "monthly" | "all" | "custom";
 
@@ -212,116 +213,102 @@ export default function DashboardPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-4"
+      className="space-y-6"
     >
-      <div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-0.5 self-start">
-                <div className="flex items-center gap-2">
-                    <h1 className="text-xl md:text-2xl font-bold tracking-tight flex-shrink-0">
-                        Welcome Back,
-                    </h1>
-                    {isLoadingInitialData || !directorName ? (
-                        <Skeleton className="h-8 w-48" />
-                    ) : (
-                        <AnimatedText 
-                            text={`${directorName}! 👋`} 
-                            textClassName="text-xl md:text-2xl font-bold tracking-tight text-primary"
-                            underlineClassName="text-primary/50"
-                        />
-                    )}
+        {/* Header Section */}
+        <div>
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div className="space-y-1.5 self-start">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight flex-shrink-0">
+                            Welcome Back,
+                        </h1>
+                        {isLoadingInitialData || !directorName ? (
+                            <Skeleton className="h-8 w-48" />
+                        ) : (
+                            <AnimatedText 
+                                text={`${directorName}! 👋`} 
+                                textClassName="text-xl md:text-2xl font-bold tracking-tight text-primary"
+                                underlineClassName="text-primary/50"
+                            />
+                        )}
+                    </div>
+                    <p className="text-sm text-muted-foreground hidden md:block">
+                        Here&apos;s a summary of your academy&apos;s performance.
+                    </p>
+                </div>
+
+                {/* Desktop: Create Stadium Button (visible on md screens and up) */}
+                <div className="hidden md:flex items-center gap-2">
+                    <Dialog open={isCreateStadiumOpen} onOpenChange={setCreateStadiumOpen}>
+                        <DialogTrigger asChild>
+                            <RainbowButton>
+                                <PlusIcon className="mr-2 h-4 w-4" />
+                                Create Stadium
+                            </RainbowButton>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl w-full mx-4 sm:mx-auto">
+                            <DialogHeader>
+                            <DialogTitle>Create a New Stadium & Assign a Coach</DialogTitle>
+                            <DialogDescription>
+                                Fill in the details below to add a new stadium and create a new coach account.
+                            </DialogDescription>
+                            </DialogHeader>
+                            <AddStadiumDialog />
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
+        </div>
 
-            <div className="flex items-center gap-2">
-                <Dialog open={isCreateStadiumOpen} onOpenChange={setCreateStadiumOpen}>
-                    <DialogTrigger asChild>
-                         <Button>
-                            <PlusIcon className="mr-2 h-4 w-4" />
-                            Create Stadium
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl w-full mx-4 sm:mx-auto">
-                        <DialogHeader>
+        {/* Mobile: Create Stadium & Filters Row */}
+        <div className="flex md:hidden items-center justify-between">
+            <Dialog open={isCreateStadiumOpen} onOpenChange={setCreateStadiumOpen}>
+                <DialogTrigger asChild>
+                    <RainbowButton className="h-9 px-4 text-sm">
+                        <PlusIcon className="mr-2 h-4 w-4" />
+                        Create Stadium
+                    </RainbowButton>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl w-full mx-4 sm:mx-auto">
+                    <DialogHeader>
                         <DialogTitle>Create a New Stadium & Assign a Coach</DialogTitle>
                         <DialogDescription>
-                            Fill in the details below to add a new stadium and create a new coach account.
+                        Fill in the details below to add a new stadium and create a new coach account.
                         </DialogDescription>
-                        </DialogHeader>
-                        <AddStadiumDialog closeDialog={() => setCreateStadiumOpen(false)} />
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </div>
-      </div>
+                    </DialogHeader>
+                    <AddStadiumDialog />
+                </DialogContent>
+            </Dialog>
 
-      <div className="flex justify-end">
-         {/* Desktop Filters - Uncontrolled Popover */}
-         <div className="hidden md:flex items-center gap-1.5 flex-wrap rounded-full border bg-card p-1">
-                {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
-                    <Button 
-                        key={filter} 
-                        variant={timeFilter === filter ? 'secondary' : 'ghost'} 
-                        className="rounded-full capitalize text-sm h-8 px-3"
-                        onClick={() => handleFilterClick(filter)} 
-                    >
-                        {filter}
-                    </Button>
-                ))}
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
-                            className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
-                            onClick={() => setTimeFilter('custom')}
-                        >
-                            Custom
-                            <CalendarIcon className="size-3.5 text-muted-foreground" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 mt-2" align="end">
-                        <Calendar
-                            initialFocus
-                            mode="range"
-                            defaultMonth={customDateRange?.from}
-                            selected={customDateRange}
-                            onSelect={setCustomDateRange}
-                            numberOfMonths={2}
-                        />
-                    </PopoverContent>
-                </Popover>
-            </div>
-
-            {/* Mobile Filters - Controlled Popover */}
-            <div className="md:hidden">
-                 <DropdownMenu>
+            {/* Mobile Filters Dropdown */}
+            <div className="flex items-center gap-2">
+                <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="flex items-center gap-2">
-                             <SlidersHorizontal className="size-4" />
+                                <SlidersHorizontal className="size-4" />
                             <span>{getFilterPeriodText()}</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                         {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+                            {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
                             <DropdownMenuItem key={filter} onSelect={() => handleFilterClick(filter)} className="capitalize">
                                 {filter}
                             </DropdownMenuItem>
                         ))}
-                         <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />
                         <DropdownMenuItem 
                             onSelect={() => {
                                 setTimeFilter('custom');
                                 setMobileCustomPopoverOpen(true);
                             }}
                         >
-                             <CalendarIcon className="mr-2 size-4" /> Custom Range
+                                <CalendarIcon className="mr-2 size-4" /> Custom Range
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                 <Popover open={mobileCustomPopoverOpen} onOpenChange={setMobileCustomPopoverOpen}>
-                    <PopoverTrigger asChild>
-                        <span />
-                    </PopoverTrigger>
+                    <Popover open={mobileCustomPopoverOpen} onOpenChange={setMobileCustomPopoverOpen}>
+                    <PopoverTrigger asChild><span /></PopoverTrigger>
                     <PopoverContent className="w-auto p-0 mt-2" align="end">
                         <Calendar
                             initialFocus
@@ -330,118 +317,152 @@ export default function DashboardPage() {
                             selected={customDateRange}
                             onSelect={(range) => {
                                 setCustomDateRange(range);
-                                if (range?.from) {
-                                    setMobileCustomPopoverOpen(false);
-                                }
+                                if (range?.from) setMobileCustomPopoverOpen(false);
                             }}
                             numberOfMonths={1}
                         />
                     </PopoverContent>
                 </Popover>
             </div>
-      </div>
-      
-      <div
-        className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-      >
-        <div>
-            <Dialog>
-                <DialogTrigger asChild>
-                    <div className="cursor-pointer">
-                        <StatCard
-                            title="Total Students"
-                            value={totalStudentsFiltered.toString()}
-                            icon="Users"
-                            trendPeriod="Across all stadiums"
-                            primary
-                        />
-                    </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
-                    <DialogHeader>
-                        <DialogTitle className="sr-only">Total Students Graph</DialogTitle>
-                        <DialogDescription className="sr-only">A graph showing the growth of total students over time.</DialogDescription>
-                    </DialogHeader>
-                    <TotalStudentsGraph organizationId={organizationId} />
-                </DialogContent>
-            </Dialog>
         </div>
-        <div>
-             <Dialog>
-                <DialogTrigger asChild>
-                    <div className="cursor-pointer">
+
+        {/* Desktop Filters */}
+        <div className="hidden md:flex items-center justify-end gap-1.5 flex-wrap rounded-full border bg-card p-1">
+            {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+                <Button 
+                    key={filter} 
+                    variant={timeFilter === filter ? 'secondary' : 'ghost'} 
+                    className="rounded-full capitalize text-sm h-8 px-3"
+                    onClick={() => handleFilterClick(filter)} 
+                >
+                    {filter}
+                </Button>
+            ))}
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
+                        className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
+                        onClick={() => setTimeFilter('custom')}
+                    >
+                        Custom
+                        <CalendarIcon className="size-3.5 text-muted-foreground" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 mt-2" align="end">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={customDateRange?.from}
+                        selected={customDateRange}
+                        onSelect={setCustomDateRange}
+                        numberOfMonths={2}
+                    />
+                </PopoverContent>
+            </Popover>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <div className="cursor-pointer">
+                            <StatCard
+                                title="Total Students"
+                                value={totalStudentsFiltered.toString()}
+                                icon="Users"
+                                trendPeriod="Across all stadiums"
+                                primary
+                            />
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
+                        <DialogHeader>
+                            <DialogTitle className="sr-only">Total Students Graph</DialogTitle>
+                            <DialogDescription className="sr-only">A graph showing the growth of total students over time.</DialogDescription>
+                        </DialogHeader>
+                        <TotalStudentsGraph organizationId={organizationId} />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            <div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <div className="cursor-pointer">
+                            <StatCard
+                                title="New Students Joined"
+                                value={filteredStudents.length.toString()}
+                                icon="UserPlus"
+                                trendPeriod={getFilterPeriodText()}
+                            />
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
+                        <DialogHeader>
+                            <DialogTitle className="sr-only">New Students Graph</DialogTitle>
+                            <DialogDescription className="sr-only">A graph showing new student admissions over time.</DialogDescription>
+                        </DialogHeader>
+                        <NewStudentsGraph organizationId={organizationId} />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            <div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <div className="cursor-pointer">
                         <StatCard
-                            title="New Students Joined"
-                            value={filteredStudents.length.toString()}
-                            icon="UserPlus"
+                            title="Total Revenue"
+                            value={formattedRevenue}
+                            icon="DollarSign"
                             trendPeriod={getFilterPeriodText()}
                         />
-                    </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
-                     <DialogHeader>
-                        <DialogTitle className="sr-only">New Students Graph</DialogTitle>
-                        <DialogDescription className="sr-only">A graph showing new student admissions over time.</DialogDescription>
-                    </DialogHeader>
-                    <NewStudentsGraph organizationId={organizationId} />
-                </DialogContent>
-            </Dialog>
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
+                        <DialogHeader>
+                            <DialogTitle className="sr-only">Total Revenue Graph</DialogTitle>
+                            <DialogDescription className="sr-only">A graph showing total revenue from new admissions over time.</DialogDescription>
+                        </DialogHeader>
+                        <TotalRevenueGraph organizationId={organizationId} />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            <div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <div className="cursor-pointer">
+                            <StatCard
+                                title="Active Stadiums"
+                                value={activeStadiums.toString()}
+                                icon="Building"
+                                trendPeriod="Online now"
+                            />
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-xl w-full mx-4 sm:mx-auto">
+                        <DialogHeader>
+                            <DialogTitle className="sr-only">Active Stadiums List</DialogTitle>
+                            <DialogDescription className="sr-only">A list of all active stadiums.</DialogDescription>
+                        </DialogHeader>
+                        <ActiveStadiumsList organizationId={organizationId} />
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
+
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+            <div className="lg:col-span-3">
+                <AttendanceGraph organizationId={organizationId} />
+            </div>
+            <div className="lg:col-span-1">
+                <RecentActivity organizationId={organizationId} />
+            </div>
+        </div>
+
         <div>
-            <Dialog>
-                <DialogTrigger asChild>
-                    <div className="cursor-pointer">
-                      <StatCard
-                        title="Total Revenue"
-                        value={formattedRevenue}
-                        icon="DollarSign"
-                        trendPeriod={getFilterPeriodText()}
-                      />
-                    </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl w-full mx-4 sm:mx-auto">
-                    <DialogHeader>
-                        <DialogTitle className="sr-only">Total Revenue Graph</DialogTitle>
-                        <DialogDescription className="sr-only">A graph showing total revenue from new admissions over time.</DialogDescription>
-                    </DialogHeader>
-                    <TotalRevenueGraph organizationId={organizationId} />
-                </DialogContent>
-            </Dialog>
-        </div>
-         <div>
-            <Dialog>
-                <DialogTrigger asChild>
-                    <div className="cursor-pointer">
-                        <StatCard
-                            title="Active Stadiums"
-                            value={activeStadiums.toString()}
-                            icon="Building"
-                            trendPeriod="Online now"
-                        />
-                    </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-xl w-full mx-4 sm:mx-auto">
-                    <DialogHeader>
-                        <DialogTitle className="sr-only">Active Stadiums List</DialogTitle>
-                        <DialogDescription className="sr-only">A list of all active stadiums.</DialogDescription>
-                    </DialogHeader>
-                    <ActiveStadiumsList organizationId={organizationId} />
-                </DialogContent>
-            </Dialog>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-        <div className="lg:col-span-3">
-            <AttendanceGraph organizationId={organizationId} />
-        </div>
-         <div className="lg:col-span-1">
-            <RecentActivity organizationId={organizationId} />
-        </div>
-      </div>
-
-       <div>
-          <NewAdmissions data={recentAdmissions} />
+            <NewAdmissions data={recentAdmissions} />
         </div>
     </MotionDiv>
   );

@@ -1,95 +1,53 @@
+import { Timestamp } from 'firebase/firestore';
 
-import { Timestamp } from "firebase/firestore";
-
-export type StudentBatches = "First Batch" | "Second Batch" | "Third Batch" | "Fourth Batch";
-
-export interface UserProfile {
+export interface User {
   id: string;
-  uid: string;
+  name: string;
   email: string;
-  username: string;
-  fullName: string;
-  organizationId: string;
-  role: "owner" | "coach" | "super-admin";
-  assignedStadiums: string[]; 
-  createdAt: Timestamp;
-  lastLoginAt?: Timestamp;
-}
-
-export interface Organization {
-  id: string;
-  organizationName: string;
-  ownerId: string;
-  createdAt: Timestamp;
-}
-
-export interface CoachDetails {
-    name: string;
-    email: string;
-    username: string;
-    phone: string;
+  role: 'super-admin' | 'owner' | 'coach';
+  organizationId?: string;
+  assignedStadiums?: string[];
 }
 
 export interface Stadium {
   id: string;
   name: string;
-  location: string;
   organizationId: string;
-  assignedCoachId: string;
-  coachDetails: CoachDetails;
-  status: "active" | "inactive";
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  settings?: {
-    operatingDays: string[];
-    defaultSchedule: string;
-  }
+  ownerId: string;
+  address: string;
+  status: 'active' | 'inactive';
 }
 
 export interface Student {
   id: string;
-  fullName: string; 
-  age: number;
-  batch: StudentBatches;
-  contact?: string;
-  stadiumId: string;
-  organizationId: string;
-  joinDate: Timestamp;
-  status: 'active' | 'trial' | 'inactive';
-  fees?: number;
-  createdAt: Timestamp;
+  fullName?: string;
+  age?: number;
+  batch?: string;
+  status?: 'active' | 'trial' | 'inactive';
+  [key: string]: any; 
 }
 
 export interface Attendance {
-  id?: string;
   studentId: string;
   date: string; // YYYY-MM-DD
-  batch: StudentBatches;
-  status: "present" | "absent";
+  status: 'present' | 'absent';
+  batch: string;
   markedByCoachId: string;
-  stadiumId: string;
   organizationId: string;
+  stadiumId: string;
   timestamp: Timestamp;
 }
 
-export interface AttendanceSubmission {
-  id?: string;
-  stadiumId: string;
-  batch: StudentBatches;
-  date: string; // YYYY-MM-DD
-  submittedByCoachId: string;
-  organizationId: string;
-  timestamp: Timestamp;
+export interface Report {
+  id: string;
+  type: 'attendance' | 'finance' | 'custom';
+  generatedOn: Timestamp;
+  // ... other report fields
 }
 
-
-export interface Schedule {
-    id?: string;
-    stadiumId: string;
-    weekStartDate: string; // YYYY-MM-DD
-    schedule: {
-        [day: string]: "active" | "holiday";
-    }
-    createdByCoachId: string;
-    createdAt: Timestamp;
+export interface Organization {
+  id: string;
+  name: string;
+  ownerId: string;
+  // ... other organization fields
 }

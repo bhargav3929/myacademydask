@@ -30,34 +30,30 @@ import { Student, Stadium } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { StudentProfileDialog } from "./student-profile-dialog";
-import { EditStudentDialog } from "./edit-student-dialog";
+import { StudentFormDialog } from "../students/student-form-dialog";
 
 type NewAdmissionsProps = {
   data: Student[];
 };
 
 export function NewAdmissions({ data }: NewAdmissionsProps) {
-    const [stadiumsMap, setStadiumsMap] = useState<Map<string, string>>(new Map());
-    
+    const [stadiums, setStadiums] = useState<Stadium[]>([]);
+
     useEffect(() => {
         const q = query(collection(firestore, "stadiums"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const newStadiumsMap = new Map<string, string>();
-            snapshot.forEach((doc) => {
-                const stadium = doc.data() as Stadium;
-                newStadiumsMap.set(doc.id, stadium.name);
-            });
-            setStadiumsMap(newStadiumsMap);
+            const stadiumsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Stadium[];
+            setStadiums(stadiumsData);
         });
 
         return () => unsubscribe();
     }, []);
 
     const getStadiumName = (stadiumId: string) => {
-        return stadiumsMap.get(stadiumId) || `...`;
+        return stadiums.find(s => s.id === stadiumId)?.name || "...";
     }
 
-  const badgeVariants: Record<Student['status'], string> = {
+  const badgeVariants: Record<Student['status'] | string, string> = {
     active: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700",
     trial: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700",
     inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700",
@@ -92,11 +88,11 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                     <User className="mr-2 size-4" /> View Profile
                 </DropdownMenuItem>
             </StudentProfileDialog>
-            <EditStudentDialog student={student}>
+            <StudentFormDialog stadiums={stadiums} studentToEdit={student}>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <Edit className="mr-2 size-4" /> Edit Details
                 </DropdownMenuItem>
-            </EditStudentDialog>
+            </StudentFormDialog>
         </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -138,7 +134,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                         <TableCell>
                             <div className="flex items-center gap-4">
                                 <Avatar className="size-9">
-                                <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                                <AvatarFallback>{(student.fullName || "U").charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="font-medium">{student.fullName}</div>
                             </div>
@@ -190,7 +186,7 @@ export function NewAdmissions({ data }: NewAdmissionsProps) {
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="size-10">
-                                        <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{(student.fullName || "U").charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <p className="font-semibold text-base">{student.fullName}</p>

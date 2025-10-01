@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,11 +7,12 @@ import { Student, Stadium } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { AddStudentDialog } from "../students/student-form-dialog";
+import { StudentFormDialog } from "../students/student-form-dialog";
 import { TakeAttendanceDialog } from "./take-attendance-dialog";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv } from "../motion";
-import { Users, CalendarCheck } from "lucide-react";
+import { Users, CalendarCheck, Plus } from "lucide-react";
+import { RainbowButton } from "../ui/rainbow-button";
 
 
 export function AttendanceTracker() {
@@ -99,7 +99,12 @@ export function AttendanceTracker() {
                 </div>
                 <CardTitle className="text-xl mb-2">Enroll a New Student</CardTitle>
                 <CardDescription className="mb-6 max-w-xs">Add a new participant to your stadium roster and assign them to a batch.</CardDescription>
-                <AddStudentDialog stadiums={stadium ? [stadium] : []} />
+                <StudentFormDialog stadiums={stadium ? [stadium] : []}>
+                  <RainbowButton>
+                      <Plus className="size-4 mr-2" />
+                      Enroll Student
+                  </RainbowButton>
+                </StudentFormDialog>
             </Card>
         </MotionDiv>
         <MotionDiv initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>

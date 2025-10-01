@@ -52,11 +52,13 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddStudentFormProps {
   stadiumId: string;
   closeDialog: () => void;
+  onStudentAdded: () => void;
 }
 
 export function AddStudentForm({
   stadiumId,
   closeDialog,
+  onStudentAdded,
 }: AddStudentFormProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -98,6 +100,7 @@ export function AddStudentForm({
         title: "Student Added",
         description: `${values.fullName} has been successfully added.`,
       });
+      onStudentAdded();
       form.reset();
       closeDialog();
     } catch (error) {

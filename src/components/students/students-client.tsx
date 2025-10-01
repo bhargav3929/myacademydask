@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { collection, query, onSnapshot, orderBy, collectionGroup, where, doc, getDoc } from "firebase/firestore";
 import { firestore, auth } from "@/lib/firebase";
 import { Student, Stadium } from "@/lib/types";
@@ -35,16 +35,10 @@ export function StudentsClient() {
       return () => unsubscribeAuth();
   }, []);
 
-
-  useEffect(() => {
-    if (!organizationId) {
-        setLoading(false);
-        return;
-    };
+  const fetchStudentsAndStadiums = useCallback(() => {
+    if (!organizationId) return;
 
     setLoading(true);
-
-    // Listener for students from all stadium subcollections within the organization
     const studentsQuery = query(
         collectionGroup(firestore, "students"), 
         where("organizationId", "==", organizationId)
@@ -67,7 +61,6 @@ export function StudentsClient() {
       setLoading(false);
     });
 
-    // Listener for stadiums within the organization
     const stadiumsQuery = query(
         collection(firestore, "stadiums"),
         where("organizationId", "==", organizationId)
@@ -83,6 +76,15 @@ export function StudentsClient() {
     };
   }, [organizationId]);
 
+  useEffect(() => {
+    const unsubscribe = fetchStudentsAndStadiums();
+    return () => unsubscribe?.();
+  }, [fetchStudentsAndStadiums]);
+
+  const refreshStudents = () => {
+    fetchStudentsAndStadiums();
+  }
+
   return (
     <MotionDiv 
       initial={{ opacity: 0, y: 20 }}
@@ -94,6 +96,7 @@ export function StudentsClient() {
         students={allStudents}
         stadiums={stadiums}
         setFilteredStudents={setFilteredStudents}
+        onAddStudent={refreshStudents} 
       />
       {loading ? (
         <div className="space-y-2">
@@ -103,7 +106,11 @@ export function StudentsClient() {
             <Skeleton className="h-12 w-full" />
         </div>
       ) : (
-        <StudentsTable data={filteredStudents} stadiums={stadiums} />
+        <StudentsTable 
+            students={filteredStudents} 
+            allStadiums={stadiums} 
+            refreshStudents={refreshStudents}
+        />
       )}
     </MotionDiv>
   );

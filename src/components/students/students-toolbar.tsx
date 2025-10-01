@@ -25,7 +25,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
-import { AddStudentDialog } from "./student-form-dialog";
+import { StudentFormDialog } from "./student-form-dialog";
 
 type StudentsToolbarProps = {
   students: Student[];
@@ -43,7 +43,7 @@ export function StudentsToolbar({ students, stadiums, setFilteredStudents }: Stu
 
     if (searchQuery) {
       filtered = filtered.filter(student =>
-        student.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+        (student.fullName || "").toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -53,11 +53,12 @@ export function StudentsToolbar({ students, stadiums, setFilteredStudents }: Stu
 
     if (dateFilter?.from) {
         filtered = filtered.filter(student => {
+            if (!student.joinDate) return false;
             const joinDate = student.joinDate.toDate();
             if (dateFilter.to) {
-                return joinDate >= dateFilter.from && joinDate <= dateFilter.to;
+                return joinDate >= (dateFilter.from as Date) && joinDate <= (dateFilter.to as Date);
             }
-            return joinDate >= dateFilter.from;
+            return joinDate >= (dateFilter.from as Date);
         });
     }
 
@@ -134,7 +135,7 @@ export function StudentsToolbar({ students, stadiums, setFilteredStudents }: Stu
         </DropdownMenu>
 
       </div>
-       <AddStudentDialog stadiums={stadiums} />
+       <StudentFormDialog stadiums={stadiums} />
     </div>
   );
 }

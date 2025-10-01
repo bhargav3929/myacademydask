@@ -1,125 +1,113 @@
-
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { doc, updateDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
-
-import { Button } from "@/components/ui/button";
+import { Coach } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { UserProfile } from "@/lib/types";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Edit } from "lucide-react";
 
 const formSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters."),
+  name: z.string().min(2, "Name is required"),
+  phone: z.string().min(10, "Phone number is required"),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>;
 
 interface EditCoachProfileDialogProps {
-  user: UserProfile;
-  setUser: (user: UserProfile) => void;
-  children: React.ReactNode;
+  coach: Coach;
 }
 
-export function EditCoachProfileDialog({ user, setUser, children }: EditCoachProfileDialogProps) {
-  const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+export function EditCoachProfileDialog({ coach }: EditCoachProfileDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<FormValues>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: user.fullName || "",
+      name: coach.name,
+      phone: coach.phone,
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsLoading(true);
     try {
-      const userDocRef = doc(firestore, "users", user.uid);
-      await updateDoc(userDocRef, { fullName: values.fullName });
-
-      setUser({ ...user, fullName: values.fullName });
-
-      toast({
-        title: "Success!",
-        description: "Your profile has been updated.",
-      });
-
-      setOpen(false);
+      const coachRef = doc(firestore, `coaches`, coach.id);
+      await updateDoc(coachRef, data);
+      toast.success("Profile updated successfully!");
+      setIsOpen(false);
     } catch (error) {
-      console.error("Profile update failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "Could not update your profile. Please try again.",
-      });
+      console.error("Error updating profile: ", error);
+      toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Edit className="mr-2 h-4 w-4" />
+          Edit Profile
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
-            Update your account information.
+            Update your personal information.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="fullName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your full name" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" value={user.email} readOnly disabled />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setIsOpen(false)} disabled={isLoading}>Cancel</Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

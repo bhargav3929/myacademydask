@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -27,20 +26,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "../ui/card";
 import { StudentProfileDialog } from "../dashboard/student-profile-dialog";
-import { EditStudentDialog } from "../dashboard/edit-student-dialog";
+import { StudentFormDialog } from "../students/student-form-dialog";
 import { DeleteStudentDialog } from "./delete-student-dialog";
 
 type StudentsTableProps = {
-  data: Student[];
-  stadiums: Stadium[];
+  students: Student[];
+  allStadiums: Stadium[];
+  refreshStudents: () => void;
 };
 
-export function StudentsTable({ data, stadiums }: StudentsTableProps) {
+export function StudentsTable({ students, allStadiums, refreshStudents }: StudentsTableProps) {
   const getStadiumName = (stadiumId: string) => {
-    return stadiums.find(s => s.id === stadiumId)?.name || "Unassigned";
+    if (!allStadiums) return "Unassigned";
+    return allStadiums.find(s => s.id === stadiumId)?.name || "Unassigned";
   }
 
-  const badgeVariants: Record<Student['status'], string> = {
+  const badgeVariants: Record<Student['status'] | string, string> = {
     active: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700",
     trial: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700",
     inactive: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700",
@@ -79,11 +80,11 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
             <User className="mr-2 size-4" /> View Profile
           </DropdownMenuItem>
         </StudentProfileDialog>
-        <EditStudentDialog student={student}>
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <Edit className="mr-2 size-4" /> Edit Student
-          </DropdownMenuItem>
-        </EditStudentDialog>
+        <StudentFormDialog stadiums={allStadiums} studentToEdit={student} onFormSubmit={refreshStudents}>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Edit className="mr-2 size-4" /> Edit Student
+            </DropdownMenuItem>
+        </StudentFormDialog>
         <DeleteStudentDialog student={student}>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
                 <Trash2 className="mr-2 size-4" /> Delete Student
@@ -92,6 +93,10 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
+
+  if (!students) {
+      return null; // Or a loading indicator
+  }
 
   return (
     <>
@@ -112,7 +117,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
           </TableHeader>
           <TableBody>
             <AnimatePresence>
-              {data.length > 0 ? data.map((student, i) => (
+              {students.length > 0 ? students.map((student, i) => (
                 <MotionTableRow
                     key={student.id}
                     variants={itemVariants}
@@ -126,7 +131,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                         <Avatar className="size-8">
-                            <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                            <AvatarFallback>{(student.fullName || "U").charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span>{student.fullName}</span>
                     </div>
@@ -160,7 +165,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
        {/* Mobile Card View */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
             <AnimatePresence>
-                {data.map((student, i) => (
+                {students.map((student, i) => (
                 <MotionCard
                     key={student.id}
                     layoutId={`student-card-${student.id}`}
@@ -175,7 +180,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                                 <Avatar className="size-10">
-                                    <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback>{(student.fullName || "U").charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <p className="font-semibold text-base">{student.fullName}</p>
@@ -203,7 +208,7 @@ export function StudentsTable({ data, stadiums }: StudentsTableProps) {
                 ))}
             </AnimatePresence>
         </div>
-        {data.length === 0 && (
+        {students.length === 0 && (
              <div className="flex flex-col items-center justify-center text-center py-16 px-4 rounded-xl border md:hidden">
                 <h3 className="text-lg font-semibold">No Students Found</h3>
                 <p className="text-sm text-muted-foreground mt-1">There are no students matching the selected filters.</p>

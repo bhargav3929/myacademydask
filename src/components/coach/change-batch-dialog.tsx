@@ -1,139 +1,137 @@
-
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { doc, updateDoc } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { doc, updateDoc, collection, getDocs, query, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
-import { Student, StudentBatches } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import { Student, Stadium } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-const studentBatches: StudentBatches[] = ["First Batch", "Second Batch", "Third Batch", "Fourth Batch"];
-
-const formSchema = z.object({
-  batch: z.string({ required_error: "Please select a new batch." }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChangeBatchDialogProps {
-    student: Student;
-    stadiumId: string;
-    children: React.ReactNode;
+  student: Student;
+  stadiumId: string;
+  onBatchChanged: () => void;
+  children: React.ReactNode;
 }
 
-export function ChangeBatchDialog({ student, stadiumId, children }: ChangeBatchDialogProps) {
-  const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+interface Batch {
+  id: string;
+  name: string;
+}
+
+export function ChangeBatchDialog({ student, stadiumId, onBatchChanged, children }: ChangeBatchDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newBatchName, setNewBatchName] = useState("");
+  const [availableBatches, setAvailableBatches] = useState<Batch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingBatches, setIsFetchingBatches] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      batch: student.batch,
-    },
-  });
+  useEffect(() => {
+    const fetchBatches = async () => {
+      if (!isOpen || !stadiumId) return;
+      setIsFetchingBatches(true);
+      try {
+        // Fetch the stadium document to get the batches array
+        const stadiumRef = doc(firestore, "stadiums", stadiumId);
+        const stadiumSnap = await getDoc(stadiumRef);
 
-  async function onSubmit(values: FormValues) {
-    if (values.batch === student.batch) {
-        setOpen(false);
-        return;
+        if (stadiumSnap.exists()) {
+          const stadiumData = stadiumSnap.data() as Stadium;
+          // The batches are stored in an array field called `batches`
+          const batches = stadiumData.batches || []; 
+          setAvailableBatches(batches.map((name: string, index: number) => ({ id: `${stadiumId}-${name}-${index}`, name })));
+        } else {
+          toast.error("Stadium details not found.");
+        }
+      } catch (error) {
+        console.error("Error fetching batches: ", error);
+        toast.error("Failed to fetch available batches.");
+      } finally {
+        setIsFetchingBatches(false);
+      }
+    };
+    fetchBatches();
+  }, [isOpen, stadiumId]);
+
+  const handleChangeBatch = async () => {
+    if (!newBatchName || newBatchName === student.batch) {
+      toast.error("Please select a new, different batch.");
+      return;
     }
     setIsLoading(true);
     try {
-      const studentDocRef = doc(firestore, `stadiums/${stadiumId}/students`, student.id);
-      await updateDoc(studentDocRef, { batch: values.batch });
+      const studentRef = doc(firestore, `stadiums/${stadiumId}/students`, student.id);
+      await updateDoc(studentRef, { batch: newBatchName });
 
-      toast({
-        title: "Success!",
-        description: `${student.fullName}'s batch has been changed to ${values.batch}.`,
-      });
-      form.reset(values);
-      setOpen(false);
-
-    } catch (error: any) {
-      console.error("Error changing batch:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not change the student's batch. Please try again.",
-      });
+      toast.success("Student batch changed successfully!");
+      onBatchChanged(); // This refreshes the student list
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error changing batch: ", error);
+      toast.error("Failed to change batch. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Change Batch for {student.fullName}</DialogTitle>
-          <DialogDescription>
-            Current Batch: <span className="font-semibold text-primary">{student.batch}</span>
-          </DialogDescription>
+          <DialogTitle>Change Batch for {student.fullName || "Unnamed Student"}</DialogTitle>
+          <DialogDescription>Select a new batch for this student. This will update their assigned batch immediately.</DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-             <FormField
-                control={form.control}
-                name="batch"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>New Batch</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a batch" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        {studentBatches.map(batch => (
-                            <SelectItem key={batch} value={batch} disabled={batch === student.batch}>
-                                {batch}
-                            </SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Change Batch"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <div className="py-4 space-y-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Current Batch</p>
+            <p className="font-semibold text-lg">{student.batch || "N/A"}</p>
+          </div>
+
+          <div className="space-y-2">
+             <label htmlFor="batch-select" className="text-sm font-medium">
+                New Batch
+              </label>
+            {isFetchingBatches ? (
+              <Skeleton className="h-10 w-full" />
+            ) : (
+              <Select onValueChange={setNewBatchName} value={newBatchName}>
+                 <SelectTrigger id="batch-select">
+                    <SelectValue placeholder="Select a new batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableBatches.length > 0 ? (
+                    availableBatches.map((batch) => (
+                      <SelectItem key={batch.id} value={batch.name} disabled={batch.name === student.batch}>
+                        {batch.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <p className="p-4 text-sm text-muted-foreground">No batches found.</p>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-end pt-4 gap-2 border-t">
+          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleChangeBatch} disabled={isLoading || isFetchingBatches || !newBatchName}>
+            {isLoading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

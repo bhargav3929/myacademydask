@@ -9,34 +9,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { AddCoachForm } from './add-coach-form';
+import { AddStudentForm } from './add-student-form';
 import { UserPlus } from 'lucide-react';
 
-interface AddCoachDialogProps {
+interface AddStudentDialogProps {
   stadiumId: string;
-  onCoachAdded: () => void;
+  onStudentAdded: () => void;
 }
 
-export function AddCoachDialog({ stadiumId, onCoachAdded }: AddCoachDialogProps) {
+export function AddStudentDialog({ stadiumId, onStudentAdded }: AddStudentDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <UserPlus className="mr-2 h-4 w-4" /> Add Coach
+          <UserPlus className="mr-2 h-4 w-4" /> Add Student
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Coach</DialogTitle>
+          <DialogTitle>Add New Student</DialogTitle>
           <DialogDescription>
-            Enter the details of the new coach to invite them to your stadium.
+            Fill in the details below to enroll a new student.
           </DialogDescription>
         </DialogHeader>
-        <AddCoachForm 
+        <AddStudentForm 
           stadiumId={stadiumId} 
-          onCoachAdded={onCoachAdded}
+          onStudentAdded={onStudentAdded}
           closeDialog={() => setOpen(false)}
         />
       </DialogContent>
