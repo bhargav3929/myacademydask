@@ -3,6 +3,55 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .hero-container {
+    @apply relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0e1320] text-white;
+  }
+
+  .parallax-layer {
+    @apply absolute inset-x-0 bottom-0 h-[120vh] w-[120vw] bg-repeat-x opacity-90;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-name: parallax_fg;
+  }
+
+  .bike-1,
+  .bike-2 {
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .hero-content {
+    @apply relative z-20 mt-12 flex w-full max-w-4xl flex-col items-center gap-4 px-4 text-center;
+  }
+
+  .hero-title {
+    @apply text-4xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-6xl;
+  }
+
+  .hero-subtitle {
+    @apply max-w-2xl text-base text-slate-200 md:text-lg;
+  }
+}
+
+@keyframes parallax_fg {
+  0% {
+    background-position: 2765px 100%;
+  }
+  100% {
+    background-position: 550px 100%;
+  }
+}
+
+@keyframes parallax_bike {
+  0% {
+    background-position: -300px 100%;
+  }
+  100% {
+    background-position: 2000px 100%;
+  }
+}
+
 body {
   font-family: 'Inter', sans-serif;
 }
@@ -94,5 +143,75 @@ body {
   }
   .delay-1000 {
     animation-delay: 1000ms;
+  }
+}
+
+.hero-container {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  width: 120vw;
+  left: -10vw;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(12,22,41,1) 0%, rgba(16,30,54,1) 45%, rgba(8,14,24,1) 100%);
+}
+
+.parallax-layer {
+  position: absolute;
+  inset: auto 0 0;
+  height: 120vh;
+  width: 160vw;
+  pointer-events: none;
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-name: parallax_fg;
+}
+
+.bike-1,
+.bike-2 {
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1.5rem 6rem;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: white;
+  text-shadow: 0 20px 45px rgba(0,0,0,0.45);
+}
+
+.hero-subtitle {
+  max-width: 40rem;
+  color: rgba(226, 232, 240, 0.9);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .hero-container {
+    width: 140vw;
+    left: -20vw;
+  }
+  .hero-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+  .hero-content {
+    padding: 3rem 1.25rem 5rem;
   }
 }

@@ -1,0 +1,1199 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.2
+2 info using node@v22.17.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/ram/myacademydask/.npmrc
+5 silly config load:file:/Users/ram/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:/Users/ram/myacademydask/.npm-cache/_logs/2025-10-05T18_51_57_390Z-
+10 verbose logfile /Users/ram/myacademydask/.npm-cache/_logs/2025-10-05T18_51_57_390Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with ENOTFOUND
+14 silly idealTree buildDeps
+15 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/acorn-import-attributes' ]
+16 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/adm-zip' ]
+17 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ajv' ]
+18 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ajv-formats' ]
+19 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ansi-color' ]
+20 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ansi-escapes' ]
+21 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/async' ]
+22 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/async-mutex' ]
+23 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/at-least-node' ]
+24 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/atob' ]
+25 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/base64-arraybuffer' ]
+26 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/bl' ]
+27 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/btoa' ]
+28 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/buffer' ]
+29 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/buffer-crc32' ]
+30 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/bufrw' ]
+31 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/caniuse-lite' ]
+32 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/canvg' ]
+33 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/chardet' ]
+34 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/cjs-module-lexer' ]
+35 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/cli-cursor' ]
+36 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/cli-spinners' ]
+37 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/cli-width' ]
+38 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/clone' ]
+39 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/colorette' ]
+40 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/colorspace' ]
+41 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/commander' ]
+42 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/configstore' ]
+43 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/core-js' ]
+44 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/crypto-random-string' ]
+45 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/css-line-break' ]
+46 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/deeks' ]
+47 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/defaults' ]
+48 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/doc-path' ]
+49 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/dompurify' ]
+50 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/dot-prop' ]
+51 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/dotenv' ]
+52 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/dotprompt' ]
+53 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/duplexer' ]
+54 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/embla-carousel' ]
+55 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/embla-carousel-react' ]
+56 silly reify mark retired [
+56 silly reify   '/Users/ram/myacademydask/node_modules/embla-carousel-reactive-utils'
+56 silly reify ]
+57 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/enabled' ]
+58 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/error' ]
+59 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/esbuild' ]
+60 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/event-stream' ]
+61 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/eventid' ]
+62 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/eventsource-parser' ]
+63 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/express-rate-limit' ]
+64 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/extract-zip' ]
+65 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/fast-uri' ]
+66 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/fd-slicer' ]
+67 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/fecha' ]
+68 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/fflate' ]
+69 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/find-yarn-workspace-root' ]
+70 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/firebase' ]
+71 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/firebase-admin' ]
+72 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/fn.name' ]
+73 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/from' ]
+74 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/fs-extra' ]
+75 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/genkit' ]
+76 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/genkit-cli' ]
+77 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/get-port' ]
+78 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/get-stream' ]
+79 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/googleapis' ]
+80 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/googleapis-common' ]
+81 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/handlebars' ]
+82 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/hexer' ]
+83 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/html2canvas' ]
+84 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ieee754' ]
+85 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/import-in-the-middle' ]
+86 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/is-docker' ]
+87 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/is-interactive' ]
+88 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/is-obj' ]
+89 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/is-typedarray' ]
+90 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/is-wsl' ]
+91 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/is-unicode-supported' ]
+92 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/jaeger-client' ]
+93 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/json-2-csv' ]
+94 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/json-schema' ]
+95 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/json-schema-traverse' ]
+96 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/json-stable-stringify' ]
+97 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/jsonfile' ]
+98 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/jsonify' ]
+99 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/jspdf' ]
+100 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/jspdf-autotable' ]
+101 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/klaw-sync' ]
+102 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/kuler' ]
+103 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/lockfile' ]
+104 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/lodash.mapvalues' ]
+105 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/log-symbols' ]
+106 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/logform' ]
+107 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/lucide-react' ]
+108 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/map-stream' ]
+109 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/make-dir' ]
+110 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/mimic-fn' ]
+111 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/module-details-from-path' ]
+112 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/mute-stream' ]
+113 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/neo-async' ]
+114 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/next' ]
+115 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/node-int64' ]
+116 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/one-time' ]
+117 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/onetime' ]
+118 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/open' ]
+119 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/openapi3-ts' ]
+120 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/opentracing' ]
+121 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ora' ]
+122 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/partial-json' ]
+123 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/patch-package' ]
+124 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/pause-stream' ]
+125 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/pend' ]
+126 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/performance-now' ]
+127 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/pg-int8' ]
+128 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/pg-protocol' ]
+129 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/pg-types' ]
+130 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/postgres-array' ]
+131 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/postgres-bytea' ]
+132 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/postgres-date' ]
+133 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/postgres-interval' ]
+134 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/process' ]
+135 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/ps-tree' ]
+136 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/pump' ]
+137 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/raf' ]
+138 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/react-hook-form' ]
+139 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/recharts' ]
+140 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/regenerator-runtime' ]
+141 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/require-in-the-middle' ]
+142 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/restore-cursor' ]
+143 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/rgbcolor' ]
+144 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/rimraf' ]
+145 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/safe-stable-stringify' ]
+146 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/shimmer' ]
+147 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/slash' ]
+148 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/sonner' ]
+149 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/source-map' ]
+150 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/split' ]
+151 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/stack-trace' ]
+152 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/stackblur-canvas' ]
+153 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/stream-combiner' ]
+154 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/string-template' ]
+155 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/svg-pathdata' ]
+156 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/terminate' ]
+157 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/text-hex' ]
+158 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/text-segmentation' ]
+159 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/thriftrw' ]
+160 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/through' ]
+161 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/triple-beam' ]
+162 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/tsx' ]
+163 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/type-fest' ]
+164 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/typedarray-to-buffer' ]
+165 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/undici' ]
+166 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/uglify-js' ]
+167 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/universalify' ]
+168 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/unique-string' ]
+169 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/uri-templates' ]
+170 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/url-template' ]
+171 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/utrie' ]
+172 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/wcwidth' ]
+173 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/winston' ]
+174 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/winston-transport' ]
+175 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/wordwrap' ]
+176 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/wrap-ansi' ]
+177 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/xdg-basedir' ]
+178 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/write-file-atomic' ]
+179 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/xorshift' ]
+180 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/yauzl' ]
+181 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/yoctocolors-cjs' ]
+182 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/zod' ]
+183 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/zod-to-json-schema' ]
+184 silly reify mark retired [
+184 silly reify   '/Users/ram/myacademydask/node_modules/@asteasolutions/zod-to-openapi'
+184 silly reify ]
+185 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@dabh/diagnostics' ]
+186 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@emnapi/runtime' ]
+187 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/aix-ppc64' ]
+188 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/android-arm' ]
+189 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/android-arm64' ]
+190 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/android-x64' ]
+191 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/darwin-arm64' ]
+192 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/darwin-x64' ]
+193 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/freebsd-arm64' ]
+194 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/freebsd-x64' ]
+195 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-arm' ]
+196 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-arm64' ]
+197 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-ia32' ]
+198 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-loong64' ]
+199 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-mips64el' ]
+200 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-ppc64' ]
+201 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-riscv64' ]
+202 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-s390x' ]
+203 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/netbsd-arm64' ]
+204 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/netbsd-x64' ]
+205 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/linux-x64' ]
+206 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/openbsd-arm64' ]
+207 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/openbsd-x64' ]
+208 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/openharmony-arm64' ]
+209 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/sunos-x64' ]
+210 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/win32-arm64' ]
+211 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/win32-x64' ]
+212 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@esbuild/win32-ia32' ]
+213 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@colors/colors' ]
+214 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/analytics' ]
+215 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/analytics-compat' ]
+216 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/analytics-types' ]
+217 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/app' ]
+218 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/app-check' ]
+219 silly reify mark retired [
+219 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-check-interop-types'
+219 silly reify ]
+220 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/app-check-compat' ]
+221 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/app-check-types' ]
+222 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/app-compat' ]
+223 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/app-types' ]
+224 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/auth-compat' ]
+225 silly reify mark retired [
+225 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/auth-interop-types'
+225 silly reify ]
+226 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/auth-types' ]
+227 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/component' ]
+228 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/data-connect' ]
+229 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/database' ]
+230 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/database-compat' ]
+231 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/database-types' ]
+232 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/firestore' ]
+233 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/firestore-compat' ]
+234 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/firestore-types' ]
+235 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/functions' ]
+236 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/functions-compat' ]
+237 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/functions-types' ]
+238 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/installations' ]
+239 silly reify mark retired [
+239 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/installations-compat'
+239 silly reify ]
+240 silly reify mark retired [
+240 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/installations-types'
+240 silly reify ]
+241 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/logger' ]
+242 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/messaging' ]
+243 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/messaging-compat' ]
+244 silly reify mark retired [
+244 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/messaging-interop-types'
+244 silly reify ]
+245 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/performance' ]
+246 silly reify mark retired [
+246 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/performance-compat'
+246 silly reify ]
+247 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/performance-types' ]
+248 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/remote-config' ]
+249 silly reify mark retired [
+249 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/remote-config-compat'
+249 silly reify ]
+250 silly reify mark retired [
+250 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/remote-config-types'
+250 silly reify ]
+251 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/storage' ]
+252 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/storage-compat' ]
+253 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/storage-types' ]
+254 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/util' ]
+255 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@firebase/vertexai-preview' ]
+256 silly reify mark retired [
+256 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/webchannel-wrapper'
+256 silly reify ]
+257 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/ai' ]
+258 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/core' ]
+259 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/google-cloud' ]
+260 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/googleai' ]
+261 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/next' ]
+262 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/telemetry-server' ]
+263 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@genkit-ai/tools-common' ]
+264 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@google/generative-ai' ]
+265 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@google-cloud/logging' ]
+266 silly reify mark retired [
+266 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/logging-winston'
+266 silly reify ]
+267 silly reify mark retired [
+267 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/opentelemetry-cloud-monitoring-exporter'
+267 silly reify ]
+268 silly reify mark retired [
+268 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/opentelemetry-cloud-trace-exporter'
+268 silly reify ]
+269 silly reify mark retired [
+269 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/opentelemetry-resource-util'
+269 silly reify ]
+270 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@google-cloud/precise-date' ]
+271 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@hookform/resolvers' ]
+272 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-darwin-x64' ]
+273 silly reify mark retired [
+273 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-darwin-x64'
+273 silly reify ]
+274 silly reify mark retired [
+274 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-arm'
+274 silly reify ]
+275 silly reify mark retired [
+275 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-arm64'
+275 silly reify ]
+276 silly reify mark retired [
+276 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-ppc64'
+276 silly reify ]
+277 silly reify mark retired [
+277 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-x64'
+277 silly reify ]
+278 silly reify mark retired [
+278 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-s390x'
+278 silly reify ]
+279 silly reify mark retired [
+279 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linuxmusl-x64'
+279 silly reify ]
+280 silly reify mark retired [
+280 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linuxmusl-arm64'
+280 silly reify ]
+281 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linux-arm' ]
+282 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linux-arm64' ]
+283 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linux-ppc64' ]
+284 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linux-s390x' ]
+285 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linuxmusl-arm64' ]
+286 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linux-x64' ]
+287 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-linuxmusl-x64' ]
+288 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-wasm32' ]
+289 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-win32-arm64' ]
+290 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-win32-ia32' ]
+291 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@img/sharp-win32-x64' ]
+292 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/checkbox' ]
+293 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/core' ]
+294 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/confirm' ]
+295 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/editor' ]
+296 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/expand' ]
+297 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/external-editor' ]
+298 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/input' ]
+299 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/figures' ]
+300 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/number' ]
+301 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/password' ]
+302 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/prompts' ]
+303 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/rawlist' ]
+304 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/search' ]
+305 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/select' ]
+306 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@inquirer/type' ]
+307 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@modelcontextprotocol/sdk' ]
+308 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/env' ]
+309 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-darwin-arm64' ]
+310 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-darwin-x64' ]
+311 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-linux-arm64-gnu' ]
+312 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-linux-arm64-musl' ]
+313 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-linux-x64-gnu' ]
+314 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-linux-x64-musl' ]
+315 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-win32-arm64-msvc' ]
+316 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@next/swc-win32-x64-msvc' ]
+317 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/api-logs' ]
+318 silly reify mark retired [
+318 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/auto-instrumentations-node'
+318 silly reify ]
+319 silly reify mark retired [
+319 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/context-async-hooks'
+319 silly reify ]
+320 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/core' ]
+321 silly reify mark retired [
+321 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-jaeger'
+321 silly reify ]
+322 silly reify mark retired [
+322 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-trace-otlp-grpc'
+322 silly reify ]
+323 silly reify mark retired [
+323 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-trace-otlp-http'
+323 silly reify ]
+324 silly reify mark retired [
+324 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-trace-otlp-proto'
+324 silly reify ]
+325 silly reify mark retired [
+325 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-zipkin'
+325 silly reify ]
+326 silly reify mark retired [
+326 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation'
+326 silly reify ]
+327 silly reify mark retired [
+327 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-amqplib'
+327 silly reify ]
+328 silly reify mark retired [
+328 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-aws-lambda'
+328 silly reify ]
+329 silly reify mark retired [
+329 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-aws-sdk'
+329 silly reify ]
+330 silly reify mark retired [
+330 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-bunyan'
+330 silly reify ]
+331 silly reify mark retired [
+331 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-cassandra-driver'
+331 silly reify ]
+332 silly reify mark retired [
+332 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-connect'
+332 silly reify ]
+333 silly reify mark retired [
+333 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-cucumber'
+333 silly reify ]
+334 silly reify mark retired [
+334 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-dataloader'
+334 silly reify ]
+335 silly reify mark retired [
+335 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-dns'
+335 silly reify ]
+336 silly reify mark retired [
+336 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-express'
+336 silly reify ]
+337 silly reify mark retired [
+337 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-fastify'
+337 silly reify ]
+338 silly reify mark retired [
+338 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-fs'
+338 silly reify ]
+339 silly reify mark retired [
+339 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-generic-pool'
+339 silly reify ]
+340 silly reify mark retired [
+340 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-graphql'
+340 silly reify ]
+341 silly reify mark retired [
+341 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-grpc'
+341 silly reify ]
+342 silly reify mark retired [
+342 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-hapi'
+342 silly reify ]
+343 silly reify mark retired [
+343 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-http'
+343 silly reify ]
+344 silly reify mark retired [
+344 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-ioredis'
+344 silly reify ]
+345 silly reify mark retired [
+345 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-kafkajs'
+345 silly reify ]
+346 silly reify mark retired [
+346 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-knex'
+346 silly reify ]
+347 silly reify mark retired [
+347 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-koa'
+347 silly reify ]
+348 silly reify mark retired [
+348 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-lru-memoizer'
+348 silly reify ]
+349 silly reify mark retired [
+349 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-memcached'
+349 silly reify ]
+350 silly reify mark retired [
+350 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mongodb'
+350 silly reify ]
+351 silly reify mark retired [
+351 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mongoose'
+351 silly reify ]
+352 silly reify mark retired [
+352 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mysql'
+352 silly reify ]
+353 silly reify mark retired [
+353 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mysql2'
+353 silly reify ]
+354 silly reify mark retired [
+354 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-nestjs-core'
+354 silly reify ]
+355 silly reify mark retired [
+355 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-net'
+355 silly reify ]
+356 silly reify mark retired [
+356 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-pg'
+356 silly reify ]
+357 silly reify mark retired [
+357 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-pino'
+357 silly reify ]
+358 silly reify mark retired [
+358 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-redis'
+358 silly reify ]
+359 silly reify mark retired [
+359 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-restify'
+359 silly reify ]
+360 silly reify mark retired [
+360 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-redis-4'
+360 silly reify ]
+361 silly reify mark retired [
+361 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-router'
+361 silly reify ]
+362 silly reify mark retired [
+362 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-socket.io'
+362 silly reify ]
+363 silly reify mark retired [
+363 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-tedious'
+363 silly reify ]
+364 silly reify mark retired [
+364 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-undici'
+364 silly reify ]
+365 silly reify mark retired [
+365 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-winston'
+365 silly reify ]
+366 silly reify mark retired [
+366 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/otlp-exporter-base'
+366 silly reify ]
+367 silly reify mark retired [
+367 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/otlp-grpc-exporter-base'
+367 silly reify ]
+368 silly reify mark retired [
+368 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/otlp-transformer'
+368 silly reify ]
+369 silly reify mark retired [
+369 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagation-utils'
+369 silly reify ]
+370 silly reify mark retired [
+370 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagator-aws-xray'
+370 silly reify ]
+371 silly reify mark retired [
+371 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagator-b3'
+371 silly reify ]
+372 silly reify mark retired [
+372 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagator-jaeger'
+372 silly reify ]
+373 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/redis-common' ]
+374 silly reify mark retired [
+374 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-alibaba-cloud'
+374 silly reify ]
+375 silly reify mark retired [
+375 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-aws'
+375 silly reify ]
+376 silly reify mark retired [
+376 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-azure'
+376 silly reify ]
+377 silly reify mark retired [
+377 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-container'
+377 silly reify ]
+378 silly reify mark retired [
+378 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-gcp'
+378 silly reify ]
+379 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/resources' ]
+380 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-logs' ]
+381 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-metrics' ]
+382 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-node' ]
+383 silly reify mark retired [
+383 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-trace-base'
+383 silly reify ]
+384 silly reify mark retired [
+384 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-trace-node'
+384 silly reify ]
+385 silly reify mark retired [
+385 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/semantic-conventions'
+385 silly reify ]
+386 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@opentelemetry/sql-common' ]
+387 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/primitive' ]
+388 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-accordion' ]
+389 silly reify mark retired [
+389 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-alert-dialog'
+389 silly reify ]
+390 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-checkbox' ]
+391 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-collapsible' ]
+392 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-dialog' ]
+393 silly reify mark retired [
+393 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-dismissable-layer'
+393 silly reify ]
+394 silly reify mark retired [
+394 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-dropdown-menu'
+394 silly reify ]
+395 silly reify mark retired [
+395 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-focus-guards'
+395 silly reify ]
+396 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-menu' ]
+397 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-menubar' ]
+398 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-popper' ]
+399 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-popover' ]
+400 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-presence' ]
+401 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-radio-group' ]
+402 silly reify mark retired [
+402 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-roving-focus'
+402 silly reify ]
+403 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-select' ]
+404 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-scroll-area' ]
+405 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-slider' ]
+406 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-switch' ]
+407 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-tabs' ]
+408 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-toast' ]
+409 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@radix-ui/react-tooltip' ]
+410 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@trpc/server' ]
+411 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/aws-lambda' ]
+412 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/bunyan' ]
+413 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/handlebars' ]
+414 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/jspdf' ]
+415 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/memcached' ]
+416 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/mysql' ]
+417 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/node' ]
+418 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/pg' ]
+419 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/pg-pool' ]
+420 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/raf' ]
+421 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/react' ]
+422 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/shimmer' ]
+423 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/tedious' ]
+424 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/triple-beam' ]
+425 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@types/yauzl' ]
+426 silly reify mark retired [ '/Users/ram/myacademydask/node_modules/@yarnpkg/lockfile' ]
+427 silly reify mark retired [
+427 silly reify   '/Users/ram/myacademydask/node_modules/acorn',
+427 silly reify   '/Users/ram/myacademydask/node_modules/.bin/acorn'
+427 silly reify ]
+428 silly reify mark retired [
+428 silly reify   '/Users/ram/myacademydask/node_modules/cssesc',
+428 silly reify   '/Users/ram/myacademydask/node_modules/.bin/cssesc'
+428 silly reify ]
+429 silly reify mark retired [
+429 silly reify   '/Users/ram/myacademydask/node_modules/fast-xml-parser',
+429 silly reify   '/Users/ram/myacademydask/node_modules/.bin/fxparser'
+429 silly reify ]
+430 silly reify mark retired [
+430 silly reify   '/Users/ram/myacademydask/node_modules/gaxios/node_modules/uuid',
+430 silly reify   '/Users/ram/myacademydask/node_modules/gaxios/node_modules/.bin/uuid'
+430 silly reify ]
+431 silly reify mark retired [
+431 silly reify   '/Users/ram/myacademydask/node_modules/glob',
+431 silly reify   '/Users/ram/myacademydask/node_modules/.bin/glob'
+431 silly reify ]
+432 silly reify mark retired [
+432 silly reify   '/Users/ram/myacademydask/node_modules/google-gax/node_modules/uuid',
+432 silly reify   '/Users/ram/myacademydask/node_modules/google-gax/node_modules/.bin/uuid'
+432 silly reify ]
+433 silly reify mark retired [
+433 silly reify   '/Users/ram/myacademydask/node_modules/jiti',
+433 silly reify   '/Users/ram/myacademydask/node_modules/.bin/jiti'
+433 silly reify ]
+434 silly reify mark retired [
+434 silly reify   '/Users/ram/myacademydask/node_modules/js-yaml',
+434 silly reify   '/Users/ram/myacademydask/node_modules/.bin/js-yaml'
+434 silly reify ]
+435 silly reify mark retired [
+435 silly reify   '/Users/ram/myacademydask/node_modules/json5',
+435 silly reify   '/Users/ram/myacademydask/node_modules/.bin/json5'
+435 silly reify ]
+436 silly reify mark retired [
+436 silly reify   '/Users/ram/myacademydask/node_modules/loose-envify',
+436 silly reify   '/Users/ram/myacademydask/node_modules/.bin/loose-envify'
+436 silly reify ]
+437 silly reify mark retired [
+437 silly reify   '/Users/ram/myacademydask/node_modules/mime',
+437 silly reify   '/Users/ram/myacademydask/node_modules/.bin/mime'
+437 silly reify ]
+438 silly reify mark retired [
+438 silly reify   '/Users/ram/myacademydask/node_modules/nanoid',
+438 silly reify   '/Users/ram/myacademydask/node_modules/.bin/nanoid'
+438 silly reify ]
+439 silly reify mark retired [
+439 silly reify   '/Users/ram/myacademydask/node_modules/resolve',
+439 silly reify   '/Users/ram/myacademydask/node_modules/.bin/resolve'
+439 silly reify ]
+440 silly reify mark retired [
+440 silly reify   '/Users/ram/myacademydask/node_modules/router/node_modules/path-to-regexp'
+440 silly reify ]
+441 silly reify mark retired [
+441 silly reify   '/Users/ram/myacademydask/node_modules/semver',
+441 silly reify   '/Users/ram/myacademydask/node_modules/.bin/semver'
+441 silly reify ]
+442 silly reify mark retired [
+442 silly reify   '/Users/ram/myacademydask/node_modules/send/node_modules/mime',
+442 silly reify   '/Users/ram/myacademydask/node_modules/send/node_modules/.bin/mime'
+442 silly reify ]
+443 silly reify mark retired [
+443 silly reify   '/Users/ram/myacademydask/node_modules/sucrase',
+443 silly reify   '/Users/ram/myacademydask/node_modules/.bin/sucrase',
+443 silly reify   '/Users/ram/myacademydask/node_modules/.bin/sucrase-node'
+443 silly reify ]
+444 silly reify mark retired [
+444 silly reify   '/Users/ram/myacademydask/node_modules/tailwindcss',
+444 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tailwind',
+444 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tailwindcss'
+444 silly reify ]
+445 silly reify mark retired [
+445 silly reify   '/Users/ram/myacademydask/node_modules/teeny-request/node_modules/uuid',
+445 silly reify   '/Users/ram/myacademydask/node_modules/teeny-request/node_modules/.bin/uuid'
+445 silly reify ]
+446 silly reify mark retired [
+446 silly reify   '/Users/ram/myacademydask/node_modules/typescript',
+446 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tsc',
+446 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tsserver'
+446 silly reify ]
+447 silly reify mark retired [
+447 silly reify   '/Users/ram/myacademydask/node_modules/uuid',
+447 silly reify   '/Users/ram/myacademydask/node_modules/.bin/uuid'
+447 silly reify ]
+448 silly reify mark retired [
+448 silly reify   '/Users/ram/myacademydask/node_modules/which',
+448 silly reify   '/Users/ram/myacademydask/node_modules/.bin/node-which'
+448 silly reify ]
+449 silly reify mark retired [
+449 silly reify   '/Users/ram/myacademydask/node_modules/yaml',
+449 silly reify   '/Users/ram/myacademydask/node_modules/.bin/yaml'
+449 silly reify ]
+450 silly reify mark retired [
+450 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/storage/node_modules/uuid',
+450 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/storage/node_modules/.bin/uuid'
+450 silly reify ]
+451 silly reify mark retired [
+451 silly reify   '/Users/ram/myacademydask/node_modules/@grpc/proto-loader',
+451 silly reify   '/Users/ram/myacademydask/node_modules/.bin/proto-loader-gen-types'
+451 silly reify ]
+452 silly reify moves {
+452 silly reify   '/Users/ram/myacademydask/node_modules/acorn-import-attributes': '/Users/ram/myacademydask/node_modules/.acorn-import-attributes-G1otnhb6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/adm-zip': '/Users/ram/myacademydask/node_modules/.adm-zip-TKt3A7nf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ajv': '/Users/ram/myacademydask/node_modules/.ajv-v8q6NO1G',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ajv-formats': '/Users/ram/myacademydask/node_modules/.ajv-formats-IrUbo0am',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ansi-color': '/Users/ram/myacademydask/node_modules/.ansi-color-7O929jzs',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ansi-escapes': '/Users/ram/myacademydask/node_modules/.ansi-escapes-frmUVzoK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/async': '/Users/ram/myacademydask/node_modules/.async-Uul6GZVW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/async-mutex': '/Users/ram/myacademydask/node_modules/.async-mutex-GuqDmyk7',
+452 silly reify   '/Users/ram/myacademydask/node_modules/at-least-node': '/Users/ram/myacademydask/node_modules/.at-least-node-eyY5Qihe',
+452 silly reify   '/Users/ram/myacademydask/node_modules/atob': '/Users/ram/myacademydask/node_modules/.atob-MDMlIPbY',
+452 silly reify   '/Users/ram/myacademydask/node_modules/base64-arraybuffer': '/Users/ram/myacademydask/node_modules/.base64-arraybuffer-hiuMX8UD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/bl': '/Users/ram/myacademydask/node_modules/.bl-oDKBIfkK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/btoa': '/Users/ram/myacademydask/node_modules/.btoa-4pFMO8oE',
+452 silly reify   '/Users/ram/myacademydask/node_modules/buffer': '/Users/ram/myacademydask/node_modules/.buffer-fCPDBSfz',
+452 silly reify   '/Users/ram/myacademydask/node_modules/buffer-crc32': '/Users/ram/myacademydask/node_modules/.buffer-crc32-96I5FB0i',
+452 silly reify   '/Users/ram/myacademydask/node_modules/bufrw': '/Users/ram/myacademydask/node_modules/.bufrw-dEqumsT3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/caniuse-lite': '/Users/ram/myacademydask/node_modules/.caniuse-lite-7E2yqTtu',
+452 silly reify   '/Users/ram/myacademydask/node_modules/canvg': '/Users/ram/myacademydask/node_modules/.canvg-pd4Xn4TE',
+452 silly reify   '/Users/ram/myacademydask/node_modules/chardet': '/Users/ram/myacademydask/node_modules/.chardet-lKA1Uqkb',
+452 silly reify   '/Users/ram/myacademydask/node_modules/cjs-module-lexer': '/Users/ram/myacademydask/node_modules/.cjs-module-lexer-FeQV5OGG',
+452 silly reify   '/Users/ram/myacademydask/node_modules/cli-cursor': '/Users/ram/myacademydask/node_modules/.cli-cursor-6RZRjySC',
+452 silly reify   '/Users/ram/myacademydask/node_modules/cli-spinners': '/Users/ram/myacademydask/node_modules/.cli-spinners-nWIrMLu3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/cli-width': '/Users/ram/myacademydask/node_modules/.cli-width-qqTPvz5m',
+452 silly reify   '/Users/ram/myacademydask/node_modules/clone': '/Users/ram/myacademydask/node_modules/.clone-T6xyMIWR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/colorette': '/Users/ram/myacademydask/node_modules/.colorette-n6FOFBqz',
+452 silly reify   '/Users/ram/myacademydask/node_modules/colorspace': '/Users/ram/myacademydask/node_modules/.colorspace-8XZf7rhq',
+452 silly reify   '/Users/ram/myacademydask/node_modules/commander': '/Users/ram/myacademydask/node_modules/.commander-Z7OcZ8KD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/configstore': '/Users/ram/myacademydask/node_modules/.configstore-5lAlvNba',
+452 silly reify   '/Users/ram/myacademydask/node_modules/core-js': '/Users/ram/myacademydask/node_modules/.core-js-XcyeMnfs',
+452 silly reify   '/Users/ram/myacademydask/node_modules/crypto-random-string': '/Users/ram/myacademydask/node_modules/.crypto-random-string-rIJirOAY',
+452 silly reify   '/Users/ram/myacademydask/node_modules/css-line-break': '/Users/ram/myacademydask/node_modules/.css-line-break-XxCnRoZy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/deeks': '/Users/ram/myacademydask/node_modules/.deeks-1CnQK4CQ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/defaults': '/Users/ram/myacademydask/node_modules/.defaults-WOJTqknn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/doc-path': '/Users/ram/myacademydask/node_modules/.doc-path-lhwxpSaN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/dompurify': '/Users/ram/myacademydask/node_modules/.dompurify-xJ1l1mdv',
+452 silly reify   '/Users/ram/myacademydask/node_modules/dot-prop': '/Users/ram/myacademydask/node_modules/.dot-prop-ANtlnvdr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/dotenv': '/Users/ram/myacademydask/node_modules/.dotenv-wDRTrFD6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/dotprompt': '/Users/ram/myacademydask/node_modules/.dotprompt-wQP2LgIX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/duplexer': '/Users/ram/myacademydask/node_modules/.duplexer-qHRirPsI',
+452 silly reify   '/Users/ram/myacademydask/node_modules/embla-carousel': '/Users/ram/myacademydask/node_modules/.embla-carousel-zOUnbjqr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/embla-carousel-react': '/Users/ram/myacademydask/node_modules/.embla-carousel-react-RdywCG64',
+452 silly reify   '/Users/ram/myacademydask/node_modules/embla-carousel-reactive-utils': '/Users/ram/myacademydask/node_modules/.embla-carousel-reactive-utils-Ey7if8pG',
+452 silly reify   '/Users/ram/myacademydask/node_modules/enabled': '/Users/ram/myacademydask/node_modules/.enabled-iulpUVjv',
+452 silly reify   '/Users/ram/myacademydask/node_modules/error': '/Users/ram/myacademydask/node_modules/.error-qSDthD6V',
+452 silly reify   '/Users/ram/myacademydask/node_modules/esbuild': '/Users/ram/myacademydask/node_modules/.esbuild-cSvmd2g3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/event-stream': '/Users/ram/myacademydask/node_modules/.event-stream-rkamTZgg',
+452 silly reify   '/Users/ram/myacademydask/node_modules/eventid': '/Users/ram/myacademydask/node_modules/.eventid-iGM2s9iI',
+452 silly reify   '/Users/ram/myacademydask/node_modules/eventsource-parser': '/Users/ram/myacademydask/node_modules/.eventsource-parser-4S1ai1lr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/express-rate-limit': '/Users/ram/myacademydask/node_modules/.express-rate-limit-oFIPk1yX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/extract-zip': '/Users/ram/myacademydask/node_modules/.extract-zip-gtiKtlry',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fast-uri': '/Users/ram/myacademydask/node_modules/.fast-uri-lXEUDKlc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fd-slicer': '/Users/ram/myacademydask/node_modules/.fd-slicer-W7QUBxT3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fecha': '/Users/ram/myacademydask/node_modules/.fecha-f7YdfKiO',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fflate': '/Users/ram/myacademydask/node_modules/.fflate-oLpDYPS1',
+452 silly reify   '/Users/ram/myacademydask/node_modules/find-yarn-workspace-root': '/Users/ram/myacademydask/node_modules/.find-yarn-workspace-root-mXxJ9Jts',
+452 silly reify   '/Users/ram/myacademydask/node_modules/firebase': '/Users/ram/myacademydask/node_modules/.firebase-r9ur2Izx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/firebase-admin': '/Users/ram/myacademydask/node_modules/.firebase-admin-wTNJ7Q03',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fn.name': '/Users/ram/myacademydask/node_modules/.fn.name-tnr7TGRy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/from': '/Users/ram/myacademydask/node_modules/.from-pivOX1TL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fs-extra': '/Users/ram/myacademydask/node_modules/.fs-extra-tuEonHnT',
+452 silly reify   '/Users/ram/myacademydask/node_modules/genkit': '/Users/ram/myacademydask/node_modules/.genkit-vsRWwoOU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/genkit-cli': '/Users/ram/myacademydask/node_modules/.genkit-cli-2Y9itB04',
+452 silly reify   '/Users/ram/myacademydask/node_modules/get-port': '/Users/ram/myacademydask/node_modules/.get-port-2Z96FF7r',
+452 silly reify   '/Users/ram/myacademydask/node_modules/get-stream': '/Users/ram/myacademydask/node_modules/.get-stream-N4D8raIq',
+452 silly reify   '/Users/ram/myacademydask/node_modules/googleapis': '/Users/ram/myacademydask/node_modules/.googleapis-WYuoSdsZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/googleapis-common': '/Users/ram/myacademydask/node_modules/.googleapis-common-nZHfxmwM',
+452 silly reify   '/Users/ram/myacademydask/node_modules/handlebars': '/Users/ram/myacademydask/node_modules/.handlebars-EPsAwUeb',
+452 silly reify   '/Users/ram/myacademydask/node_modules/hexer': '/Users/ram/myacademydask/node_modules/.hexer-GXuSQPek',
+452 silly reify   '/Users/ram/myacademydask/node_modules/html2canvas': '/Users/ram/myacademydask/node_modules/.html2canvas-KD72YEuo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ieee754': '/Users/ram/myacademydask/node_modules/.ieee754-dgUyjsjI',
+452 silly reify   '/Users/ram/myacademydask/node_modules/import-in-the-middle': '/Users/ram/myacademydask/node_modules/.import-in-the-middle-EidbuOLL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/is-docker': '/Users/ram/myacademydask/node_modules/.is-docker-gU6GHghj',
+452 silly reify   '/Users/ram/myacademydask/node_modules/is-interactive': '/Users/ram/myacademydask/node_modules/.is-interactive-diqXsyVp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/is-obj': '/Users/ram/myacademydask/node_modules/.is-obj-NHrYJ1kD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/is-typedarray': '/Users/ram/myacademydask/node_modules/.is-typedarray-wOZJFo6j',
+452 silly reify   '/Users/ram/myacademydask/node_modules/is-wsl': '/Users/ram/myacademydask/node_modules/.is-wsl-nPomIdPV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/is-unicode-supported': '/Users/ram/myacademydask/node_modules/.is-unicode-supported-Cg8jKEIv',
+452 silly reify   '/Users/ram/myacademydask/node_modules/jaeger-client': '/Users/ram/myacademydask/node_modules/.jaeger-client-A9xIoUYq',
+452 silly reify   '/Users/ram/myacademydask/node_modules/json-2-csv': '/Users/ram/myacademydask/node_modules/.json-2-csv-xlemyh1t',
+452 silly reify   '/Users/ram/myacademydask/node_modules/json-schema': '/Users/ram/myacademydask/node_modules/.json-schema-9QHfplwq',
+452 silly reify   '/Users/ram/myacademydask/node_modules/json-schema-traverse': '/Users/ram/myacademydask/node_modules/.json-schema-traverse-qfixwquF',
+452 silly reify   '/Users/ram/myacademydask/node_modules/json-stable-stringify': '/Users/ram/myacademydask/node_modules/.json-stable-stringify-Z99AkCTe',
+452 silly reify   '/Users/ram/myacademydask/node_modules/jsonfile': '/Users/ram/myacademydask/node_modules/.jsonfile-30t8d02w',
+452 silly reify   '/Users/ram/myacademydask/node_modules/jsonify': '/Users/ram/myacademydask/node_modules/.jsonify-6DEaDIAs',
+452 silly reify   '/Users/ram/myacademydask/node_modules/jspdf': '/Users/ram/myacademydask/node_modules/.jspdf-n0A5XiWs',
+452 silly reify   '/Users/ram/myacademydask/node_modules/jspdf-autotable': '/Users/ram/myacademydask/node_modules/.jspdf-autotable-WexSm2vG',
+452 silly reify   '/Users/ram/myacademydask/node_modules/klaw-sync': '/Users/ram/myacademydask/node_modules/.klaw-sync-95efJRcZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/kuler': '/Users/ram/myacademydask/node_modules/.kuler-p5VReoDh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/lockfile': '/Users/ram/myacademydask/node_modules/.lockfile-I69UV9dF',
+452 silly reify   '/Users/ram/myacademydask/node_modules/lodash.mapvalues': '/Users/ram/myacademydask/node_modules/.lodash.mapvalues-g7Jj3QNH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/log-symbols': '/Users/ram/myacademydask/node_modules/.log-symbols-m4MRV1x4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/logform': '/Users/ram/myacademydask/node_modules/.logform-7IdAmGA4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/lucide-react': '/Users/ram/myacademydask/node_modules/.lucide-react-Xl8lHv3g',
+452 silly reify   '/Users/ram/myacademydask/node_modules/map-stream': '/Users/ram/myacademydask/node_modules/.map-stream-dc5t49xW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/make-dir': '/Users/ram/myacademydask/node_modules/.make-dir-FPGDt8bZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/mimic-fn': '/Users/ram/myacademydask/node_modules/.mimic-fn-8QIJG4JF',
+452 silly reify   '/Users/ram/myacademydask/node_modules/module-details-from-path': '/Users/ram/myacademydask/node_modules/.module-details-from-path-FdzjUdW8',
+452 silly reify   '/Users/ram/myacademydask/node_modules/mute-stream': '/Users/ram/myacademydask/node_modules/.mute-stream-lsLjGIXS',
+452 silly reify   '/Users/ram/myacademydask/node_modules/neo-async': '/Users/ram/myacademydask/node_modules/.neo-async-r45FtDiY',
+452 silly reify   '/Users/ram/myacademydask/node_modules/next': '/Users/ram/myacademydask/node_modules/.next-CXgsRFjD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/node-int64': '/Users/ram/myacademydask/node_modules/.node-int64-ix512a5G',
+452 silly reify   '/Users/ram/myacademydask/node_modules/one-time': '/Users/ram/myacademydask/node_modules/.one-time-WXSjPkwJ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/onetime': '/Users/ram/myacademydask/node_modules/.onetime-ehDygaoi',
+452 silly reify   '/Users/ram/myacademydask/node_modules/open': '/Users/ram/myacademydask/node_modules/.open-6vDxZLJj',
+452 silly reify   '/Users/ram/myacademydask/node_modules/openapi3-ts': '/Users/ram/myacademydask/node_modules/.openapi3-ts-B3oKTvCo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/opentracing': '/Users/ram/myacademydask/node_modules/.opentracing-Giow7f3k',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ora': '/Users/ram/myacademydask/node_modules/.ora-f4R9vL9Q',
+452 silly reify   '/Users/ram/myacademydask/node_modules/partial-json': '/Users/ram/myacademydask/node_modules/.partial-json-eNsR2BHc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/patch-package': '/Users/ram/myacademydask/node_modules/.patch-package-XcjHcIFu',
+452 silly reify   '/Users/ram/myacademydask/node_modules/pause-stream': '/Users/ram/myacademydask/node_modules/.pause-stream-ZyJcknzp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/pend': '/Users/ram/myacademydask/node_modules/.pend-EX4aDEWU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/performance-now': '/Users/ram/myacademydask/node_modules/.performance-now-UPSvqZxR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/pg-int8': '/Users/ram/myacademydask/node_modules/.pg-int8-H8EJPDy1',
+452 silly reify   '/Users/ram/myacademydask/node_modules/pg-protocol': '/Users/ram/myacademydask/node_modules/.pg-protocol-Uh1tGwJ6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/pg-types': '/Users/ram/myacademydask/node_modules/.pg-types-DI5wVP61',
+452 silly reify   '/Users/ram/myacademydask/node_modules/postgres-array': '/Users/ram/myacademydask/node_modules/.postgres-array-tKGe5dYc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/postgres-bytea': '/Users/ram/myacademydask/node_modules/.postgres-bytea-bAiXZxN2',
+452 silly reify   '/Users/ram/myacademydask/node_modules/postgres-date': '/Users/ram/myacademydask/node_modules/.postgres-date-DcI598Bc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/postgres-interval': '/Users/ram/myacademydask/node_modules/.postgres-interval-xaCVVcZj',
+452 silly reify   '/Users/ram/myacademydask/node_modules/process': '/Users/ram/myacademydask/node_modules/.process-3uxDfDzK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/ps-tree': '/Users/ram/myacademydask/node_modules/.ps-tree-X1auKrfD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/pump': '/Users/ram/myacademydask/node_modules/.pump-fXllDCIU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/raf': '/Users/ram/myacademydask/node_modules/.raf-XLY0CKst',
+452 silly reify   '/Users/ram/myacademydask/node_modules/react-hook-form': '/Users/ram/myacademydask/node_modules/.react-hook-form-u0G0HvtW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/recharts': '/Users/ram/myacademydask/node_modules/.recharts-XscXMFvo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/regenerator-runtime': '/Users/ram/myacademydask/node_modules/.regenerator-runtime-r3NMtBdu',
+452 silly reify   '/Users/ram/myacademydask/node_modules/require-in-the-middle': '/Users/ram/myacademydask/node_modules/.require-in-the-middle-0tAqpmu3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/restore-cursor': '/Users/ram/myacademydask/node_modules/.restore-cursor-HH4C4GsZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/rgbcolor': '/Users/ram/myacademydask/node_modules/.rgbcolor-MHYdLFUA',
+452 silly reify   '/Users/ram/myacademydask/node_modules/rimraf': '/Users/ram/myacademydask/node_modules/.rimraf-yp9I5EiZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/safe-stable-stringify': '/Users/ram/myacademydask/node_modules/.safe-stable-stringify-WKLiYkOP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/shimmer': '/Users/ram/myacademydask/node_modules/.shimmer-gcwi2Nrk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/slash': '/Users/ram/myacademydask/node_modules/.slash-f5rm7but',
+452 silly reify   '/Users/ram/myacademydask/node_modules/sonner': '/Users/ram/myacademydask/node_modules/.sonner-4MDm3Cft',
+452 silly reify   '/Users/ram/myacademydask/node_modules/source-map': '/Users/ram/myacademydask/node_modules/.source-map-N9OqtsVe',
+452 silly reify   '/Users/ram/myacademydask/node_modules/split': '/Users/ram/myacademydask/node_modules/.split-RYLMIF1e',
+452 silly reify   '/Users/ram/myacademydask/node_modules/stack-trace': '/Users/ram/myacademydask/node_modules/.stack-trace-BA9BLl9T',
+452 silly reify   '/Users/ram/myacademydask/node_modules/stackblur-canvas': '/Users/ram/myacademydask/node_modules/.stackblur-canvas-pTOvv9pf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/stream-combiner': '/Users/ram/myacademydask/node_modules/.stream-combiner-JPf6C1zc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/string-template': '/Users/ram/myacademydask/node_modules/.string-template-RWyqtxoD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/svg-pathdata': '/Users/ram/myacademydask/node_modules/.svg-pathdata-FVIMoSCz',
+452 silly reify   '/Users/ram/myacademydask/node_modules/terminate': '/Users/ram/myacademydask/node_modules/.terminate-XtOFFQ7q',
+452 silly reify   '/Users/ram/myacademydask/node_modules/text-hex': '/Users/ram/myacademydask/node_modules/.text-hex-cIYw7qm1',
+452 silly reify   '/Users/ram/myacademydask/node_modules/text-segmentation': '/Users/ram/myacademydask/node_modules/.text-segmentation-rs4drp70',
+452 silly reify   '/Users/ram/myacademydask/node_modules/thriftrw': '/Users/ram/myacademydask/node_modules/.thriftrw-PXtxPBXC',
+452 silly reify   '/Users/ram/myacademydask/node_modules/through': '/Users/ram/myacademydask/node_modules/.through-7fESdbZa',
+452 silly reify   '/Users/ram/myacademydask/node_modules/triple-beam': '/Users/ram/myacademydask/node_modules/.triple-beam-WgUgX21S',
+452 silly reify   '/Users/ram/myacademydask/node_modules/tsx': '/Users/ram/myacademydask/node_modules/.tsx-lrmwPYQX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/type-fest': '/Users/ram/myacademydask/node_modules/.type-fest-tXMCqksI',
+452 silly reify   '/Users/ram/myacademydask/node_modules/typedarray-to-buffer': '/Users/ram/myacademydask/node_modules/.typedarray-to-buffer-QhpycG0S',
+452 silly reify   '/Users/ram/myacademydask/node_modules/undici': '/Users/ram/myacademydask/node_modules/.undici-BQMcTmKN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/uglify-js': '/Users/ram/myacademydask/node_modules/.uglify-js-pdQm1jdQ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/universalify': '/Users/ram/myacademydask/node_modules/.universalify-MYRj3Fa5',
+452 silly reify   '/Users/ram/myacademydask/node_modules/unique-string': '/Users/ram/myacademydask/node_modules/.unique-string-92ZQJaj7',
+452 silly reify   '/Users/ram/myacademydask/node_modules/uri-templates': '/Users/ram/myacademydask/node_modules/.uri-templates-LW9nAE0V',
+452 silly reify   '/Users/ram/myacademydask/node_modules/url-template': '/Users/ram/myacademydask/node_modules/.url-template-IrgAFnBD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/utrie': '/Users/ram/myacademydask/node_modules/.utrie-07ySlNZN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/wcwidth': '/Users/ram/myacademydask/node_modules/.wcwidth-OZKzYP1l',
+452 silly reify   '/Users/ram/myacademydask/node_modules/winston': '/Users/ram/myacademydask/node_modules/.winston-NGgY5Efl',
+452 silly reify   '/Users/ram/myacademydask/node_modules/winston-transport': '/Users/ram/myacademydask/node_modules/.winston-transport-vqgOYNzj',
+452 silly reify   '/Users/ram/myacademydask/node_modules/wordwrap': '/Users/ram/myacademydask/node_modules/.wordwrap-VWWI3837',
+452 silly reify   '/Users/ram/myacademydask/node_modules/wrap-ansi': '/Users/ram/myacademydask/node_modules/.wrap-ansi-qHTSBqtb',
+452 silly reify   '/Users/ram/myacademydask/node_modules/xdg-basedir': '/Users/ram/myacademydask/node_modules/.xdg-basedir-MEXWOkvo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/write-file-atomic': '/Users/ram/myacademydask/node_modules/.write-file-atomic-r76EbR2q',
+452 silly reify   '/Users/ram/myacademydask/node_modules/xorshift': '/Users/ram/myacademydask/node_modules/.xorshift-68pk3gvo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/yauzl': '/Users/ram/myacademydask/node_modules/.yauzl-oenjfH7z',
+452 silly reify   '/Users/ram/myacademydask/node_modules/yoctocolors-cjs': '/Users/ram/myacademydask/node_modules/.yoctocolors-cjs-GUXYjI1l',
+452 silly reify   '/Users/ram/myacademydask/node_modules/zod': '/Users/ram/myacademydask/node_modules/.zod-c3WjFTh4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/zod-to-json-schema': '/Users/ram/myacademydask/node_modules/.zod-to-json-schema-LrCCvN7a',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@asteasolutions/zod-to-openapi': '/Users/ram/myacademydask/node_modules/@asteasolutions/.zod-to-openapi-fnE8Or9c',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@dabh/diagnostics': '/Users/ram/myacademydask/node_modules/@dabh/.diagnostics-HGfGOmXG',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@emnapi/runtime': '/Users/ram/myacademydask/node_modules/@emnapi/.runtime-fbYBmx1C',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/aix-ppc64': '/Users/ram/myacademydask/node_modules/@esbuild/.aix-ppc64-OrVQ7rIP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/android-arm': '/Users/ram/myacademydask/node_modules/@esbuild/.android-arm-kugT3njl',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/android-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.android-arm64-dG2cK5Hf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/android-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.android-x64-wlUMLZTV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/darwin-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.darwin-arm64-GUxFIr7F',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/darwin-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.darwin-x64-dVWqSOlw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/freebsd-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.freebsd-arm64-wCc7xq1G',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/freebsd-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.freebsd-x64-7kkOEyIL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-arm': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-arm-GRgww7VA',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-arm64-MS3Kwj6s',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-ia32': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-ia32-EDhnnCpD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-loong64': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-loong64-mn6wVadP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-mips64el': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-mips64el-xXIVe0O8',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-ppc64': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-ppc64-DzrGdDjL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-riscv64': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-riscv64-ox4Hjx5A',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-s390x': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-s390x-VE7BMEEu',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/netbsd-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.netbsd-arm64-6KIAf8k3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/netbsd-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.netbsd-x64-1k6PMsrH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/linux-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.linux-x64-X6jtgA5p',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/openbsd-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.openbsd-arm64-UpOp3cMh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/openbsd-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.openbsd-x64-R7wBO3IZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/openharmony-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.openharmony-arm64-g4EnXNrV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/sunos-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.sunos-x64-k37waWZH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/win32-arm64': '/Users/ram/myacademydask/node_modules/@esbuild/.win32-arm64-KT1EOP08',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/win32-x64': '/Users/ram/myacademydask/node_modules/@esbuild/.win32-x64-LWCa66ez',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@esbuild/win32-ia32': '/Users/ram/myacademydask/node_modules/@esbuild/.win32-ia32-dHb6cy36',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@colors/colors': '/Users/ram/myacademydask/node_modules/@colors/.colors-LRceYAvV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/analytics': '/Users/ram/myacademydask/node_modules/@firebase/.analytics-wzpcvFDP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/analytics-compat': '/Users/ram/myacademydask/node_modules/@firebase/.analytics-compat-RJwWsgDL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/analytics-types': '/Users/ram/myacademydask/node_modules/@firebase/.analytics-types-Ko6BuKyx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app': '/Users/ram/myacademydask/node_modules/@firebase/.app-mkldrta5',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-check': '/Users/ram/myacademydask/node_modules/@firebase/.app-check-3OBAe5pA',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-check-interop-types': '/Users/ram/myacademydask/node_modules/@firebase/.app-check-interop-types-ZmwHtWex',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-check-compat': '/Users/ram/myacademydask/node_modules/@firebase/.app-check-compat-L0GZuVXs',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-check-types': '/Users/ram/myacademydask/node_modules/@firebase/.app-check-types-gZ1fxHCr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-compat': '/Users/ram/myacademydask/node_modules/@firebase/.app-compat-eULdQtsy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/app-types': '/Users/ram/myacademydask/node_modules/@firebase/.app-types-HK2lD31B',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/auth-compat': '/Users/ram/myacademydask/node_modules/@firebase/.auth-compat-2hcIJfp0',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/auth-interop-types': '/Users/ram/myacademydask/node_modules/@firebase/.auth-interop-types-6HhQaHLb',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/auth-types': '/Users/ram/myacademydask/node_modules/@firebase/.auth-types-zbQpSwxk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/component': '/Users/ram/myacademydask/node_modules/@firebase/.component-JRcWCyNS',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/data-connect': '/Users/ram/myacademydask/node_modules/@firebase/.data-connect-8UujWJTH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/database': '/Users/ram/myacademydask/node_modules/@firebase/.database-Y9YjYgfh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/database-compat': '/Users/ram/myacademydask/node_modules/@firebase/.database-compat-UVuA85MX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/database-types': '/Users/ram/myacademydask/node_modules/@firebase/.database-types-kjtOKURL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/firestore': '/Users/ram/myacademydask/node_modules/@firebase/.firestore-LpuOMwKJ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/firestore-compat': '/Users/ram/myacademydask/node_modules/@firebase/.firestore-compat-OQ49X0yO',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/firestore-types': '/Users/ram/myacademydask/node_modules/@firebase/.firestore-types-aQbVkq4X',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/functions': '/Users/ram/myacademydask/node_modules/@firebase/.functions-7WRWs4S6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/functions-compat': '/Users/ram/myacademydask/node_modules/@firebase/.functions-compat-DTcp7AHC',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/functions-types': '/Users/ram/myacademydask/node_modules/@firebase/.functions-types-UArYhZJS',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/installations': '/Users/ram/myacademydask/node_modules/@firebase/.installations-OfxtPAy3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/installations-compat': '/Users/ram/myacademydask/node_modules/@firebase/.installations-compat-llBJiPXX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/installations-types': '/Users/ram/myacademydask/node_modules/@firebase/.installations-types-WOV9G6QL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/logger': '/Users/ram/myacademydask/node_modules/@firebase/.logger-E52r2mKS',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/messaging': '/Users/ram/myacademydask/node_modules/@firebase/.messaging-n5kgVnQV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/messaging-compat': '/Users/ram/myacademydask/node_modules/@firebase/.messaging-compat-N5YwNq6w',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/messaging-interop-types': '/Users/ram/myacademydask/node_modules/@firebase/.messaging-interop-types-zc07Vli8',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/performance': '/Users/ram/myacademydask/node_modules/@firebase/.performance-1B7q93mM',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/performance-compat': '/Users/ram/myacademydask/node_modules/@firebase/.performance-compat-1pOW1KHF',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/performance-types': '/Users/ram/myacademydask/node_modules/@firebase/.performance-types-BPPBhSbO',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/remote-config': '/Users/ram/myacademydask/node_modules/@firebase/.remote-config-yRwl618S',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/remote-config-compat': '/Users/ram/myacademydask/node_modules/@firebase/.remote-config-compat-jfVaoOUi',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/remote-config-types': '/Users/ram/myacademydask/node_modules/@firebase/.remote-config-types-fTG3ifkF',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/storage': '/Users/ram/myacademydask/node_modules/@firebase/.storage-4LoODWPH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/storage-compat': '/Users/ram/myacademydask/node_modules/@firebase/.storage-compat-rvJIOfxp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/storage-types': '/Users/ram/myacademydask/node_modules/@firebase/.storage-types-hnyapmXJ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/util': '/Users/ram/myacademydask/node_modules/@firebase/.util-MvCLjoHc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/vertexai-preview': '/Users/ram/myacademydask/node_modules/@firebase/.vertexai-preview-9yrNA4bD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@firebase/webchannel-wrapper': '/Users/ram/myacademydask/node_modules/@firebase/.webchannel-wrapper-EPQfGhlM',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/ai': '/Users/ram/myacademydask/node_modules/@genkit-ai/.ai-Do1gtaoU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/core': '/Users/ram/myacademydask/node_modules/@genkit-ai/.core-yBamBNW2',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/google-cloud': '/Users/ram/myacademydask/node_modules/@genkit-ai/.google-cloud-CSG5FPsC',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/googleai': '/Users/ram/myacademydask/node_modules/@genkit-ai/.googleai-d9kn6CUM',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/next': '/Users/ram/myacademydask/node_modules/@genkit-ai/.next-P2X9EVLh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/telemetry-server': '/Users/ram/myacademydask/node_modules/@genkit-ai/.telemetry-server-zmH3Ai6F',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@genkit-ai/tools-common': '/Users/ram/myacademydask/node_modules/@genkit-ai/.tools-common-tg2P6Hsk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google/generative-ai': '/Users/ram/myacademydask/node_modules/@google/.generative-ai-D8po26gB',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/logging': '/Users/ram/myacademydask/node_modules/@google-cloud/.logging-n8Dyqv7y',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/logging-winston': '/Users/ram/myacademydask/node_modules/@google-cloud/.logging-winston-9paah8HK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/opentelemetry-cloud-monitoring-exporter': '/Users/ram/myacademydask/node_modules/@google-cloud/.opentelemetry-cloud-monitoring-exporter-u4KQcTic',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/opentelemetry-cloud-trace-exporter': '/Users/ram/myacademydask/node_modules/@google-cloud/.opentelemetry-cloud-trace-exporter-Bt65qoTj',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/opentelemetry-resource-util': '/Users/ram/myacademydask/node_modules/@google-cloud/.opentelemetry-resource-util-xozmfDKV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/precise-date': '/Users/ram/myacademydask/node_modules/@google-cloud/.precise-date-Wn10jlAA',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@hookform/resolvers': '/Users/ram/myacademydask/node_modules/@hookform/.resolvers-n8oLKvyW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-darwin-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-darwin-x64-iTjvM9xn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-darwin-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-darwin-x64-TLerKtE4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-arm': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linux-arm-KKijd3rR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-arm64': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linux-arm64-lnzKkx5x',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-ppc64': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linux-ppc64-xvYtaXPk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linux-x64-C1Ds1ZII',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linux-s390x': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linux-s390x-UlNc4hYw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linuxmusl-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linuxmusl-x64-IHADcVIr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-libvips-linuxmusl-arm64': '/Users/ram/myacademydask/node_modules/@img/.sharp-libvips-linuxmusl-arm64-i6nGXIcN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linux-arm': '/Users/ram/myacademydask/node_modules/@img/.sharp-linux-arm-6WgLFc31',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linux-arm64': '/Users/ram/myacademydask/node_modules/@img/.sharp-linux-arm64-xwp3aY6B',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linux-ppc64': '/Users/ram/myacademydask/node_modules/@img/.sharp-linux-ppc64-AwJZy3TE',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linux-s390x': '/Users/ram/myacademydask/node_modules/@img/.sharp-linux-s390x-XfwztzSf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linuxmusl-arm64': '/Users/ram/myacademydask/node_modules/@img/.sharp-linuxmusl-arm64-NV5hsUBB',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linux-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-linux-x64-I8hZevXY',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-linuxmusl-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-linuxmusl-x64-GQfx5Eio',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-wasm32': '/Users/ram/myacademydask/node_modules/@img/.sharp-wasm32-R1VQirnc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-win32-arm64': '/Users/ram/myacademydask/node_modules/@img/.sharp-win32-arm64-pMai2Ju1',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-win32-ia32': '/Users/ram/myacademydask/node_modules/@img/.sharp-win32-ia32-8kGONrwx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@img/sharp-win32-x64': '/Users/ram/myacademydask/node_modules/@img/.sharp-win32-x64-ennPSZTn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/checkbox': '/Users/ram/myacademydask/node_modules/@inquirer/.checkbox-Zu7nLs8g',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/core': '/Users/ram/myacademydask/node_modules/@inquirer/.core-UNnra69l',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/confirm': '/Users/ram/myacademydask/node_modules/@inquirer/.confirm-7dEjNnUZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/editor': '/Users/ram/myacademydask/node_modules/@inquirer/.editor-K7muY6un',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/expand': '/Users/ram/myacademydask/node_modules/@inquirer/.expand-joDjGkOl',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/external-editor': '/Users/ram/myacademydask/node_modules/@inquirer/.external-editor-LH8BbfHR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/input': '/Users/ram/myacademydask/node_modules/@inquirer/.input-X2I70ajz',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/figures': '/Users/ram/myacademydask/node_modules/@inquirer/.figures-7MI877UP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/number': '/Users/ram/myacademydask/node_modules/@inquirer/.number-arG4EbKk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/password': '/Users/ram/myacademydask/node_modules/@inquirer/.password-WGImGVJQ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/prompts': '/Users/ram/myacademydask/node_modules/@inquirer/.prompts-eE0ZcPvn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/rawlist': '/Users/ram/myacademydask/node_modules/@inquirer/.rawlist-uXbKaRHy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/search': '/Users/ram/myacademydask/node_modules/@inquirer/.search-OlCfymnw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/select': '/Users/ram/myacademydask/node_modules/@inquirer/.select-fhA1Q8X5',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@inquirer/type': '/Users/ram/myacademydask/node_modules/@inquirer/.type-nFlxYo1s',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@modelcontextprotocol/sdk': '/Users/ram/myacademydask/node_modules/@modelcontextprotocol/.sdk-t1l0XhHZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/env': '/Users/ram/myacademydask/node_modules/@next/.env-opy9xDNJ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-darwin-arm64': '/Users/ram/myacademydask/node_modules/@next/.swc-darwin-arm64-XaMCp37i',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-darwin-x64': '/Users/ram/myacademydask/node_modules/@next/.swc-darwin-x64-ofSMQnjJ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-linux-arm64-gnu': '/Users/ram/myacademydask/node_modules/@next/.swc-linux-arm64-gnu-LfBJysGU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-linux-arm64-musl': '/Users/ram/myacademydask/node_modules/@next/.swc-linux-arm64-musl-NiYzmzIL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-linux-x64-gnu': '/Users/ram/myacademydask/node_modules/@next/.swc-linux-x64-gnu-Rp89BNrw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-linux-x64-musl': '/Users/ram/myacademydask/node_modules/@next/.swc-linux-x64-musl-1wXVu2NB',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-win32-arm64-msvc': '/Users/ram/myacademydask/node_modules/@next/.swc-win32-arm64-msvc-xSG7VZQa',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@next/swc-win32-x64-msvc': '/Users/ram/myacademydask/node_modules/@next/.swc-win32-x64-msvc-zT9jTfhL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/api-logs': '/Users/ram/myacademydask/node_modules/@opentelemetry/.api-logs-PXbl4MuT',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/auto-instrumentations-node': '/Users/ram/myacademydask/node_modules/@opentelemetry/.auto-instrumentations-node-QVRyTnfK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/context-async-hooks': '/Users/ram/myacademydask/node_modules/@opentelemetry/.context-async-hooks-SEhU2ciw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/core': '/Users/ram/myacademydask/node_modules/@opentelemetry/.core-iKKdC8sq',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-jaeger': '/Users/ram/myacademydask/node_modules/@opentelemetry/.exporter-jaeger-O3NE37ip',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-trace-otlp-grpc': '/Users/ram/myacademydask/node_modules/@opentelemetry/.exporter-trace-otlp-grpc-OR1D5sZU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-trace-otlp-http': '/Users/ram/myacademydask/node_modules/@opentelemetry/.exporter-trace-otlp-http-UAPmBFOw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-trace-otlp-proto': '/Users/ram/myacademydask/node_modules/@opentelemetry/.exporter-trace-otlp-proto-KEXnnNJX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/exporter-zipkin': '/Users/ram/myacademydask/node_modules/@opentelemetry/.exporter-zipkin-ZXU0WEbH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-fRL3A693',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-amqplib': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-amqplib-c2t5i2zW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-aws-lambda': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-aws-lambda-fO9kpd2l',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-aws-sdk': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-aws-sdk-esQmz3FD',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-bunyan': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-bunyan-c1pGeeQW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-cassandra-driver': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-cassandra-driver-LUR6lVvZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-connect': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-connect-qv2rrf3h',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-cucumber': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-cucumber-YYA6JAMK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-dataloader': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-dataloader-Ks7yK0Jc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-dns': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-dns-43upmyWQ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-express': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-express-xPBEzP8j',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-fastify': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-fastify-BWdWWTCH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-fs': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-fs-RXbKEZVS',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-generic-pool': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-generic-pool-7XOsiXpP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-graphql': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-graphql-aniLC46n',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-grpc': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-grpc-Z8tkNMfn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-hapi': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-hapi-zs8xRAc3',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-http': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-http-LthzUT14',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-ioredis': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-ioredis-3scb23EP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-kafkajs': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-kafkajs-z1zYbCQX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-knex': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-knex-sXl07Bxr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-koa': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-koa-Ct88yJXA',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-lru-memoizer': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-lru-memoizer-2htPzO7s',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-memcached': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-memcached-JWpeYJTV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mongodb': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-mongodb-IKhOPIHW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mongoose': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-mongoose-UgmIHPDm',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mysql': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-mysql-0wWhaAGk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-mysql2': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-mysql2-yEryZJRz',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-nestjs-core': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-nestjs-core-bain8p7M',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-net': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-net-LcFuHl8V',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-pg': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-pg-4P8RlW5J',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-pino': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-pino-4T9DWFuR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-redis': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-redis-M4C1hOO1',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-restify': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-restify-TXfyGlYm',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-redis-4': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-redis-4-BJ58AlLi',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-router': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-router-E6YtTScf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-socket.io': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-socket.io-madovOP4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-tedious': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-tedious-vStJe86b',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-undici': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-undici-zl2InjKN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/instrumentation-winston': '/Users/ram/myacademydask/node_modules/@opentelemetry/.instrumentation-winston-YH7zMj1A',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/otlp-exporter-base': '/Users/ram/myacademydask/node_modules/@opentelemetry/.otlp-exporter-base-r06igAFR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/otlp-grpc-exporter-base': '/Users/ram/myacademydask/node_modules/@opentelemetry/.otlp-grpc-exporter-base-uC6xxIEj',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/otlp-transformer': '/Users/ram/myacademydask/node_modules/@opentelemetry/.otlp-transformer-6QEUt7vh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagation-utils': '/Users/ram/myacademydask/node_modules/@opentelemetry/.propagation-utils-rQtVNlAn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagator-aws-xray': '/Users/ram/myacademydask/node_modules/@opentelemetry/.propagator-aws-xray-ChvNjV7q',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagator-b3': '/Users/ram/myacademydask/node_modules/@opentelemetry/.propagator-b3-ZEOktBai',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/propagator-jaeger': '/Users/ram/myacademydask/node_modules/@opentelemetry/.propagator-jaeger-KObXxt6N',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/redis-common': '/Users/ram/myacademydask/node_modules/@opentelemetry/.redis-common-YHNcJtmv',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-alibaba-cloud': '/Users/ram/myacademydask/node_modules/@opentelemetry/.resource-detector-alibaba-cloud-Ff3VHJLP',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-aws': '/Users/ram/myacademydask/node_modules/@opentelemetry/.resource-detector-aws-0wCDfW2v',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-azure': '/Users/ram/myacademydask/node_modules/@opentelemetry/.resource-detector-azure-CLy6R5hm',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-container': '/Users/ram/myacademydask/node_modules/@opentelemetry/.resource-detector-container-WLA6zbQH',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resource-detector-gcp': '/Users/ram/myacademydask/node_modules/@opentelemetry/.resource-detector-gcp-CTlRnDjp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/resources': '/Users/ram/myacademydask/node_modules/@opentelemetry/.resources-lFU4yKtV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-logs': '/Users/ram/myacademydask/node_modules/@opentelemetry/.sdk-logs-S3ZMzuZ2',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-metrics': '/Users/ram/myacademydask/node_modules/@opentelemetry/.sdk-metrics-TWGgbF0B',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-node': '/Users/ram/myacademydask/node_modules/@opentelemetry/.sdk-node-L8On87zx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-trace-base': '/Users/ram/myacademydask/node_modules/@opentelemetry/.sdk-trace-base-oYWfY1xg',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sdk-trace-node': '/Users/ram/myacademydask/node_modules/@opentelemetry/.sdk-trace-node-SVeCK6j9',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/semantic-conventions': '/Users/ram/myacademydask/node_modules/@opentelemetry/.semantic-conventions-VnYRNogU',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@opentelemetry/sql-common': '/Users/ram/myacademydask/node_modules/@opentelemetry/.sql-common-hFaVWqto',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/primitive': '/Users/ram/myacademydask/node_modules/@radix-ui/.primitive-ZMKVxaz6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-accordion': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-accordion-Hrqy39Nf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-alert-dialog': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-alert-dialog-GLuCcLVV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-checkbox': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-checkbox-uhTCJmJh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-collapsible': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-collapsible-SBvGL45v',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-dialog': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-dialog-iLCePLVa',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-dismissable-layer': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-dismissable-layer-7xu5pA1c',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-dropdown-menu': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-dropdown-menu-EEWldl1k',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-focus-guards': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-focus-guards-KjGnomus',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-menu': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-menu-l1IelEir',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-menubar': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-menubar-AZwMnAU9',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-popper': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-popper-I2vbYXNT',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-popover': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-popover-OvJP0ezQ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-presence': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-presence-3EYolFJo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-radio-group': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-radio-group-INjzT29Z',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-roving-focus': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-roving-focus-mlCy3lt0',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-select': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-select-Fq6aiJUw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-scroll-area': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-scroll-area-cy2MdIyO',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-slider': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-slider-5K4P7RCR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-switch': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-switch-YjDNc3lk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-tabs': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-tabs-wE7YOGSL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-toast': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-toast-ORPwfG3F',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@radix-ui/react-tooltip': '/Users/ram/myacademydask/node_modules/@radix-ui/.react-tooltip-YqHKLmlo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@trpc/server': '/Users/ram/myacademydask/node_modules/@trpc/.server-NK5SV3uo',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/aws-lambda': '/Users/ram/myacademydask/node_modules/@types/.aws-lambda-eTKqnof6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/bunyan': '/Users/ram/myacademydask/node_modules/@types/.bunyan-QqKqlNuJ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/handlebars': '/Users/ram/myacademydask/node_modules/@types/.handlebars-ykFrYLWx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/jspdf': '/Users/ram/myacademydask/node_modules/@types/.jspdf-KndWWbRg',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/memcached': '/Users/ram/myacademydask/node_modules/@types/.memcached-Eo4BgqqW',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/mysql': '/Users/ram/myacademydask/node_modules/@types/.mysql-0WvjCrHI',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/node': '/Users/ram/myacademydask/node_modules/@types/.node-2YFnadKf',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/pg': '/Users/ram/myacademydask/node_modules/@types/.pg-oyX07tqL',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/pg-pool': '/Users/ram/myacademydask/node_modules/@types/.pg-pool-IQLJfmuc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/raf': '/Users/ram/myacademydask/node_modules/@types/.raf-nXjhLnoB',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/react': '/Users/ram/myacademydask/node_modules/@types/.react-0sgmy2BT',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/shimmer': '/Users/ram/myacademydask/node_modules/@types/.shimmer-ATnRGKkB',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/tedious': '/Users/ram/myacademydask/node_modules/@types/.tedious-Wwenxcjp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/triple-beam': '/Users/ram/myacademydask/node_modules/@types/.triple-beam-N490IglV',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@types/yauzl': '/Users/ram/myacademydask/node_modules/@types/.yauzl-12hk4AJK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@yarnpkg/lockfile': '/Users/ram/myacademydask/node_modules/@yarnpkg/.lockfile-tzozsQ4w',
+452 silly reify   '/Users/ram/myacademydask/node_modules/acorn': '/Users/ram/myacademydask/node_modules/.acorn-7jUMluRq',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/acorn': '/Users/ram/myacademydask/node_modules/.bin/.acorn-kTUZVJJr',
+452 silly reify   '/Users/ram/myacademydask/node_modules/cssesc': '/Users/ram/myacademydask/node_modules/.cssesc-Q5V21squ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/cssesc': '/Users/ram/myacademydask/node_modules/.bin/.cssesc-paoaNaKp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/fast-xml-parser': '/Users/ram/myacademydask/node_modules/.fast-xml-parser-v5yPP7ML',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/fxparser': '/Users/ram/myacademydask/node_modules/.bin/.fxparser-UQXVTy84',
+452 silly reify   '/Users/ram/myacademydask/node_modules/gaxios/node_modules/uuid': '/Users/ram/myacademydask/node_modules/gaxios/node_modules/.uuid-pnpqSGQx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/gaxios/node_modules/.bin/uuid': '/Users/ram/myacademydask/node_modules/gaxios/node_modules/.bin/.uuid-ZJQCz30Y',
+452 silly reify   '/Users/ram/myacademydask/node_modules/glob': '/Users/ram/myacademydask/node_modules/.glob-L1UlEnZI',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/glob': '/Users/ram/myacademydask/node_modules/.bin/.glob-xO6mybXh',
+452 silly reify   '/Users/ram/myacademydask/node_modules/google-gax/node_modules/uuid': '/Users/ram/myacademydask/node_modules/google-gax/node_modules/.uuid-umD7murx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/google-gax/node_modules/.bin/uuid': '/Users/ram/myacademydask/node_modules/google-gax/node_modules/.bin/.uuid-8kK2L5SN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/jiti': '/Users/ram/myacademydask/node_modules/.jiti-s7m9kjaE',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/jiti': '/Users/ram/myacademydask/node_modules/.bin/.jiti-ej01sMmX',
+452 silly reify   '/Users/ram/myacademydask/node_modules/js-yaml': '/Users/ram/myacademydask/node_modules/.js-yaml-dwLkF6hm',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/js-yaml': '/Users/ram/myacademydask/node_modules/.bin/.js-yaml-XfZ4YvhZ',
+452 silly reify   '/Users/ram/myacademydask/node_modules/json5': '/Users/ram/myacademydask/node_modules/.json5-XUURd7p6',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/json5': '/Users/ram/myacademydask/node_modules/.bin/.json5-JMGMpZqy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/loose-envify': '/Users/ram/myacademydask/node_modules/.loose-envify-1bXlwxGa',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/loose-envify': '/Users/ram/myacademydask/node_modules/.bin/.loose-envify-q2orcUYK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/mime': '/Users/ram/myacademydask/node_modules/.mime-eCt3OxTA',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/mime': '/Users/ram/myacademydask/node_modules/.bin/.mime-LF3Lyzaz',
+452 silly reify   '/Users/ram/myacademydask/node_modules/nanoid': '/Users/ram/myacademydask/node_modules/.nanoid-s05C3fXF',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/nanoid': '/Users/ram/myacademydask/node_modules/.bin/.nanoid-hsPsuw8t',
+452 silly reify   '/Users/ram/myacademydask/node_modules/resolve': '/Users/ram/myacademydask/node_modules/.resolve-RRL9oHYB',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/resolve': '/Users/ram/myacademydask/node_modules/.bin/.resolve-DqRYcLV1',
+452 silly reify   '/Users/ram/myacademydask/node_modules/router/node_modules/path-to-regexp': '/Users/ram/myacademydask/node_modules/router/node_modules/.path-to-regexp-D7gQT3ad',
+452 silly reify   '/Users/ram/myacademydask/node_modules/semver': '/Users/ram/myacademydask/node_modules/.semver-SINzySqk',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/semver': '/Users/ram/myacademydask/node_modules/.bin/.semver-oQgngRBO',
+452 silly reify   '/Users/ram/myacademydask/node_modules/send/node_modules/mime': '/Users/ram/myacademydask/node_modules/send/node_modules/.mime-ol11jNq4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/send/node_modules/.bin/mime': '/Users/ram/myacademydask/node_modules/send/node_modules/.bin/.mime-Ojsf9KvN',
+452 silly reify   '/Users/ram/myacademydask/node_modules/sucrase': '/Users/ram/myacademydask/node_modules/.sucrase-QFhc2pRc',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/sucrase': '/Users/ram/myacademydask/node_modules/.bin/.sucrase-f51LLvYp',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/sucrase-node': '/Users/ram/myacademydask/node_modules/.bin/.sucrase-node-TawDkapn',
+452 silly reify   '/Users/ram/myacademydask/node_modules/tailwindcss': '/Users/ram/myacademydask/node_modules/.tailwindcss-2UyGzwew',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tailwind': '/Users/ram/myacademydask/node_modules/.bin/.tailwind-nGLdGMM4',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tailwindcss': '/Users/ram/myacademydask/node_modules/.bin/.tailwindcss-5HddC8ui',
+452 silly reify   '/Users/ram/myacademydask/node_modules/teeny-request/node_modules/uuid': '/Users/ram/myacademydask/node_modules/teeny-request/node_modules/.uuid-L1MPtcdx',
+452 silly reify   '/Users/ram/myacademydask/node_modules/teeny-request/node_modules/.bin/uuid': '/Users/ram/myacademydask/node_modules/teeny-request/node_modules/.bin/.uuid-bJpmV3hK',
+452 silly reify   '/Users/ram/myacademydask/node_modules/typescript': '/Users/ram/myacademydask/node_modules/.typescript-l0afjPhy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tsc': '/Users/ram/myacademydask/node_modules/.bin/.tsc-o8Vu6xU0',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/tsserver': '/Users/ram/myacademydask/node_modules/.bin/.tsserver-3UlWL6BR',
+452 silly reify   '/Users/ram/myacademydask/node_modules/uuid': '/Users/ram/myacademydask/node_modules/.uuid-HdUBmEPm',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/uuid': '/Users/ram/myacademydask/node_modules/.bin/.uuid-oamhtgMy',
+452 silly reify   '/Users/ram/myacademydask/node_modules/which': '/Users/ram/myacademydask/node_modules/.which-8OhWeoxw',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/node-which': '/Users/ram/myacademydask/node_modules/.bin/.node-which-B5oT9bea',
+452 silly reify   '/Users/ram/myacademydask/node_modules/yaml': '/Users/ram/myacademydask/node_modules/.yaml-4eBxebwY',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/yaml': '/Users/ram/myacademydask/node_modules/.bin/.yaml-VAui9IXO',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/storage/node_modules/uuid': '/Users/ram/myacademydask/node_modules/@google-cloud/storage/node_modules/.uuid-LT1Qbd79',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@google-cloud/storage/node_modules/.bin/uuid': '/Users/ram/myacademydask/node_modules/@google-cloud/storage/node_modules/.bin/.uuid-hgWdABQG',
+452 silly reify   '/Users/ram/myacademydask/node_modules/@grpc/proto-loader': '/Users/ram/myacademydask/node_modules/@grpc/.proto-loader-Q3R0nGlE',
+452 silly reify   '/Users/ram/myacademydask/node_modules/.bin/proto-loader-gen-types': '/Users/ram/myacademydask/node_modules/.bin/.proto-loader-gen-types-n6Rv687z'
+452 silly reify }
+453 verbose stack Error: ENOTEMPTY: directory not empty, rename '/Users/ram/myacademydask/node_modules/colorspace' -> '/Users/ram/myacademydask/node_modules/.colorspace-8XZf7rhq'
+453 verbose stack     at async Object.rename (node:internal/fs/promises:784:10)
+453 verbose stack     at async moveFile (/usr/local/lib/node_modules/npm/node_modules/@npmcli/fs/lib/move-file.js:30:5)
+453 verbose stack     at async Promise.allSettled (index 25)
+453 verbose stack     at async [reifyPackages] (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:325:11)
+453 verbose stack     at async Arborist.reify (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:142:5)
+453 verbose stack     at async Install.exec (/usr/local/lib/node_modules/npm/lib/commands/install.js:150:5)
+453 verbose stack     at async Npm.exec (/usr/local/lib/node_modules/npm/lib/npm.js:207:9)
+453 verbose stack     at async module.exports (/usr/local/lib/node_modules/npm/lib/cli/entry.js:74:5)
+454 error code ENOTEMPTY
+455 error syscall rename
+456 error path /Users/ram/myacademydask/node_modules/colorspace
+457 error dest /Users/ram/myacademydask/node_modules/.colorspace-8XZf7rhq
+458 error errno -66
+459 error ENOTEMPTY: directory not empty, rename '/Users/ram/myacademydask/node_modules/colorspace' -> '/Users/ram/myacademydask/node_modules/.colorspace-8XZf7rhq'
+460 silly unfinished npm timer reify 1759690317778
+461 silly unfinished npm timer reify:retireShallow 1759690318278
+462 verbose cwd /Users/ram/myacademydask
+463 verbose os Darwin 25.0.0
+464 verbose node v22.17.0
+465 verbose npm  v10.9.2
+466 verbose exit -66
+467 verbose code -66
+468 error A complete log of this run can be found in: /Users/ram/myacademydask/.npm-cache/_logs/2025-10-05T18_51_57_390Z-debug-0.log

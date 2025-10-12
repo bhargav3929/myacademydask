@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { SignInCard } from "@/components/ui/sign-in-card";
 import { useRouter } from "next/navigation";
 import { httpsCallable } from 'firebase/functions';
@@ -57,14 +57,11 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, email, data.password);
         const user = userCredential.user;
 
-        // 1. Force token refresh to get latest claims (including role from syncUserRole)
-        const idToken = await user.getIdToken(true);
-
-        // 2. Call syncUserRole Cloud Function to ensure custom claims are set/updated
+        // 1. Call syncUserRole Cloud Function to ensure custom claims are set/updated
         const syncUserRoleFn = httpsCallable(functions, 'syncUserRole');
         const syncResult: any = await syncUserRoleFn(); // No data needed for syncUserRole function
 
-        if (syncResult.data.error) {
+        if (syncResult?.data?.error) {
           toast({
               variant: "destructive",
               title: "Login Failed",
@@ -74,7 +71,22 @@ export default function LoginPage() {
           return;
         }
 
-        const role = syncResult.data.role;
+        // 2. Refresh the ID token *after* syncing to capture latest custom claims
+        const tokenResult = await user.getIdTokenResult(true);
+        const idToken = tokenResult.token;
+        const roleFromClaims = tokenResult.claims.role as string | undefined;
+
+        let role = (syncResult?.data?.role as string | undefined) ?? roleFromClaims;
+
+        if (!role) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                const userData = userDoc.data();
+                role = (userData?.role as string | undefined) ?? undefined;
+            } catch (firestoreError) {
+                console.error('Failed to read user role from Firestore fallback:', firestoreError);
+            }
+        }
 
         // 3. Call API route to create session cookie
         const sessionResponse = await fetch('/api/login', {

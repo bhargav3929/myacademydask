@@ -1,0 +1,116 @@
+
+> nextn@0.1.0 dev
+> next dev --turbopack --hostname 127.0.0.1 --port 4000
+
+   ▲ Next.js 15.3.3 (Turbopack)
+   - Local:        http://127.0.0.1:4000
+   - Network:      http://127.0.0.1:4000
+
+ ✓ Starting...
+ ✓ Compiled middleware in 388ms
+ ✓ Ready in 1521ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.4s
+ ⨯ Error [FirebaseError]: Firebase: Error (auth/invalid-api-key).
+    at [project]/src/lib/firebase.ts [app-ssr] (ecmascript) (src/lib/firebase.ts:18:21)
+    at [project]/src/contexts/auth-context.tsx [app-ssr] (ecmascript) (src/contexts/auth-context.tsx:5:0)
+  16 | // Initialize Firebase
+  17 | const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+> 18 | const auth = getAuth(app);
+     |                     ^
+  19 | const db = getFirestore(app);
+  20 | const firestore = getFirestore(app); // For legacy compatibility
+  21 | const functions = getFunctions(app); {
+  code: 'auth/invalid-api-key',
+  customData: [Object],
+  digest: '1153775418'
+}
+ GET / 500 in 3061ms
+ ✓ Compiled /favicon.ico in 399ms
+ GET /favicon.ico 200 in 654ms
+   Reload env: .env.local
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload when ./src/lib/firebase.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 718ms
+ GET / 200 in 1089ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 238ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 716ms
+ GET /_next/static/webpack/9ef0208640b9eb63.webpack.hot-update.json 404 in 766ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /client-portal/shipments 404 in 59ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 228ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 737ms
+ GET /login 200 in 765ms
+ GET /login 200 in 54ms
+ ○ Compiling /api/login ...
+ ✓ Compiled /api/login in 638ms
+ POST /api/login 200 in 1717ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.7s
+ GET /dashboard 200 in 3064ms
+ GET /login 200 in 44ms
+ POST /api/login 200 in 489ms
+ GET /dashboard 200 in 190ms
+ GET /login 200 in 38ms
+ ✓ Compiled in 166ms
+ ✓ Compiled in 85ms
+ ✓ Compiled in 1654ms
+ ⚠ Fast Refresh had to perform a full reload when ./src/contexts/auth-context.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /login 200 in 424ms
+ ✓ Compiled in 1ms
+ GET /login 200 in 460ms
+ GET /login 200 in 471ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 446ms
+ ○ Compiling /coach/dashboard ...
+ ✓ Compiled /coach/dashboard in 2.4s
+ GET /coach/dashboard 200 in 2477ms
+ ⚠ Fast Refresh had to perform a full reload when ./src/contexts/auth-context.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 195ms
+ GET /coach/dashboard 404 in 184ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 232ms
+ ⚠ Fast Refresh had to perform a full reload when ./src/contexts/auth-context.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled in 33ms
+ GET /coach/dashboard 404 in 122ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 237ms
+ ✓ Compiled in 856ms
+ ✓ Compiled in 153ms
+ ✓ Compiled in 230ms
+ ✓ Compiled in 244ms
+ ✓ Compiled in 127ms
+ ✓ Compiled in 292ms
+ ✓ Compiled in 189ms
+ ✓ Compiled in 253ms
+ ✓ Compiled in 312ms
+ ✓ Compiled in 270ms
+ ✓ Compiled in 214ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /_next/static/webpack/9ef0208640b9eb63.webpack.hot-update.json 404 in 225ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /auth/login 404 in 82ms
+ GET /login 200 in 279ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 396ms
+ GET /favicon.ico?favicon.56766c03.ico 200 in 225ms
+ ✓ Compiled in 170ms
+ ✓ Compiled in 260ms
+ ✓ Compiled in 1060ms
+ ✓ Compiled in 470ms
+ ✓ Compiled in 512ms
+ ✓ Compiled in 758ms
+ ✓ Compiled in 309ms
+[Error: unrecognized HMR message "{"event":"ping","page":"/_error"}"]
+ ⨯ uncaughtException: [Error: unrecognized HMR message "{"event":"ping","page":"/_error"}"]
+ ⨯ uncaughtException:  [Error: unrecognized HMR message "{"event":"ping","page":"/_error"}"]
+ GET /_next/static/webpack/af0f3ebf2fbc44e7.webpack.hot-update.json 404 in 64ms
+ ✓ Compiled / in 32ms
+ GET / 200 in 517ms
+ ✓ Compiled in 115ms
+ ✓ Compiled in 119ms
+ ✓ Compiled in 252ms
+ ✓ Compiled in 206ms
+ ✓ Compiled in 459ms
+ ✓ Compiled in 155ms
+[?25h

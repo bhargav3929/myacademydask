@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, functions } from '@/lib/firebase';
+import { auth, functions, db } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
 import { httpsCallable } from 'firebase/functions';
+import { doc, getDoc } from 'firebase/firestore';
 
 export interface AuthUser {
   uid: string;
@@ -38,10 +39,24 @@ const getUserRoleFromToken = async (user: User): Promise<{ role: string | null; 
         await syncUserRole(); 
 
         const idTokenResult = await user.getIdTokenResult(true); // Force refresh to get latest claims
-        return {
-            role: idTokenResult.claims.role as string || null,
-            organizationId: idTokenResult.claims.organizationId as string || null
-        };
+        let role = (idTokenResult.claims.role as string) || null;
+        let organizationId = (idTokenResult.claims.organizationId as string) || null;
+
+        // Fallback: if claims are missing, hydrate from Firestore user document
+        if (!role) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    role = (data?.role as string) || null;
+                    organizationId = (data?.organizationId as string) || organizationId;
+                }
+            } catch (firestoreError) {
+                console.error('Failed to fetch user document for claims fallback:', firestoreError);
+            }
+        }
+
+        return { role, organizationId };
     } catch (error: any) {
         console.error("Error getting user role from token:", error.message);
         return { role: null, organizationId: null };
@@ -58,14 +73,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
-      if (user) {
+     if (user) {
         // Fetch claims, including role, to populate authUser
         const { role, organizationId } = await getUserRoleFromToken(user);
+        // Fetch profile document to hydrate display name consistently across app
+        let resolvedName: string | null = user.displayName || null;
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+          if (userDocSnap.exists()) {
+            const data = userDocSnap.data();
+            // Prefer fullName field when available
+            resolvedName = (data?.fullName as string) || resolvedName;
+          }
+        } catch (firestoreError) {
+          console.error('Failed to fetch user profile for display name:', firestoreError);
+        }
         if (role) {
             const fetchedAuthUser: AuthUser = {
                 uid: user.uid,
                 email: user.email,
-                name: user.displayName || "User",
+                name: resolvedName || "User",
                 role: role as 'owner' | 'coach' | 'super-admin',
             };
             if (organizationId) {
@@ -74,8 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(user);
             setAuthUser(fetchedAuthUser);
         } else {
-            // If no role, consider them not fully authenticated for our app context
-            setUser(null);
+            // Preserve base user state so we can avoid premature redirects while claims sync
+            setUser(user);
             setAuthUser(null);
         }
       } else {
@@ -96,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/signup';
 
-    if (!authUser && !isAuthPage && pathname !== '/' && pathname !== '/pricing') {
+    if (!authUser && !user && !isAuthPage && pathname !== '/' && pathname !== '/pricing') {
       // If not authenticated and not on public/auth pages, redirect to login
       router.replace('/login');
       return;
@@ -135,7 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
-  }, [loading, authUser, pathname, router]);
+  }, [loading, authUser, user, pathname, router]);
 
   const signOut = async () => {
     await firebaseSignOut(auth);

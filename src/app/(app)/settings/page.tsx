@@ -332,26 +332,15 @@ export default function SettingsPage() {
         </MotionDiv>
         
         <MotionDiv variants={itemVariants}>
-            <Card className="border-destructive/50">
-                <CardHeader>
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="size-6 text-destructive" />
-                        <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                    </div>
-                    <CardDescription>
-                        These actions are permanent and cannot be undone.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                   <p className="text-sm text-muted-foreground">
-                        Signing out will end your current session. You will need to log in again to access your dashboard.
+            <Card>
+                <CardContent className="pt-6">
+                   <p className="text-sm text-muted-foreground mb-4">
+                        Signing out will end your current session.
                    </p>
-                </CardContent>
-                <CardFooter className="border-t px-6 py-4">
-                    <Button variant="destructive" onClick={handleSignOut}>
+                   <Button variant="destructive" onClick={handleSignOut}>
                         Sign Out
-                    </Button>
-                </CardFooter>
+                   </Button>
+                </CardContent>
             </Card>
         </MotionDiv>
     </MotionDiv>

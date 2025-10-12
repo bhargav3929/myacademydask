@@ -1,0 +1,62 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.2
+2 info using node@v22.17.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 warn config optional Use `--omit=optional` to exclude optional dependencies, or
+4 warn config `--include=optional` to include them.
+4 warn config
+4 warn config       Default value does install optional deps unless otherwise omitted.
+5 silly config load:file:/Users/ram/myacademydask/.npmrc
+6 silly config load:file:/Users/ram/.npmrc
+7 silly config load:file:/usr/local/etc/npmrc
+8 verbose title npm install
+9 verbose argv "install" "--no-optional" "--ignore-scripts"
+10 verbose logfile logs-max:10 dir:/Users/ram/myacademydask/.npm-cache/_logs/2025-10-05T18_56_27_518Z-
+11 verbose logfile /Users/ram/myacademydask/.npm-cache/_logs/2025-10-05T18_56_27_518Z-debug-0.log
+12 silly logfile done cleaning log files
+13 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+14 silly idealTree buildDeps
+15 silly fetch manifest @genkit-ai/googleai@^1.14.1
+16 silly packumentCache full:https://registry.npmjs.org/@genkit-ai%2fgoogleai cache-miss
+17 http fetch GET https://registry.npmjs.org/@genkit-ai%2fgoogleai attempt 1 failed with ENOTFOUND
+18 http fetch GET https://registry.npmjs.org/@genkit-ai%2fgoogleai attempt 2 failed with ENOTFOUND
+19 http fetch GET https://registry.npmjs.org/@genkit-ai%2fgoogleai attempt 3 failed with ENOTFOUND
+20 silly fetch manifest @genkit-ai/next@^1.14.1
+21 silly packumentCache full:https://registry.npmjs.org/@genkit-ai%2fnext cache-miss
+22 http fetch GET https://registry.npmjs.org/@genkit-ai%2fnext attempt 1 failed with ENOTFOUND
+23 http fetch GET https://registry.npmjs.org/@genkit-ai%2fnext attempt 2 failed with ENOTFOUND
+24 http fetch GET https://registry.npmjs.org/@genkit-ai%2fnext attempt 3 failed with ENOTFOUND
+25 silly fetch manifest @hookform/resolvers@^4.1.3
+26 silly packumentCache full:https://registry.npmjs.org/@hookform%2fresolvers cache-miss
+27 http fetch GET https://registry.npmjs.org/@hookform%2fresolvers attempt 1 failed with ENOTFOUND
+28 http fetch GET https://registry.npmjs.org/@hookform%2fresolvers attempt 2 failed with ENOTFOUND
+29 http fetch GET https://registry.npmjs.org/@hookform%2fresolvers attempt 3 failed with ENOTFOUND
+30 silly fetch manifest @radix-ui/react-accordion@^1.2.3
+31 silly packumentCache full:https://registry.npmjs.org/@radix-ui%2freact-accordion cache-miss
+32 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-accordion attempt 1 failed with ENOTFOUND
+33 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-accordion attempt 2 failed with ENOTFOUND
+34 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-accordion attempt 3 failed with ENOTFOUND
+35 silly fetch manifest @radix-ui/react-alert-dialog@^1.1.6
+36 silly packumentCache full:https://registry.npmjs.org/@radix-ui%2freact-alert-dialog cache-miss
+37 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-alert-dialog attempt 1 failed with ENOTFOUND
+38 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-alert-dialog attempt 2 failed with ENOTFOUND
+39 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-alert-dialog attempt 3 failed with ENOTFOUND
+40 silly fetch manifest @radix-ui/react-avatar@^1.1.3
+41 silly packumentCache full:https://registry.npmjs.org/@radix-ui%2freact-avatar cache-miss
+42 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-avatar attempt 1 failed with ENOTFOUND
+43 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-avatar attempt 2 failed with ENOTFOUND
+44 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-avatar attempt 3 failed with ENOTFOUND
+45 silly fetch manifest @radix-ui/react-checkbox@^1.1.4
+46 silly packumentCache full:https://registry.npmjs.org/@radix-ui%2freact-checkbox cache-miss
+47 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-checkbox attempt 1 failed with ENOTFOUND
+48 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-checkbox attempt 2 failed with ENOTFOUND
+49 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-checkbox attempt 3 failed with ENOTFOUND
+50 silly fetch manifest @radix-ui/react-collapsible@^1.1.11
+51 silly packumentCache full:https://registry.npmjs.org/@radix-ui%2freact-collapsible cache-miss
+52 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-collapsible attempt 1 failed with ENOTFOUND
+53 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-collapsible attempt 2 failed with ENOTFOUND
+54 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-collapsible attempt 3 failed with ENOTFOUND
+55 silly fetch manifest @radix-ui/react-dialog@^1.1.6
+56 silly packumentCache full:https://registry.npmjs.org/@radix-ui%2freact-dialog cache-miss
+57 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-dialog attempt 1 failed with ENOTFOUND
+58 http fetch GET https://registry.npmjs.org/@radix-ui%2freact-dialog attempt 2 failed with ENOTFOUND

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { auth } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -66,7 +67,35 @@ export function AddStadiumDialog() {
     setIsLoading(true);
     
     try {
-      const functions = getFunctions();
+      // Ensure correct region and fresh auth claims before calling the function
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("You must be signed in to perform this action.");
+      }
+
+      // Force-refresh token and verify required claims (role + organizationId)
+      let tokenResult = await user.getIdTokenResult(true);
+      let role = (tokenResult.claims.role as string) || null;
+      let organizationId = (tokenResult.claims.organizationId as string) || null;
+
+      if (!role || !organizationId) {
+        try {
+          const regionalFunctions = getFunctions(undefined, "us-central1");
+          const syncUserRole = httpsCallable(regionalFunctions, "syncUserRole");
+          await syncUserRole();
+          tokenResult = await user.getIdTokenResult(true);
+          role = (tokenResult.claims.role as string) || null;
+          organizationId = (tokenResult.claims.organizationId as string) || null;
+        } catch (_) {
+          // If sync fails, fall through and show a helpful error below
+        }
+      }
+
+      if (role !== "owner" || !organizationId) {
+        throw new Error("Only authenticated owners can perform this action.");
+      }
+
+      const functions = getFunctions(undefined, "us-central1");
       const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
       
       const response = await createStadiumAndCoach(values);

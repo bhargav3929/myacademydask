@@ -257,6 +257,42 @@ export default function DashboardPage() {
                             <AddStadiumDialog />
                         </DialogContent>
                     </Dialog>
+
+                    {/* Desktop Filters moved into header to remove extra whitespace */}
+                    <div className="ml-2 flex items-center justify-end gap-1.5 flex-wrap rounded-full border bg-card p-1">
+                        {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
+                            <Button 
+                                key={filter} 
+                                variant={timeFilter === filter ? 'secondary' : 'ghost'} 
+                                className="rounded-full capitalize text-sm h-8 px-3"
+                                onClick={() => handleFilterClick(filter)} 
+                            >
+                                {filter}
+                            </Button>
+                        ))}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
+                                    className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
+                                    onClick={() => setTimeFilter('custom')}
+                                >
+                                    Custom
+                                    <CalendarIcon className="size-3.5 text-muted-foreground" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 mt-2" align="end">
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={customDateRange?.from}
+                                    selected={customDateRange}
+                                    onSelect={setCustomDateRange}
+                                    numberOfMonths={2}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
             </div>
         </div>
@@ -326,41 +362,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        {/* Desktop Filters */}
-        <div className="hidden md:flex items-center justify-end gap-1.5 flex-wrap rounded-full border bg-card p-1">
-            {([ "today", "weekly", "monthly", "all"] as TimeFilter[]).map(filter => (
-                <Button 
-                    key={filter} 
-                    variant={timeFilter === filter ? 'secondary' : 'ghost'} 
-                    className="rounded-full capitalize text-sm h-8 px-3"
-                    onClick={() => handleFilterClick(filter)} 
-                >
-                    {filter}
-                </Button>
-            ))}
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant={timeFilter === 'custom' ? 'secondary' : 'ghost'} 
-                        className="rounded-full capitalize text-sm h-8 px-3 flex items-center gap-1.5"
-                        onClick={() => setTimeFilter('custom')}
-                    >
-                        Custom
-                        <CalendarIcon className="size-3.5 text-muted-foreground" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 mt-2" align="end">
-                    <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={customDateRange?.from}
-                        selected={customDateRange}
-                        onSelect={setCustomDateRange}
-                        numberOfMonths={2}
-                    />
-                </PopoverContent>
-            </Popover>
-        </div>
+        
 
         {/* Stat Cards */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

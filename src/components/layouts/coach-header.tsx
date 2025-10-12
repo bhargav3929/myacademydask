@@ -54,10 +54,7 @@ export function CoachHeader() {
     return authUser.role === 'coach' ? '/coach/dashboard' : '/dashboard';
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return "";
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  }
+  
 
   const navItems = [
     { name: "Dashboard", url: getDashboardUrl(), icon: LayoutDashboard },
@@ -148,13 +145,7 @@ export function CoachHeader() {
                         <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
                           <Avatar className="size-8">
                             <AvatarFallback>
-                                {loading ? (
-                                    <Skeleton className="size-8 rounded-full" />
-                                ) : authUser ? (
-                                    getInitials(authUser.name) ? getInitials(authUser.name) : <User className="size-5" />
-                                ) : (
-                                    <User className="size-5" />
-                                )}
+                              <User className="size-5" />
                             </AvatarFallback>
                           </Avatar>
                           <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
