@@ -82,7 +82,7 @@ export function OwnerHeader() {
         <div className="flex justify-start">
           <div className="flex items-center bg-background/5 border border-border backdrop-blur-lg p-2 rounded-full shadow-lg">
             <Link href="/" className="flex items-center">
-              <img src="/Untitled design - 2025-09-27T235120.489.png" alt="Myacademydesk Logo" className="h-8 w-10" />
+              <img src="/owner-logo.png" alt="Owner Logo" className="h-8 w-auto object-contain mr-2.5" />
               <span className="text-lg font-bold hidden sm:inline-block">Myacademydesk</span>
             </Link>
           </div>
