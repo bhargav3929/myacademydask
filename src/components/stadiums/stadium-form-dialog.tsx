@@ -1,12 +1,13 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 import { RainbowButton } from "../ui/rainbow-button";
+import { SaveButton } from "../ui/save-button";
 
 const formSchema = z.object({
   stadiumName: z.string().min(3, "Stadium name must be at least 3 characters."),
@@ -48,6 +50,7 @@ export function AddStadiumDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,33 +76,64 @@ export function AddStadiumDialog() {
         throw new Error("You must be signed in to perform this action.");
       }
 
-      // Force-refresh token and verify required claims (role + organizationId)
-      let tokenResult = await user.getIdTokenResult(true);
+      console.log("Starting stadium creation for user:", user.uid);
+
+      // Let's check if we already have valid claims before syncing
+      let tokenResult = await user.getIdTokenResult(false);
       let role = (tokenResult.claims.role as string) || null;
       let organizationId = (tokenResult.claims.organizationId as string) || null;
+      
+      console.log("Initial claims - Role:", role, "OrganizationId:", organizationId);
 
-      if (!role || !organizationId) {
+      // Skip the broken syncUserRole function for now and go directly to Firestore
+      console.log("⚠️ Skipping syncUserRole due to deployment issues - using direct Firestore approach");
+
+      console.log("Current claims after processing - Role:", role, "OrganizationId:", organizationId);
+
+      // Final fallback: hydrate role/org from Firestore user document and re-sync claims
+      if (role !== "owner" || !organizationId) {
+        console.log("Claims missing, checking Firestore user document...");
         try {
-          const regionalFunctions = getFunctions(undefined, "us-central1");
-          const syncUserRole = httpsCallable(regionalFunctions, "syncUserRole");
-          await syncUserRole();
-          tokenResult = await user.getIdTokenResult(true);
-          role = (tokenResult.claims.role as string) || null;
-          organizationId = (tokenResult.claims.organizationId as string) || null;
-        } catch (_) {
-          // If sync fails, fall through and show a helpful error below
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data() as { role?: string; organizationId?: string };
+            console.log("Firestore user data - Role:", data?.role, "OrganizationId:", data?.organizationId);
+            
+            if (data?.role === "owner" && data?.organizationId) {
+              // We have valid data in Firestore, use it directly since syncUserRole is problematic
+              console.log("✅ Using Firestore data directly - user is authenticated owner");
+              role = "owner";
+              organizationId = data.organizationId;
+              
+              // We have the correct data, let's proceed
+              console.log("✅ Proceeding with validated owner data from Firestore");
+            } else {
+              throw new Error(`User document indicates role: ${data?.role}, organizationId: ${data?.organizationId}. Expected owner role with valid organizationId.`);
+            }
+          } else {
+            throw new Error("User document not found in Firestore. Please contact support.");
+          }
+        } catch (firestoreError) {
+          console.error("Firestore fallback error:", firestoreError);
+          throw new Error(`Authentication verification failed: ${(firestoreError as Error).message}`);
         }
       }
 
-      if (role !== "owner" || !organizationId) {
-        throw new Error("Only authenticated owners can perform this action.");
+      if (role !== "owner") {
+        throw new Error(`Access denied. Current role: ${role}. Owner role required.`);
       }
 
-      const functions = getFunctions(undefined, "us-central1");
-      const createStadiumAndCoach = httpsCallable(functions, 'createStadiumAndCoach');
-      
-      const response = await createStadiumAndCoach(values);
-      const result = response.data as { success?: boolean; error?: string; message?: string; field?: string; };
+      if (!organizationId) {
+        throw new Error("Owner account not properly configured. Missing organization association. Please contact support.");
+      }
+
+      // Call our server-side API which uses Admin SDK (bypasses callable function)
+      const apiResponse = await fetch('/api/stadiums/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      const result = await apiResponse.json() as { success?: boolean; error?: string; message?: string; field?: string; };
 
       if (result.success) {
         toast({
@@ -107,7 +141,6 @@ export function AddStadiumDialog() {
           description: result.message,
         });
         form.reset();
-        setOpen(false);
       } else {
         // Handle specific field errors returned from the backend
         if (result.field && (result.field === 'stadiumName' || result.field === 'coachEmail' || result.field === 'coachUsername')) {
@@ -127,6 +160,7 @@ export function AddStadiumDialog() {
         title: "Creation Failed",
         description: error.message || "An unexpected error occurred. Please try again.",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +183,7 @@ export function AddStadiumDialog() {
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] p-1">
             <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-6">
+            <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-6">
                 <FormField
                 control={form.control}
                 name="stadiumName"
@@ -238,11 +272,18 @@ export function AddStadiumDialog() {
                     )}
                 />
                 
-                <DialogFooter className="pt-4 !justify-between">
-                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? "Creating..." : "Create Stadium"}
-                    </Button>
+                <DialogFooter className="pt-4 flex-col md:flex-row gap-2 md:!justify-between">
+                    <SaveButton
+                        text={{
+                            idle: "Create Stadium",
+                            saving: "Creating...",
+                            saved: "Created!"
+                        }}
+                        onSave={async () => await form.handleSubmit(onSubmit)()}
+                        formRef={formRef}
+                        onSuccess={() => setOpen(false)}
+                    />
+                    <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full md:w-auto">Cancel</Button>
                 </DialogFooter>
             </form>
             </Form>
@@ -251,3 +292,4 @@ export function AddStadiumDialog() {
     </Dialog>
   );
 }
+

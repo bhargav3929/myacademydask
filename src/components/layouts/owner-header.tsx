@@ -2,9 +2,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
 
 import {
   Bell,
@@ -19,6 +21,7 @@ import {
   LogOut,
   User,
   Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,10 +36,7 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -48,6 +48,11 @@ export function OwnerHeader() {
   const router = useRouter();
   const { authUser, signOut, loading } = useAuth();
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [administratorName, setAdministratorName] = useState<string | null>(null);
+  const supportPhoneNumber = "+919553143929";
+  const displayPhoneNumber = "+91 955 314 3929";
+  const whatsappSupportUrl = "https://wa.link/c3p2m2";
 
   const handleLogout = async () => {
     await signOut();
@@ -58,7 +63,57 @@ export function OwnerHeader() {
     return authUser.role === 'coach' ? '/coach/dashboard' : '/dashboard';
   };
 
-  
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchAdministratorName = async () => {
+      if (!authUser || authUser.role !== 'coach' || !authUser.organizationId) {
+        if (isMounted) {
+          setAdministratorName(null);
+        }
+        return;
+      }
+
+      try {
+        const ownerDocRef = doc(firestore, "stadium_owners", authUser.organizationId);
+        const ownerDocSnap = await getDoc(ownerDocRef);
+
+        if (!isMounted) return;
+
+        if (ownerDocSnap.exists()) {
+          const data = ownerDocSnap.data() as { ownerName?: string; fullName?: string };
+          const resolvedName = data?.ownerName || data?.fullName || null;
+          setAdministratorName(resolvedName);
+        } else {
+          setAdministratorName(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch administrator name:", error);
+        if (isMounted) {
+          setAdministratorName(null);
+        }
+      }
+    };
+
+    fetchAdministratorName();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authUser]);
+
+  const handleSettingsSelect = () => {
+    if (authUser?.role === 'coach') {
+      setSettingsDialogOpen(true);
+      return;
+    }
+    // For owners, navigate to the full settings page in (app) route group
+    window.location.href = '/settings';
+  };
+
+  const handleSupportSelect = () => {
+    setSupportDialogOpen(true);
+  };
 
   const ownerNavItems = [
     { name: "Dashboard", url: getDashboardUrl(), icon: LayoutDashboard },
@@ -74,15 +129,16 @@ export function OwnerHeader() {
   ];
 
   const navItems = authUser?.role === 'coach' ? coachNavItems : ownerNavItems;
+  const administratorDisplayName = administratorName?.trim() ? administratorName : "your administrator";
 
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-30 flex h-20 items-center justify-between px-4 md:px-6 md:grid md:grid-cols-3">
         {/* Left section */}
         <div className="flex justify-start">
-          <div className="flex items-center bg-background/5 border border-border backdrop-blur-lg p-2 rounded-full shadow-lg">
-            <Link href="/" className="flex items-center">
-              <img src="/owner-logo.png" alt="Owner Logo" className="h-8 w-auto object-contain mr-2.5" />
+          <div className="flex items-center justify-center sm:justify-start bg-background/5 border border-border backdrop-blur-lg p-2 rounded-full shadow-lg h-12 w-12 sm:h-auto sm:w-auto">
+            <Link href="/" className="flex items-center gap-0 sm:gap-1.5 lg:gap-1">
+              <img src="/owner-logo.png" alt="Owner Logo" className="h-10 w-10 object-contain sm:h-8 sm:w-auto" />
               <span className="text-lg font-bold hidden sm:inline-block">Myacademydesk</span>
             </Link>
           </div>
@@ -130,66 +186,136 @@ export function OwnerHeader() {
                   <Bell className="h-5 w-5" />
                   <span className="sr-only">Toggle notifications</span>
                 </Button>
-                <AlertDialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
-                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
-                          <Avatar className="size-8">
-                            <AvatarFallback>
-                              <User className="size-5" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
-                          <span className="sr-only">Toggle user menu</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1.5 h-auto">
+                      <Avatar className="size-8">
+                        <AvatarFallback>
+                          <User className="size-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground ml-1 hidden sm:block" />
+                      <span className="sr-only">Toggle user menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {loading ? (
+                      <div className="p-2 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-full" />
+                      </div>
+                    ) : authUser && (
+                      <>
+                        <DropdownMenuLabel>
+                          <p>{authUser.name || "User"}</p>
+                          <p className="text-xs text-muted-foreground font-normal">{authUser.email || "..."}</p>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={handleSettingsSelect}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={handleSupportSelect}>
+                          <LifeBuoy className="mr-2 h-4 w-4" />
+                          Support
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleLogout()}>
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Logout
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <AlertDialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+                  <AlertDialogContent className="sm:max-w-md overflow-hidden rounded-[28px] border border-border/50 bg-background/95 p-0 shadow-[0_28px_80px_-40px_rgba(15,23,42,0.65)] backdrop-blur-2xl">
+                    <div className="flex items-start justify-between gap-4 border-b border-border/60 bg-gradient-to-r from-primary/15 via-background/95 to-background px-6 py-5">
+                      <div className="space-y-1">
+                        <AlertDialogTitle className="text-lg font-semibold text-foreground">Administrator Access Required</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm leading-relaxed text-muted-foreground">
+                          Only administrators can edit settings for coach accounts. Connect with{" "}
+                          <span className="font-medium text-foreground">{administratorDisplayName}</span> to make changes to your profile or academy.
+                        </AlertDialogDescription>
+                      </div>
+                      <AlertDialogCancel asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-muted-foreground transition hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Close dialog</span>
+                        </button>
+                      </AlertDialogCancel>
+                    </div>
+                    <div className="space-y-6 px-6 py-6">
+                      <div className="rounded-2xl border border-border/60 bg-muted/40 px-4 py-4 text-sm leading-relaxed text-muted-foreground">
+                        Need help right away? Contact Bhargav using the quick actions below for immediate assistance.
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Button asChild className="h-11 rounded-xl text-base font-medium shadow-sm">
+                          <a href={`tel:${supportPhoneNumber}`} rel="noopener noreferrer">
+                            Call Bhargav
+                          </a>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        {loading ? (
-                            <div className="p-2 space-y-2">
-                                <Skeleton className="h-4 w-3/4" />
-                                <Skeleton className="h-3 w-full" />
-                            </div>
-                        ) : authUser && (
-                            <>
-                                <DropdownMenuLabel>
-                                  <p>{authUser.name || "User"}</p>
-                                  <p className="text-xs text-muted-foreground font-normal">{authUser.email || "..."}</p>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => router.push('/settings')}>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    Settings
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <AlertDialogTrigger asChild>
-                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <LifeBuoy className="mr-2 h-4 w-4" />
-                                        Support
-                                    </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout}>
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Logout
-                                </DropdownMenuItem>
-                            </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Contact Support</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Please contact the developer Bhargav for any query.
-                                <br />
-                                <br />
-                                Contact Number: <span className="font-bold text-foreground">955 314 3929</span>
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Close</AlertDialogCancel>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="h-11 rounded-xl border-primary/30 text-base font-medium text-primary shadow-sm hover:bg-primary/10"
+                        >
+                          <a href={whatsappSupportUrl} target="_blank" rel="noopener noreferrer">
+                            WhatsApp Message
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
+                  <AlertDialogContent className="sm:max-w-md overflow-hidden rounded-[28px] border border-border/50 bg-background/95 p-0 shadow-[0_28px_80px_-40px_rgba(15,23,42,0.65)] backdrop-blur-2xl">
+                    <div className="flex items-start justify-between gap-4 border-b border-border/60 bg-gradient-to-r from-primary/15 via-background/95 to-background px-6 py-5">
+                      <div className="space-y-1">
+                        <AlertDialogTitle className="text-lg font-semibold text-foreground">Need a Hand?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm leading-relaxed text-muted-foreground">
+                          Reach out to our developer Bhargav for queries, troubleshooting, or urgent assistance.
+                        </AlertDialogDescription>
+                      </div>
+                      <AlertDialogCancel asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-muted-foreground transition hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Close dialog</span>
+                        </button>
+                      </AlertDialogCancel>
+                    </div>
+                    <div className="space-y-6 px-6 py-6">
+                      <div className="rounded-2xl border border-primary/25 bg-primary/5 px-4 py-4 text-sm leading-relaxed">
+                        <p className="text-muted-foreground">Primary Contact</p>
+                        <p className="text-lg font-semibold tracking-wide text-foreground">{displayPhoneNumber}</p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Button asChild className="h-11 rounded-xl text-base font-medium shadow-sm">
+                          <a href={`tel:${supportPhoneNumber}`} rel="noopener noreferrer">
+                            Call Bhargav
+                          </a>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="h-11 rounded-xl border-primary/30 text-base font-medium text-primary shadow-sm hover:bg-primary/10"
+                        >
+                          <a href={whatsappSupportUrl} target="_blank" rel="noopener noreferrer">
+                            WhatsApp Message
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  </AlertDialogContent>
                 </AlertDialog>
             </div>
           </div>

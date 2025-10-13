@@ -452,8 +452,8 @@ export default function Home() {
       >
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="group flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-light)] bg-white shadow-[0_8px_22px_rgba(20,184,166,0.16)]">
-              <Sparkles className="h-5 w-5 text-[var(--violet-500)]" />
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-light)] bg-white shadow-[0_8px_22px_rgba(20,184,166,0.16)] overflow-hidden">
+              <img src="/landing-logo.png" alt="myacademydask" className="h-6 w-6 object-contain" />
             </span>
             <span className="text-xs font-semibold uppercase tracking-[0.4em] text-[var(--text-secondary)] transition group-hover:text-[var(--violet-600)]">
               myacademydask

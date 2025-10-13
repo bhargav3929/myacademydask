@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
+import { SaveButton } from "../ui/save-button";
 
 const studentBatches: StudentBatches[] = ["First Batch", "Second Batch", "Third Batch", "Fourth Batch"];
 
@@ -67,6 +68,7 @@ export function StudentFormDialog({ stadiums, studentToEdit, children, onFormSub
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isEditMode = !!studentToEdit;
 
@@ -138,7 +140,6 @@ export function StudentFormDialog({ stadiums, studentToEdit, children, onFormSub
       }
 
       onFormSubmit?.();
-      setOpen(false);
 
     } catch (error: any) {
       console.error("Error saving student:", error);
@@ -147,6 +148,7 @@ export function StudentFormDialog({ stadiums, studentToEdit, children, onFormSub
         title: "Error",
         description: error.message || "Could not save student. Please try again.",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -165,7 +167,7 @@ export function StudentFormDialog({ stadiums, studentToEdit, children, onFormSub
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -340,11 +342,18 @@ export function StudentFormDialog({ stadiums, studentToEdit, children, onFormSub
                 />
             </div>
 
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={(!form.formState.isDirty && isEditMode) || !form.formState.isValid || isLoading}>
-                {isLoading ? "Saving..." : (isEditMode ? "Save Changes" : "Add Student")}
-              </Button>
+            <DialogFooter className="pt-4 flex-col md:flex-row gap-2 md:!justify-between">
+              <SaveButton
+                text={{
+                  idle: isEditMode ? "Save Changes" : "Add Student",
+                  saving: "Saving...",
+                  saved: "Saved!"
+                }}
+                onSave={async () => await form.handleSubmit(onSubmit)()}
+                formRef={formRef}
+                onSuccess={() => setOpen(false)}
+              />
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full md:w-auto">Cancel</Button>
             </DialogFooter>
           </form>
         </Form>

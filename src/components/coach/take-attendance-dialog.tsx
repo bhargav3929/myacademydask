@@ -40,6 +40,7 @@ import { CalendarCheck, CheckCircle2, XCircle, CircleSlash } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { MiniCalendar } from "../ui/mini-calendar";
 import { RainbowButton } from "../ui/rainbow-button";
+import { SaveButton } from "../ui/save-button";
 
 type AttendanceStatus = "present" | "absent";
 type AttendanceRecord = { [studentId: string]: AttendanceStatus };
@@ -170,7 +171,6 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
         title: "Success",
         description: `Attendance for ${selectedBatch} on ${format(selectedDate, "PPP")} has been saved.`,
       });
-      setOpen(false);
     } catch (error) {
       console.error("Error saving attendance: ", error);
       toast({
@@ -178,6 +178,7 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
         title: "Save Failed",
         description: "Could not save attendance. Please try again.",
       });
+      throw error; // Re-throw to let SaveButton handle it
     } finally {
       setIsSubmitting(false);
     }
@@ -330,13 +331,19 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
                         )}
                     </AnimatePresence>
                 </div>
-                <DialogFooter className="pt-6 mt-auto">
+                <DialogFooter className="pt-6 mt-auto flex-col md:flex-row gap-2 md:!justify-between">
+                    <SaveButton
+                        text={{
+                            idle: "Save Attendance",
+                            saving: "Saving...",
+                            saved: "Saved!"
+                        }}
+                        onSave={handleSaveAttendance}
+                        onSuccess={() => setOpen(false)}
+                    />
                     <DialogClose asChild>
-                        <Button type="button" variant="outline">Cancel</Button>
+                        <Button type="button" variant="outline" className="w-full md:w-auto">Cancel</Button>
                     </DialogClose>
-                    <Button type="button" onClick={handleSaveAttendance} disabled={isLoading || isSubmitting || studentsInBatch.length === 0}>
-                        {isSubmitting ? "Saving..." : "Save Attendance"}
-                    </Button>
                 </DialogFooter>
             </div>
         </div>

@@ -113,14 +113,26 @@ export default {
         "appear-zoom": {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" }
-        }
+        },
+        flip: {
+          to: {
+            transform: "rotate(360deg)",
+          },
+        },
+        rotate: {
+          to: {
+            transform: "rotate(90deg)",
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         rainbow: "rainbow var(--speed, 2s) infinite linear",
         appear: "appear 0.5s ease-out forwards",
-        "appear-zoom": "appear-zoom 0.5s ease-out forwards"
+        "appear-zoom": "appear-zoom 0.5s ease-out forwards",
+        flip: "flip 6s infinite steps(2, end)",
+        rotate: "rotate 3s linear infinite both",
       },
     },
   },

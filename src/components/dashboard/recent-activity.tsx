@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { collection, query, orderBy, limit, doc, getDoc, getDocs, collectionGroup, where, Timestamp } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserPlus, CalendarCheck } from "lucide-react";
+import { CalendarCheck, UserPlus } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { Student, Stadium, AttendanceSubmission, UserProfile } from "@/lib/types";
@@ -20,9 +20,17 @@ type Activity = {
   timestamp: Date;
 };
 
-const activityIcons: Record<ActivityType, React.ReactNode> = {
-  attendance_submission: <CalendarCheck className="size-4 text-green-500" />,
-  new_student: <UserPlus className="size-4 text-primary" />,
+const gradientBackgrounds = [
+  "from-[#4D6CFF] via-[#5A77FF] to-[#6D8BFF]",
+  "from-[#10B981] via-[#16C2A6] to-[#38BDF8]",
+  "from-[#F97316] via-[#FB923C] to-[#F59E0B]",
+  "from-[#8B5CF6] via-[#A855F7] to-[#EC4899]",
+  "from-[#6366F1] via-[#818CF8] to-[#22D3EE]",
+];
+
+const activityIcons: Record<ActivityType, ReactNode> = {
+  attendance_submission: <CalendarCheck className="size-4" />,
+  new_student: <UserPlus className="size-4" />,
 };
 
 export function RecentActivity({ organizationId }: { organizationId: string | null }) {
@@ -128,7 +136,7 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
         
         const combinedActivities = [...studentActivities, ...attendanceActivities]
           .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-          .slice(0, 5);
+          .slice(0, 4);
 
         setActivities(combinedActivities);
 
@@ -146,45 +154,54 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
   }, [organizationId]);
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+    <Card className="flex flex-col border-0 bg-gradient-to-b from-white via-[#f8fbff] to-[#eef2ff] shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-base font-semibold text-slate-900">Recent Activity</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow p-6 pt-0">
+      <CardContent className="space-y-2 px-6 pb-4 pt-4">
         {loading ? (
-           <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-2">
-                    <Skeleton className="flex size-8 items-center justify-center rounded-full" />
-                    <div className="flex-grow space-y-1.5">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/4" />
-                    </div>
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-2xl bg-white/60 px-4 py-3 shadow-inner ring-1 ring-slate-100/70"
+              >
+                <Skeleton className="size-10 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
                 </div>
-                ))}
-           </div>
-        ) : activities.length > 0 ? (
-          <div className="space-y-1">
-            {activities.map((activity) => (
-             <div key={`${activity.type}-${activity.id}`} className="flex items-center gap-3 py-2">
-                <div className="flex size-8 items-center justify-center rounded-full bg-secondary border">
-                    {activityIcons[activity.type]}
-                </div>
-                <div className="flex-grow">
-                    <p className="font-semibold text-sm leading-tight">
-                        {activity.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                        {activity.description}
-                        {isClient && activity.timestamp && (
-                            <span className="ml-1.5">
-                                {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
-                            </span>
-                        )}
-                    </p>
-                </div>
-             </div>
+                <Skeleton className="h-3 w-16" />
+              </div>
             ))}
+          </div>
+        ) : activities.length > 0 ? (
+          <div className="space-y-2">
+            {activities.map((activity, index) => {
+              const gradient = gradientBackgrounds[index % gradientBackgrounds.length];
+              const relativeTime =
+                isClient && activity.timestamp
+                  ? formatDistanceToNow(activity.timestamp, { addSuffix: true })
+                  : null;
+
+              return (
+                <div
+                  key={`${activity.type}-${activity.id}`}
+                  className={`flex items-center gap-3 rounded-2xl bg-gradient-to-r ${gradient} px-4 py-3 text-white shadow-[0_18px_45px_-32px_rgba(14,20,51,0.55)]`}
+                >
+                  <div className="flex size-10 items-center justify-center rounded-full bg-white/20 text-white">
+                    {activityIcons[activity.type]}
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <p className="truncate text-sm font-semibold leading-tight">{activity.title}</p>
+                    <p className="text-xs text-white/80">{activity.description}</p>
+                  </div>
+                  {relativeTime && (
+                    <span className="shrink-0 text-xs font-medium text-white/90">{relativeTime}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="flex h-full items-center justify-center text-center text-muted-foreground">

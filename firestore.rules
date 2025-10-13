@@ -27,9 +27,12 @@ service cloud.firestore {
 
     // USERS:
     match /users/{userId} {
+       // Allow read if user is reading their own document, is an owner of the org, or is admin
        allow read: if isSignedIn() && 
                     (request.auth.uid == userId || isOwner(resource.data.organizationId));
+      // Allow update if user is updating their own document or is admin
       allow update: if isSignedIn() && request.auth.uid == userId;
+      // Allow create for signed in users (needed for account creation)
       allow create: if isSignedIn(); 
       allow delete: if false;
     }

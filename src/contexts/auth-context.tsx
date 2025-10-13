@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth, functions, db } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation'; // Added usePathname
-import { httpsCallable } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
 
 export interface AuthUser {
@@ -29,27 +29,50 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-const syncUserRole = httpsCallable(functions, 'syncUserRole');
+// Use regional functions to ensure consistency
+const regionalFunctions = getFunctions(undefined, "us-central1");
+const syncUserRole = httpsCallable(regionalFunctions, 'syncUserRole');
 
 const getUserRoleFromToken = async (user: User): Promise<{ role: string | null; organizationId: string | null }> => {
     try {
-        // Calling syncUserRole ensures claims are up-to-date in Firebase Auth backend.
-        // We don't necessarily need its return value here, as the ID token refresh below
-        // will pick up the latest claims.
-        await syncUserRole(); 
-
-        const idTokenResult = await user.getIdTokenResult(true); // Force refresh to get latest claims
+        console.log("Getting user role for:", user.uid);
+        
+        // First, check current claims
+        let idTokenResult = await user.getIdTokenResult(false);
         let role = (idTokenResult.claims.role as string) || null;
         let organizationId = (idTokenResult.claims.organizationId as string) || null;
+        
+        console.log("Current token claims - Role:", role, "OrganizationId:", organizationId);
 
-        // Fallback: if claims are missing, hydrate from Firestore user document
-        if (!role) {
+        // If claims are missing or incomplete, try to sync from Firestore
+        if (!role || !organizationId) {
+            console.log("Claims missing, fetching from Firestore and syncing...");
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    role = (data?.role as string) || null;
-                    organizationId = (data?.organizationId as string) || organizationId;
+                    const firestoreRole = (data?.role as string) || null;
+                    const firestoreOrgId = (data?.organizationId as string) || null;
+                    
+                    console.log("Firestore data - Role:", firestoreRole, "OrganizationId:", firestoreOrgId);
+
+                    if (firestoreRole && firestoreOrgId) {
+                        // Sync the role to update claims
+                        await syncUserRole();
+                        
+                        // Force refresh to get updated claims
+                        idTokenResult = await user.getIdTokenResult(true);
+                        role = (idTokenResult.claims.role as string) || firestoreRole;
+                        organizationId = (idTokenResult.claims.organizationId as string) || firestoreOrgId;
+                        
+                        console.log("After sync - Role:", role, "OrganizationId:", organizationId);
+                    } else {
+                        console.warn("Incomplete user data in Firestore:", { firestoreRole, firestoreOrgId });
+                        role = firestoreRole;
+                        organizationId = firestoreOrgId;
+                    }
+                } else {
+                    console.error("User document not found in Firestore");
                 }
             } catch (firestoreError) {
                 console.error('Failed to fetch user document for claims fallback:', firestoreError);

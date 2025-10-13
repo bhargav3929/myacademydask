@@ -22,6 +22,7 @@ import { ReportSummary } from "./report-summary";
 import { NewJoiners } from "./new-joiners";
 import { generatePdf } from "@/lib/pdf-generator";
 import { RainbowButton } from "../ui/rainbow-button";
+import { SaveButton } from "../ui/save-button";
 
 export function ReportsClient() {
   const { toast } = useToast();
@@ -240,6 +241,7 @@ export function ReportsClient() {
     } catch (error) {
         console.error("Error generating PDF:", error);
         toast({ variant: "destructive", title: "PDF Generation Failed", description: "There was an error creating the PDF." });
+        throw error;
     } finally {
         setIsDownloading(false);
     }
@@ -322,10 +324,15 @@ export function ReportsClient() {
       {processedReport && (
         <div className="space-y-6">
             <div className="flex justify-end">
-                <RainbowButton onClick={handleDownloadPdf} disabled={isDownloading}>
-                    <Download className="mr-2 h-4 w-4" />
-                    {isDownloading ? 'Downloading...' : 'Download PDF'}
-                </RainbowButton>
+                <SaveButton
+                    text={{
+                        idle: "Download PDF",
+                        saving: "Downloading...",
+                        saved: "Downloaded!"
+                    }}
+                    onSave={handleDownloadPdf}
+                    className="flex items-center"
+                />
             </div>
             <AttendanceReportTable reportData={processedReport} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
