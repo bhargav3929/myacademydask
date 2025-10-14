@@ -33,6 +33,20 @@ const AuthContext = createContext<AuthContextType>({
 const regionalFunctions = getFunctions(undefined, "us-central1");
 const syncUserRole = httpsCallable(regionalFunctions, 'syncUserRole');
 
+const LAST_PROTECTED_PATH_KEY = 'mad:lastProtectedPath';
+
+const DEFAULT_ROUTE: Record<AuthUser['role'], string> = {
+  owner: '/dashboard',
+  coach: '/coach/dashboard',
+  'super-admin': '/super-admin/dashboard',
+};
+
+const PROTECTED_PREFIXES: Record<AuthUser['role'], string[]> = {
+  owner: ['/dashboard', '/stadiums', '/students', '/reports', '/settings'],
+  coach: ['/coach'],
+  'super-admin': ['/super-admin'],
+};
+
 const getUserRoleFromToken = async (user: User): Promise<{ role: string | null; organizationId: string | null }> => {
     try {
         console.log("Getting user role for:", user.uid);
@@ -142,9 +156,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // This useEffect is a secondary/fallback check for client-side navigation
   // or to ensure consistency, but middleware.ts is the authoritative source.
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!authUser) {
+      localStorage.removeItem(LAST_PROTECTED_PATH_KEY);
+      return;
+    }
+
+    const prefixes = PROTECTED_PREFIXES[authUser.role];
+    const onProtectedPath = prefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
+
+    if (onProtectedPath) {
+      localStorage.setItem(LAST_PROTECTED_PATH_KEY, pathname);
+    }
+  }, [authUser, pathname]);
+
+  useEffect(() => {
     if (loading) return;
 
     const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/signup';
+    const isPublicEntry = pathname === '/' || pathname === '/pricing';
+    const defaultTarget = authUser ? DEFAULT_ROUTE[authUser.role] : '/dashboard';
 
     if (!authUser && !user && !isAuthPage && pathname !== '/' && pathname !== '/pricing') {
       // If not authenticated and not on public/auth pages, redirect to login
@@ -155,10 +191,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // If authenticated, and on an auth page, redirect to their dashboard.
     // This handles cases where a user directly navigates to /login after being authenticated.
     if (authUser && isAuthPage) {
-        let targetUrl = '/dashboard'; // Default for owner
-        if (authUser.role === 'coach') targetUrl = '/coach/dashboard';
-        if (authUser.role === 'super-admin') targetUrl = '/super-admin/dashboard'; 
-        router.replace(targetUrl);
+        const targetUrl = DEFAULT_ROUTE[authUser.role];
+        if (targetUrl !== pathname) {
+          router.replace(targetUrl);
+        }
+        return;
+    }
+
+    if (authUser && isPublicEntry) {
+        const storedPath =
+          typeof window !== 'undefined' ? localStorage.getItem(LAST_PROTECTED_PATH_KEY) : null;
+        const targetUrl = storedPath || DEFAULT_ROUTE[authUser.role];
+        if (targetUrl && targetUrl !== pathname) {
+          router.replace(targetUrl);
+        }
         return;
     }
 
@@ -190,6 +236,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await firebaseSignOut(auth);
     // Explicitly clear the session cookie on client-side to ensure middleware also sees logout
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(LAST_PROTECTED_PATH_KEY);
+    }
     document.cookie = '__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     window.location.assign('/login'); // Use assign to force full reload and middleware re-evaluation
   };

@@ -1,5 +1,78 @@
 
+import createNextPWA from '@ducanh2912/next-pwa';
 import type {NextConfig} from 'next';
+
+const withPWA = createNextPWA({
+  dest: 'public',
+  register: true,
+  disable: process.env.NODE_ENV === 'development',
+  workboxOptions: {
+    skipWaiting: true,
+    clientsClaim: true,
+    navigateFallback: '/',
+    runtimeCaching: [
+      {
+        urlPattern: ({url, request}) => {
+          if (request.method !== 'GET') {
+            return false;
+          }
+          const globalLocation = (
+            globalThis as typeof globalThis & {location?: Location}
+          ).location;
+          const isSameOrigin =
+            !globalLocation || url.origin === globalLocation.origin;
+          return isSameOrigin && url.pathname.startsWith('/api/');
+        },
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'mad-api-cache',
+          networkTimeoutSeconds: 10,
+          cacheableResponse: {statuses: [0, 200]},
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 5 * 60,
+          },
+        },
+      },
+      {
+        urlPattern: ({request}) => request.mode === 'navigate',
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'mad-pages-cache',
+          networkTimeoutSeconds: 10,
+          cacheableResponse: {statuses: [0, 200]},
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 24 * 60 * 60,
+          },
+        },
+      },
+      {
+        urlPattern: ({request}) => request.destination === 'image',
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'mad-image-cache',
+          expiration: {
+            maxEntries: 60,
+            maxAgeSeconds: 24 * 60 * 60,
+          },
+        },
+      },
+      {
+        urlPattern: ({request}) =>
+          request.destination === 'style' || request.destination === 'script',
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'mad-static-resources',
+          expiration: {
+            maxEntries: 60,
+            maxAgeSeconds: 7 * 24 * 60 * 60,
+          },
+        },
+      },
+    ],
+  },
+});
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -88,4 +161,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

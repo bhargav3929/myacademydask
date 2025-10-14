@@ -65,6 +65,12 @@ export const metadata: Metadata = {
     // Add Google Search Console verification code when ready
     // google: 'your-google-verification-code',
   },
+  themeColor: '#14B8A6',
+  appleWebApp: {
+    capable: true,
+    title: 'My Academy Desk',
+    statusBarStyle: 'default',
+  },
   manifest: '/manifest.json',
 };
 
