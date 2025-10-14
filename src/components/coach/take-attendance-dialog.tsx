@@ -293,9 +293,9 @@ export function TakeAttendanceDialog({ stadium, allStudents }: { stadium: Stadiu
                             >
                                 <div className="flex items-center gap-4">
                                 <Avatar className="size-9">
-                                    <AvatarFallback>{student.fullName.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback>{student.fullName?.charAt(0) || 'S'}</AvatarFallback>
                                 </Avatar>
-                                <p className="font-medium">{student.fullName}</p>
+                                <p className="font-medium">{student.fullName || 'Unknown'}</p>
                                 </div>
                                 <div className="flex gap-2">
                                 <Button

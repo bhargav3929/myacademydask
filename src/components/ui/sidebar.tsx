@@ -33,13 +33,15 @@ export const SidebarProvider = ({ children }: { children: React.ReactNode }) => 
     setIsOpen(!isMobile);
   }, [isMobile]);
 
+  const childrenArray = React.Children.toArray(children);
+  
   return (
     <SidebarContext.Provider value={{ isOpen, setIsOpen, isMobile }}>
       <div className="flex">
         <AnimatePresence>
-          {isOpen && <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ duration: 0.3, ease: 'easeInOut' }}>{children[0]}</motion.div>}
+          {isOpen && <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ duration: 0.3, ease: 'easeInOut' }}>{childrenArray[0]}</motion.div>}
         </AnimatePresence>
-        {children[1]}
+        {childrenArray[1]}
       </div>
     </SidebarContext.Provider>
   );

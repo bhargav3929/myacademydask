@@ -10,6 +10,38 @@ import { useRouter } from "next/navigation";
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 
+// Note: Metadata cannot be exported from client components
+// For SEO, consider using next/head or creating a server component wrapper
+// export const metadata: Metadata = {
+//   title: 'Login - Sports Academy Management System',
+//   description: 'Login to My Academy Desk to manage your sports academy. Access coach dashboards, athlete management, attendance tracking, and revenue analytics.',
+//   keywords: ['my academy desk login', 'sports academy login', 'coach dashboard login', 'academy management login'],
+//   openGraph: {
+//     title: 'Login | My Academy Desk',
+//     description: 'Login to manage your sports academy with My Academy Desk.',
+//     url: 'https://myacademydask.com/login',
+//     type: 'website',
+//     images: [
+//       {
+//         url: '/landing-logo.png',
+//         width: 1200,
+//         height: 630,
+//         alt: 'My Academy Desk Login',
+//       },
+//     ],
+//   },
+//   twitter: {
+//     card: 'summary_large_image',
+//     title: 'Login | My Academy Desk',
+//     description: 'Login to manage your sports academy.',
+//     images: ['/landing-logo.png'],
+//   },
+//   robots: {
+//     index: false, // Don't index login pages
+//     follow: true,
+//   },
+// }
+
 export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);

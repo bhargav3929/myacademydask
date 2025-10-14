@@ -1,6 +1,4 @@
-
-"use client";
-
+'use client';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check, Gamepad2 } from 'lucide-react';
@@ -8,44 +6,71 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { BackgroundBeamsWithCollision } from '@/components/ui/background-beams-with-collision';
 
+// Note: Metadata cannot be exported from client components
+// For SEO, consider using next/head or creating a server component wrapper
+// export const metadata: Metadata = {
+//   title: 'Pricing Plans - Sports Academy Management Software',
+//   description: 'Choose the perfect pricing plan for your sports academy. Free trial available. Plans start at ₹1,499/month. Manage multiple sports, coaches, and athletes seamlessly.',
+//   keywords: ['sports academy pricing', 'academy management software pricing', 'coach management pricing', 'my academy desk pricing', 'sports facility management cost'],
+//   openGraph: {
+//     title: 'Pricing Plans | My Academy Desk',
+//     description: 'Choose the perfect pricing plan for your sports academy. Free trial available. Plans start at ₹1,499/month.',
+//     url: 'https://myacademydask.com/pricing',
+//     type: 'website',
+//     images: [
+//       {
+//         url: '/landing-logo.png',
+//         width: 1200,
+//         height: 630,
+//         alt: 'My Academy Desk Pricing Plans',
+//       },
+//     ],
+//   },
+//   twitter: {
+//     card: 'summary_large_image',
+//     title: 'Pricing Plans | My Academy Desk',
+//     description: 'Choose the perfect pricing plan for your sports academy. Free trial available.',
+//     images: ['/landing-logo.png'],
+//   },
+// }
+
+
 export default function PricingPage() {
   const tiers = [
     {
-      name: 'Starter',
-      price: '$49',
-      description: 'For new academies getting started.',
+      name: 'Foundation',
+      price: 'Free',
+      description: 'Own your day-to-day operations with a unified control center for a single location.',
       features: [
-        'Up to 50 Students',
-        '2 Stadiums',
-        'Basic Analytics',
-        'Email Support',
+        'Coach & athlete workspaces per sport',
+        'Automated attendance and family messaging',
+        'Launch concierge + quarterly strategy check-in',
+        '30-day full trial',
       ],
-      cta: 'Choose Starter',
+      cta: 'Start Free Trial',
     },
     {
-      name: 'Pro',
-      price: '$99',
-      description: 'For growing academies that need more power.',
+      name: 'Elevation',
+      price: '₹1,499',
+      description: 'Scale across sports and locations with forecasting, automations, and executive dashboards.',
       features: [
-        'Up to 200 Students',
-        '10 Stadiums',
-        'Advanced Analytics',
-        'Priority Email Support',
-        'AI-Powered Insights',
+        'Predictive retention + revenue modelling',
+        'Workflow builder with cross-sport automation',
+        'Bi-weekly optimisation with success architect',
+        'Advanced analytics & reporting',
       ],
-      cta: 'Get Started with Pro',
+      cta: 'Begin with Elevation',
       popular: true,
     },
     {
-      name: 'Enterprise',
+      name: 'Signature',
       price: 'Custom',
-      description: 'For large organizations with custom needs.',
+      description: 'For elite organisations demanding bespoke integrations, visual identity, and innovation cycles.',
       features: [
-        'Unlimited Students',
-        'Unlimited Stadiums',
-        'Custom Analytics & Reporting',
-        'Dedicated Account Manager',
-        'On-demand Support',
+        'Dedicated product pod & private data lake',
+        'White-label portals per sport & location',
+        'Priority roadmap influence + executive labs',
+        'Custom integrations & API access',
       ],
       cta: 'Contact Sales',
     },
@@ -56,8 +81,10 @@ export default function PricingPage() {
          <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <Gamepad2 className="h-7 w-7 text-primary" />
-            <span className="text-lg font-bold">CourtCommand</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white shadow-sm overflow-hidden">
+              <img src="/landing-logo.png" alt="My Academy Desk" className="h-6 w-6 object-contain" />
+            </span>
+            <span className="text-lg font-bold">My Academy Desk</span>
           </Link>
           <nav className="flex items-center gap-4">
              <Link href="/#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
@@ -123,7 +150,7 @@ export default function PricingPage() {
                   <CardContent className="flex-grow space-y-6">
                     <div className="flex items-baseline gap-2">
                         <span className="text-5xl font-bold">{tier.price}</span>
-                        {tier.price.startsWith('$') && <span className="text-muted-foreground">/ month</span>}
+                        {tier.price.startsWith('₹') && <span className="text-muted-foreground">/ month</span>}
                     </div>
                     <ul className="space-y-3">
                       {tier.features.map((feature) => (
@@ -149,8 +176,10 @@ export default function PricingPage() {
         <footer className="border-t border-border/40 bg-secondary/50">
             <div className="container flex flex-col md:flex-row items-center justify-between py-8 text-sm text-muted-foreground gap-4">
             <div className="flex items-center gap-2.5">
-                <Gamepad2 className="h-6 w-6 text-muted-foreground" />
-                <span className="font-semibold">&copy; {new Date().getFullYear()} CourtCommand. All rights reserved.</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-white shadow-sm overflow-hidden">
+                  <img src="/landing-logo.png" alt="My Academy Desk" className="h-4 w-4 object-contain" />
+                </span>
+                <span className="font-semibold">&copy; {new Date().getFullYear()} My Academy Desk. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-6">
                 <Link href="#" className="transition-colors hover:text-foreground">Privacy Policy</Link>

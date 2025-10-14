@@ -81,7 +81,7 @@ export function ReportsClient() {
     const studentData: Record<string, { name: string; attendance: Record<string, 'present' | 'absent' | null> }> = {};
     
     students.forEach(s => {
-      studentData[s.id] = { name: s.fullName, attendance: {} };
+      studentData[s.id] = { name: s.fullName || 'Unknown', attendance: {} };
       dates.forEach(d => {
         studentData[s.id].attendance[format(d, 'yyyy-MM-dd')] = null;
       });
@@ -109,10 +109,10 @@ export function ReportsClient() {
         .map(s => {
             const stadium = stadiums.find(stadium => stadium.id === s.stadiumId);
             return { 
-                name: s.fullName, 
+                name: s.fullName || 'Unknown', 
                 joinDate: s.joinDate.toDate(), 
                 stadiumName: stadium?.name || 'N/A',
-                coachName: stadium?.coachDetails.name || 'N/A'
+                coachName: stadium?.coachDetails?.name || 'N/A'
             };
         });
 

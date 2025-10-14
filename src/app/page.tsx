@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type JSX,
 } from 'react';
+import { OrganizationStructuredData, WebsiteStructuredData } from './structured-data';
 import { motion, useInView } from 'framer-motion';
 import {
   ArrowRight,
@@ -231,7 +232,7 @@ const timelineSteps = [
 const testimonials = [
   {
     quote:
-      'myacademydask turned our multi-sport complex from reactive to proactive. We spot utilisation dips hours before they impact revenue and coaches finally feel supported.',
+      'My Academy Desk turned our multi-sport complex from reactive to proactive. We spot utilisation dips hours before they impact revenue and coaches finally feel supported.',
     name: 'Aanya Patel',
     role: 'Director, Horizon Sports Collective',
     metrics: '5 sports • 28 coaches • 740 athletes',
@@ -453,10 +454,10 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="group flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-light)] bg-white shadow-[0_8px_22px_rgba(20,184,166,0.16)] overflow-hidden">
-              <img src="/landing-logo.png" alt="myacademydask" className="h-6 w-6 object-contain" />
+              <img src="/landing-logo.png" alt="My Academy Desk" className="h-6 w-6 object-contain" />
             </span>
             <span className="text-xs font-semibold uppercase tracking-[0.4em] text-[var(--text-secondary)] transition group-hover:text-[var(--violet-600)]">
-              myacademydask
+              My Academy Desk
             </span>
           </Link>
 
@@ -543,7 +544,7 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Link href="/login" className="login-float-button" aria-label="Login to myacademydask">
+              <Link href="/login" className="login-float-button" aria-label="Login to My Academy Desk">
                 <div className="login-float-points" aria-hidden>
                   {Array.from({ length: 10 }).map((_, idx) => (
                     <i key={idx} className="login-float-point" />
@@ -1053,7 +1054,7 @@ export default function Home() {
       <footer className="relative mt-16 border-t border-[var(--border-light)] bg-[var(--bg-secondary)]/70 py-12">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 text-sm text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.4em] text-[var(--text-tertiary)]">myacademydask</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.4em] text-[var(--text-tertiary)]">My Academy Desk</span>
             <p className="max-w-md text-[var(--text-secondary)]">
               The bright operating system for multi-sport academies—crafted for owners who demand clarity, connection, and championship-level execution.
             </p>
@@ -1076,7 +1077,7 @@ export default function Home() {
               </Link>
             </div>
             <p className="text-xs text-[var(--text-tertiary)]">
-              © {new Date().getFullYear()} myacademydask. All rights reserved.
+              © {new Date().getFullYear()} My Academy Desk. All rights reserved.
             </p>
           </div>
         </div>
@@ -1111,7 +1112,7 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-[var(--text-primary)]">Contact the administrator</h3>
               </div>
               <p className="text-sm leading-relaxed">
-                We’d love to walk you through myacademydask. Reach out to Bhargav directly and we’ll schedule a high-touch strategy session tailored to your academy.
+                We'd love to walk you through My Academy Desk. Reach out to Bhargav directly and we'll schedule a high-touch strategy session tailored to your academy.
               </p>
               <div className="rounded-2xl border border-[var(--border-light)] bg-[var(--bg-secondary)]/80 p-4 text-sm">
                 <p className="font-semibold text-[var(--text-primary)]">Bhargav • Customer Success</p>
@@ -1238,6 +1239,10 @@ export default function Home() {
           transform: translateX(3px);
         }
       `}</style>
+      
+      {/* SEO Structured Data */}
+      <OrganizationStructuredData />
+      <WebsiteStructuredData />
     </div>
   );
 }

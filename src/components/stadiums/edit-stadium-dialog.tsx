@@ -52,9 +52,9 @@ export function EditStadiumDialog({ stadium, children }: EditStadiumDialogProps)
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: stadium.name,
-      location: stadium.location,
-      coachName: stadium.coachDetails.name,
-      coachPhone: stadium.coachDetails.phone,
+      location: stadium.location || '',
+      coachName: stadium.coachDetails?.name || '',
+      coachPhone: stadium.coachDetails?.phone || '',
     },
   });
 
@@ -72,10 +72,12 @@ export function EditStadiumDialog({ stadium, children }: EditStadiumDialogProps)
         updatedAt: new Date(),
        });
 
-      const userDocRef = doc(firestore, "users", stadium.assignedCoachId);
-       batch.update(userDocRef, {
-        fullName: values.coachName,
-      });
+      if (stadium.assignedCoachId) {
+        const userDocRef = doc(firestore, "users", stadium.assignedCoachId);
+        batch.update(userDocRef, {
+          fullName: values.coachName,
+        });
+      }
 
       await batch.commit();
 

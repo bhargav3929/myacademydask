@@ -60,7 +60,7 @@ export function AddStudentForm({
   closeDialog,
   onStudentAdded,
 }: AddStudentFormProps) {
-  const { user } = useAuth();
+  const { user, authUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
@@ -75,7 +75,7 @@ export function AddStudentForm({
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (!user || !user.organizationId) {
+    if (!user || !authUser || !authUser.organizationId) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -91,7 +91,7 @@ export function AddStudentForm({
         {
           ...values,
           joinDate: serverTimestamp(),
-          organizationId: user.organizationId,
+          organizationId: authUser.organizationId,
           coachId: user.uid,
         }
       );

@@ -43,7 +43,12 @@ export function CoachDashboard() {
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
-                    const userData = { id: userDocSnap.id, ...userDocSnap.data() } as UserProfile;
+                    const data = userDocSnap.data();
+                    const userData = { 
+                      id: userDocSnap.id, 
+                      uid: userDocSnap.id, 
+                      ...data 
+                    } as UserProfile;
                     setUser(userData);
 
                     const stadiumId = userData.assignedStadiums?.[0];
@@ -146,15 +151,7 @@ export function CoachDashboard() {
             </MotionDiv>
 
             <MotionDiv variants={itemVariants}>
-                <AttendanceTracker 
-                    stadium={stadium} 
-                    students={students} 
-                    loading={loading} 
-                    onFormSubmit={handleRefreshStudents} 
-                    allStadiums={allStadiums}
-                    coachId={user?.id}
-                    refreshStudents={handleRefreshStudents}
-                />
+                <AttendanceTracker />
             </MotionDiv>
 
             <MotionDiv variants={itemVariants}>

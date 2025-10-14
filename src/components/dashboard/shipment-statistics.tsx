@@ -144,7 +144,7 @@ export function ShipmentStatistics() {
                 fillOpacity={1} 
                 fill="url(#colorShipment)" 
                 strokeWidth={2} 
-                activeDot={(props) => props.payload.name === 'Jul' ? <CustomActiveDot {...props} /> : null}
+                activeDot={<CustomActiveDot />}
                 dot={false}
               />
               <Area 
@@ -154,7 +154,7 @@ export function ShipmentStatistics() {
                 fillOpacity={1} 
                 fill="url(#colorDelivery)" 
                 strokeWidth={2}
-                activeDot={(props) => props.payload.name === 'Jul' ? <CustomActiveDot {...props} /> : null}
+                activeDot={<CustomActiveDot />}
                 dot={false}
               />
             </AreaChart>

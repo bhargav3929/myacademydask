@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Performance and SEO optimizations
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
+  
   images: {
     remotePatterns: [
       {
@@ -42,6 +47,44 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       }
     ],
+    // Modern image formats for better performance
+    formats: ['image/avif', 'image/webp'],
+    // Image optimization settings
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+
+  // Headers for better SEO and security
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
+
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
 };
 

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { generateFirestoreSecurityRules } from "@/ai/flows/generate-firestore-security-rules";
+// TODO: Implement generateFirestoreSecurityRules function in @/ai/flows/generate-firestore-security-rules
+// import { generateFirestoreSecurityRules } from "@/ai/flows/generate-firestore-security-rules";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,11 +49,28 @@ User Roles:
     setIsLoading(true);
     setGeneratedRules("");
     try {
-      const result = await generateFirestoreSecurityRules(values);
-      setGeneratedRules(result.securityRules);
+      // TODO: Implement AI-powered security rules generation
+      // const result = await generateFirestoreSecurityRules(values);
+      // setGeneratedRules(result.securityRules);
+      
+      // Placeholder response until AI function is implemented
+      const placeholderRules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // TODO: Generated rules based on your data structure will appear here
+    // Data Structure: ${values.dataStructureDescription}
+    // User Roles: ${values.userRolesDescription}
+    
+    match /{document=**} {
+      allow read, write: if false; // Deny all by default - implement proper rules
+    }
+  }
+}`;
+      
+      setGeneratedRules(placeholderRules);
       toast({
-        title: "Success!",
-        description: "Firestore security rules generated successfully.",
+        title: "Placeholder Generated",
+        description: "AI generation not yet implemented. This is a placeholder.",
       });
     } catch (error) {
       console.error("Error generating security rules:", error);

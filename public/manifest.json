@@ -1,0 +1,26 @@
+{
+  "name": "My Academy Desk",
+  "short_name": "My Academy Desk",
+  "description": "Sports Academy Management System - Manage coaches, athletes, attendance, revenue, and operations seamlessly",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFFFE",
+  "theme_color": "#14B8A6",
+  "orientation": "portrait-primary",
+  "categories": ["business", "sports", "education"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/landing-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/landing-logo.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

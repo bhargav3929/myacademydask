@@ -74,7 +74,12 @@ export function RecentActivity({ organizationId }: { organizationId: string | nu
             const coachDocRef = doc(firestore, "users", coachId);
             const coachDoc = await getDoc(coachDocRef);
              if (coachDoc.exists()) {
-                const coachData = { id: coachId, ...coachDoc.data() } as UserProfile;
+                const data = coachDoc.data();
+                const coachData = { 
+                  id: coachId, 
+                  uid: coachId, 
+                  ...data 
+                } as UserProfile;
                 coachesCache.set(coachId, coachData);
                 return coachData;
             }

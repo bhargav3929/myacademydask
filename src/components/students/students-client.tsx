@@ -47,10 +47,12 @@ export function StudentsClient() {
       const studentsData = snapshot.docs.map(doc => {
         const path = doc.ref.path.split('/');
         const stadiumId = path[1];
+        const data = doc.data();
         return {
           id: doc.id,
           stadiumId, 
-          ...doc.data(),
+          ...data,
+          status: data.status || 'active' // Provide default status
         } as Student;
       });
       setAllStudents(studentsData);

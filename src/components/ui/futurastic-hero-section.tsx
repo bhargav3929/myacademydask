@@ -4,7 +4,9 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { FiArrowRight } from "react-icons/fi";
+// TODO: Install react-icons package to enable icon
+// import { FiArrowRight } from "react-icons/fi";
+import { ArrowRight as FiArrowRight } from "lucide-react"; // Using lucide-react as alternative
 import {
   useMotionTemplate,
   useMotionValue,

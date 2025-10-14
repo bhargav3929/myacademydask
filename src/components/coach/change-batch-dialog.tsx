@@ -49,7 +49,8 @@ export function ChangeBatchDialog({ student, stadiumId, onBatchChanged, children
           const stadiumData = stadiumSnap.data() as Stadium;
           // The batches are stored in an array field called `batches`
           const batches = stadiumData.batches || []; 
-          setAvailableBatches(batches.map((name: string, index: number) => ({ id: `${stadiumId}-${name}-${index}`, name })));
+          // batches is already an array of Batch objects with {id, name}
+          setAvailableBatches(batches);
         } else {
           toast.error("Stadium details not found.");
         }

@@ -42,7 +42,8 @@ const settingsFormSchema = z.object({
 type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
 export function SettingsForm() {
-  const { currency, setCurrency, authUser } = useCurrency();
+  const { currency, setCurrency } = useCurrency();
+  const { authUser } = useAuth();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
