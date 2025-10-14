@@ -58,9 +58,10 @@ const getUserRoleFromToken = async (user: User): Promise<{ role: string | null; 
         
         console.log("Current token claims - Role:", role, "OrganizationId:", organizationId);
 
-        // If claims are missing or incomplete, try to sync from Firestore
-        if (!role || !organizationId) {
-            console.log("Claims missing, fetching from Firestore and syncing...");
+        // If claims are missing (allow super-admins without organizationId)
+        const needsOrgId = role === 'owner' || role === 'coach';
+        if (!role || (needsOrgId && !organizationId)) {
+            console.log("Claims missing or incomplete, fetching from Firestore and syncing...");
             try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
@@ -70,7 +71,10 @@ const getUserRoleFromToken = async (user: User): Promise<{ role: string | null; 
                     
                     console.log("Firestore data - Role:", firestoreRole, "OrganizationId:", firestoreOrgId);
 
-                    if (firestoreRole && firestoreOrgId) {
+                    // Super-admins don't need organizationId, only owners/coaches do
+                    const needsOrgId = firestoreRole === 'owner' || firestoreRole === 'coach';
+                    
+                    if (firestoreRole && (!needsOrgId || firestoreOrgId)) {
                         // Sync the role to update claims
                         await syncUserRole();
                         

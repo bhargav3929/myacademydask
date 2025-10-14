@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOwnerPassword = exports.createCoachUser = exports.syncUserRole = exports.createStadiumAndCoach = exports.grantOwnerRole = void 0;
+exports.toggleOwnerAccountStatus = exports.updateOwnerCredentials = exports.updateOwnerPassword = exports.createCoachUser = exports.syncUserRole = exports.createStadiumAndCoach = exports.grantOwnerRole = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const v2_1 = require("firebase-functions/v2");
 const admin = require("firebase-admin");
@@ -288,5 +288,144 @@ exports.updateOwnerPassword = (0, https_1.onCall)(async (request) => {
             "An internal error occurred while updating the password.";
         throw new https_1.HttpsError("internal", message);
     }
+});
+exports.updateOwnerCredentials = (0, https_1.onCall)(async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError("unauthenticated", "The function must be called while authenticated.");
+    }
+    const callerRole = request.auth.token.role;
+    if (callerRole !== "super-admin") {
+        throw new https_1.HttpsError("permission-denied", "Only super-admins can update owner credentials.");
+    }
+    const { targetUid, ownerDocId, newUsername, newPassword, } = request.data;
+    if (!targetUid || !ownerDocId || !newUsername) {
+        throw new https_1.HttpsError("invalid-argument", "Missing required fields: targetUid, ownerDocId, and newUsername.");
+    }
+    const normalizedUsername = String(newUsername).trim().toLowerCase();
+    if (!/^[a-z0-9_]+$/.test(normalizedUsername)) {
+        throw new https_1.HttpsError("invalid-argument", "Username can only contain lowercase letters, numbers, and underscores.");
+    }
+    const db = admin.firestore();
+    const ownerDocRef = db.collection("stadium_owners").doc(ownerDocId);
+    const ownerDoc = await ownerDocRef.get();
+    if (!ownerDoc.exists) {
+        throw new https_1.HttpsError("not-found", `Stadium owner document ${ownerDocId} could not be found.`);
+    }
+    const ownerData = ownerDoc.data();
+    if ((ownerData === null || ownerData === void 0 ? void 0 : ownerData.authUid) !== targetUid) {
+        throw new https_1.HttpsError("failed-precondition", "Owner document does not belong to the provided user.");
+    }
+    const usersRef = db.collection("users");
+    const existingUsernameSnapshot = await usersRef
+        .where("username", "==", normalizedUsername)
+        .get();
+    if (!existingUsernameSnapshot.empty) {
+        const conflict = existingUsernameSnapshot.docs.find((docSnap) => docSnap.id !== targetUid);
+        if (conflict) {
+            throw new https_1.HttpsError("already-exists", "This username is already in use. Choose a different username.");
+        }
+    }
+    const newEmail = `${normalizedUsername}@owner.courtcommand.com`;
+    const batch = db.batch();
+    batch.update(usersRef.doc(targetUid), {
+        username: normalizedUsername,
+        email: newEmail,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    batch.update(ownerDocRef, {
+        credentials: {
+            username: normalizedUsername,
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
+    const updateRequest = {
+        email: newEmail,
+    };
+    if (typeof newPassword === "string" && newPassword.trim().length > 0) {
+        if (newPassword.trim().length < 8) {
+            throw new https_1.HttpsError("invalid-argument", "Password must be at least 8 characters long.");
+        }
+        updateRequest.password = newPassword;
+    }
+    await admin.auth().updateUser(targetUid, updateRequest);
+    await admin.auth().revokeRefreshTokens(targetUid);
+    return {
+        success: true,
+        message: "Owner credentials were updated successfully.",
+        email: newEmail,
+        username: normalizedUsername,
+        passwordUpdated: Boolean(updateRequest.password),
+    };
+});
+exports.toggleOwnerAccountStatus = (0, https_1.onCall)(async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError("unauthenticated", "The function must be called while authenticated.");
+    }
+    const callerRole = request.auth.token.role;
+    if (callerRole !== "super-admin") {
+        throw new https_1.HttpsError("permission-denied", "Only super-admins can manage owner account status.");
+    }
+    const { targetUid, ownerDocId, status, } = request.data;
+    if (!targetUid || !ownerDocId || !status) {
+        throw new https_1.HttpsError("invalid-argument", "Missing required fields: targetUid, ownerDocId, and status.");
+    }
+    if (!["active", "inactive", "suspended"].includes(status)) {
+        throw new https_1.HttpsError("invalid-argument", "Invalid status provided. Expected 'active', 'inactive', or 'suspended'.");
+    }
+    const db = admin.firestore();
+    const ownerDocRef = db.collection("stadium_owners").doc(ownerDocId);
+    const ownerDoc = await ownerDocRef.get();
+    if (!ownerDoc.exists) {
+        throw new https_1.HttpsError("not-found", `Owner document ${ownerDocId} does not exist.`);
+    }
+    const ownerData = ownerDoc.data();
+    if ((ownerData === null || ownerData === void 0 ? void 0 : ownerData.authUid) !== targetUid) {
+        throw new https_1.HttpsError("failed-precondition", "Owner document does not belong to the provided user.");
+    }
+    const batch = db.batch();
+    const timestamp = admin.firestore.FieldValue.serverTimestamp();
+    batch.update(ownerDocRef, {
+        status,
+        updatedAt: timestamp,
+    });
+    const ownerUserRef = db.collection("users").doc(targetUid);
+    batch.update(ownerUserRef, {
+        status,
+        updatedAt: timestamp,
+    });
+    const coachesSnapshot = await db
+        .collection("users")
+        .where("organizationId", "==", ownerDocId)
+        .where("role", "==", "coach")
+        .get();
+    const affectedCoachUids = [];
+    coachesSnapshot.forEach((coachDoc) => {
+        affectedCoachUids.push(coachDoc.id);
+        batch.update(coachDoc.ref, {
+            status,
+            updatedAt: timestamp,
+        });
+    });
+    await batch.commit();
+    const disableUser = status !== "active";
+    await admin.auth().updateUser(targetUid, { disabled: disableUser });
+    await admin.auth().revokeRefreshTokens(targetUid);
+    if (affectedCoachUids.length > 0) {
+        await Promise.all(affectedCoachUids.map(async (coachUid) => {
+            try {
+                await admin.auth().updateUser(coachUid, { disabled: disableUser });
+                await admin.auth().revokeRefreshTokens(coachUid);
+            }
+            catch (error) {
+                console.error(`Failed to update coach ${coachUid}:`, error);
+            }
+        }));
+    }
+    return {
+        success: true,
+        status,
+        coachesUpdated: affectedCoachUids.length,
+    };
 });
 //# sourceMappingURL=index.js.map

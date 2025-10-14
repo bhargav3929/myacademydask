@@ -12,6 +12,9 @@ export interface StadiumOwner {
     createdAt: Timestamp;
     createdBy: string; // super_admin_uid
     lastLoginAt?: Timestamp;
+    totalStudents?: number;
+    totalStadiums?: number;
+    totalRevenue?: number;
 }
 
 export interface SuperAdminUser {

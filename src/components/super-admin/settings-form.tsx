@@ -57,8 +57,6 @@ export function SettingsForm() {
     mode: "onChange",
   });
 
-  const updateOwnerPasswordFn = httpsCallable(functions, 'updateOwnerPassword');
-
   async function onSubmit(data: SettingsFormValues) {
     setIsSaving(true);
     try {
@@ -66,17 +64,25 @@ export function SettingsForm() {
       
       // Update password if a new password is provided and authenticated user is super admin
       if (data.password && authUser?.role === 'super-admin') {
-            const updatePasswordResult : any = await updateOwnerPasswordFn({
-                targetUid: authUser.uid, // Assuming you want super admins to be able to edit their own password
+            const response = await fetch('/api/super-admin/update-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                targetUid: authUser.uid,
                 newPassword: data.password,
+              }),
             });
-             if (!updatePasswordResult.data.success) {
-                  throw new Error(updatePasswordResult.data.message || 'Failed to update password.');
-              }
-              toast({
-                  title: "Password Updated",
-                  description: "Your password has been updated successfully.",
-              });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || 'Failed to update password.');
+            }
+
+            toast({
+              title: "Password Updated",
+              description: "Your password has been updated successfully.",
+            });
       }
       
       toast({
