@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // Check if all required environment variables are present.
 if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
@@ -19,6 +20,11 @@ if (!getApps().length) {
     });
 }
 
+const adminDb = getFirestore();
+
+type VerifySessionCookie = ReturnType<typeof getAuth>['verifySessionCookie'];
+type DecodedToken = Awaited<ReturnType<VerifySessionCookie>>;
+
 export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
@@ -28,7 +34,6 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith('/api') ||
         pathname.startsWith('/static') ||
         pathname.includes('.') || // Files like favicon.ico
-        pathname === '/' ||
         pathname === '/login' ||
         pathname === '/register' ||
         pathname === '/pricing'
@@ -37,17 +42,44 @@ export async function middleware(request: NextRequest) {
     }
 
     const sessionCookie = request.cookies.get('__session')?.value;
-    let decodedToken = null;
+    let decodedToken: DecodedToken | null = null;
+    let userRole: 'super-admin' | 'owner' | 'coach' | null = null;
 
     if (sessionCookie) {
         try {
             decodedToken = await getAuth().verifySessionCookie(sessionCookie, true);
+            const tokenRole = decodedToken.role as string | undefined;
+            if (tokenRole === 'super-admin' || tokenRole === 'owner' || tokenRole === 'coach') {
+                userRole = tokenRole;
+            } else {
+                try {
+                    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
+                    if (userDoc.exists) {
+                        const firestoreRole = userDoc.get('role');
+                        if (firestoreRole === 'super-admin' || firestoreRole === 'owner' || firestoreRole === 'coach') {
+                            userRole = firestoreRole;
+                        }
+                    }
+                } catch (firestoreError) {
+                    console.error('Failed to fetch user role from Firestore in middleware:', firestoreError);
+                }
+            }
         } catch (error) {
             console.log('Error verifying session cookie:', error);
             const response = NextResponse.redirect(new URL('/login', request.url));
             response.cookies.delete('__session');
             return response;
         }
+    }
+
+    if (decodedToken && pathname === '/' && userRole) {
+        const redirectPath =
+            userRole === 'super-admin'
+                ? '/super-admin/dashboard'
+                : userRole === 'owner'
+                    ? '/dashboard'
+                    : '/coach/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, request.url));
     }
 
     if (!decodedToken) {
@@ -60,7 +92,10 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    const userRole = decodedToken.role;
+    if (!userRole) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     const isSuperAdminPath = pathname.startsWith('/super-admin');
     const isCoachPath = pathname.startsWith('/coach');
     const isOwnerPath = !isSuperAdminPath && !isCoachPath && (pathname.startsWith('/dashboard') || pathname.startsWith('/stadiums') || pathname.startsWith('/students') || pathname.startsWith('/reports') || pathname.startsWith('/settings'));

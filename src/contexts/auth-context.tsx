@@ -34,6 +34,7 @@ const regionalFunctions = getFunctions(undefined, "us-central1");
 const syncUserRole = httpsCallable(regionalFunctions, 'syncUserRole');
 
 const LAST_PROTECTED_PATH_KEY = 'mad:lastProtectedPath';
+const CACHED_USER_ROLE_KEY = 'mad:cachedUserRole';
 
 const DEFAULT_ROUTE: Record<AuthUser['role'], string> = {
   owner: '/dashboard',
@@ -139,6 +140,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (organizationId) {
                 fetchedAuthUser.organizationId = organizationId;
             }
+            
+            // Cache the role for instant PWA redirects on next app open
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(CACHED_USER_ROLE_KEY, role);
+            }
+            
             setUser(user);
             setAuthUser(fetchedAuthUser);
         } else {
@@ -242,6 +249,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Explicitly clear the session cookie on client-side to ensure middleware also sees logout
     if (typeof window !== 'undefined') {
       localStorage.removeItem(LAST_PROTECTED_PATH_KEY);
+      localStorage.removeItem(CACHED_USER_ROLE_KEY); // Clear cached role for security
     }
     document.cookie = '__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     window.location.assign('/login'); // Use assign to force full reload and middleware re-evaluation
